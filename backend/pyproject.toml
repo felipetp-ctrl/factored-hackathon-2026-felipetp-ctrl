@@ -2,7 +2,12 @@
 name = "dispute-ops"
 version = "0.1.0"
 requires-python = ">=3.12"
-dependencies = ["pydantic>=2.7", "pyyaml>=6.0"]
+dependencies = [
+    "anthropic>=1.8.0",
+    "pydantic>=2.7",
+    "python-dotenv>=1.2.3",
+    "pyyaml>=6.0",
+]
 
 [dependency-groups]
 dev = ["pytest>=8.2"]
