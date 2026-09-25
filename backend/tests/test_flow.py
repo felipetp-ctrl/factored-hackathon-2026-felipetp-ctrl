@@ -146,3 +146,11 @@ def test_amount_search_identifies_single_transaction(flow, token):
     r = flow.handle(Turn(token=token, amount=Decimal("1250.00"), reason_code=ReasonCode.FRAUD_CNP))
     assert r.ask_for == ["card_in_possession", "recognizes_merchant"]
     assert flow.txn.transaction_id == "TXN001"
+
+
+def test_escalate_hands_off_with_given_reason_and_keeps_known_facts(flow, token):
+    flow.handle(Turn(token=token, transaction_id="TXN001", reason_code=ReasonCode.FRAUD_CNP))
+    r = flow.escalate(["nlu_unavailable"])
+    assert r.handoff.reason_for_handoff == ["nlu_unavailable"]
+    assert r.handoff.verified_facts[0].source == "txn:TXN001"
+    assert flow.handle(Turn(token=token)).action == "handoff"

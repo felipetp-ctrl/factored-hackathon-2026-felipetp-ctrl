@@ -124,6 +124,12 @@ class DisputeFlow:
             return self._on_confirm(turn)
         return self._advance(turn)
 
+    def escalate(self, reasons: list[str]) -> FlowResult:
+        """Hand off from outside the flow (e.g. the language layer is unavailable)."""
+        if self._final is not None:
+            return self._final
+        return self._handoff(reasons)
+
     def close(self, reason: str) -> FlowResult:
         """End without action (e.g. customer recognised a proactively flagged transaction)."""
         self._audit("closed", reason=reason)
