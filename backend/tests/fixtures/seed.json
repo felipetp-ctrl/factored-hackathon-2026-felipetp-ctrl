@@ -1,0 +1,21 @@
+{
+  "_note": "Synthetic test fixture authored by the team, shaped after the LATAM Bank data dictionary. Not organizer data.",
+  "customers": [
+    {"customer_id": "CUST001", "country": "Mexico", "segment": "Premium", "is_repeat_complainer": false},
+    {"customer_id": "CUST002", "country": "Colombia", "segment": "Basic", "is_repeat_complainer": true}
+  ],
+  "products": [
+    {"product_id": "PRD001", "customer_id": "CUST001", "product_type": "Credit Card", "product_status": "Active"},
+    {"product_id": "PRD002", "customer_id": "CUST002", "product_type": "Debit Card", "product_status": "Active"}
+  ],
+  "transactions": [
+    {"transaction_id": "TXN001", "customer_id": "CUST001", "product_id": "PRD001", "transaction_date": "2026-06-15T10:00:00+00:00", "amount": "1250.00", "currency": "MXN", "amount_usd": "68.50", "merchant_name": "Amazon MX", "transaction_status": "Approved", "transaction_country": "Mexico", "fraud_score": "12.00"},
+    {"transaction_id": "TXN002", "customer_id": "CUST001", "product_id": "PRD001", "transaction_date": "2026-06-14T09:00:00+00:00", "amount": "399.00", "currency": "MXN", "amount_usd": "21.87", "merchant_name": "Netflix", "transaction_status": "Approved", "transaction_country": "Mexico", "fraud_score": "3.00"},
+    {"transaction_id": "TXN003", "customer_id": "CUST001", "product_id": "PRD001", "transaction_date": "2026-06-14T09:05:00+00:00", "amount": "399.00", "currency": "MXN", "amount_usd": "21.87", "merchant_name": "Netflix", "transaction_status": "Approved", "transaction_country": "Mexico", "fraud_score": "3.00"},
+    {"transaction_id": "TXN004", "customer_id": "CUST001", "product_id": "PRD001", "transaction_date": "2026-01-10T12:00:00+00:00", "amount": "800.00", "currency": "MXN", "amount_usd": "43.84", "merchant_name": "Liverpool", "transaction_status": "Approved", "transaction_country": "Mexico", "fraud_score": "5.00"},
+    {"transaction_id": "TXN005", "customer_id": "CUST001", "product_id": "PRD001", "transaction_date": "2026-06-16T22:00:00+00:00", "amount": "15000.00", "currency": "MXN", "amount_usd": "822.00", "merchant_name": "Electronica Online", "transaction_status": "Approved", "transaction_country": "Mexico", "fraud_score": "91.00"},
+    {"transaction_id": "TXN006", "customer_id": "CUST001", "product_id": "PRD001", "transaction_date": "2026-06-10T08:00:00+00:00", "amount": "500.00", "currency": "MXN", "amount_usd": "27.40", "merchant_name": "Uber", "transaction_status": "Reversed", "transaction_country": "Mexico", "fraud_score": "2.00"},
+    {"transaction_id": "TXN007", "customer_id": "CUST001", "product_id": "PRD001", "transaction_date": "2026-06-17T03:00:00+00:00", "amount": "2400.00", "currency": "MXN", "amount_usd": "131.50", "merchant_name": "TiendaXYZ Online", "transaction_status": "Approved", "transaction_country": "Mexico", "fraud_score": "88.00"},
+    {"transaction_id": "TXN101", "customer_id": "CUST002", "product_id": "PRD002", "transaction_date": "2026-06-12T15:00:00+00:00", "amount": "90000.00", "currency": "COP", "amount_usd": "22.10", "merchant_name": "Rappi", "transaction_status": "Approved", "transaction_country": "Colombia", "fraud_score": "4.00"}
+  ]
+}
