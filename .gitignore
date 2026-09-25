@@ -1,0 +1,12 @@
+.DS_Store
+.venv/
+__pycache__/
+*.db
+.env
+data/raw/
+mlruns/
+node_modules/
+
+# local working notes (not part of the submission)
+docs/superpowers/
+HACKATHON_GUIDE.md
