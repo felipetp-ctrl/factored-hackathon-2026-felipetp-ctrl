@@ -1,0 +1,28 @@
+# SYNTHETIC dispute policy authored by the team for the hackathon.
+# Not a real regulatory or card-network policy. Thresholds are placeholders
+# to be calibrated against the EDA (claimed_amount / resolution_days distributions).
+version: disputes_v1
+synthetic: true
+dispute_window_days:
+  FRAUD_CNP: 120
+  FRAUD_CP: 120
+  DUPLICATE: 120
+  INCORRECT_AMOUNT: 60
+  NOT_RECEIVED: 120
+  CANCELLED_RECURRING: 60
+eligible_txn_status: [Approved, Pending]
+required_evidence:
+  FRAUD_CNP: [card_in_possession, recognizes_merchant]
+  FRAUD_CP: [card_in_possession]
+  DUPLICATE: [duplicate_transaction_id]
+  INCORRECT_AMOUNT: [expected_amount]
+  NOT_RECEIVED: [expected_delivery_date, contacted_merchant]
+  CANCELLED_RECURRING: [cancellation_date]
+handoff:
+  amount_usd_threshold:
+    Mexico: 500
+    Colombia: 400
+    Argentina: 300
+  amount_usd_threshold_default: 300
+  max_disputes_30d: 3
+  min_classifier_confidence: 0.6
