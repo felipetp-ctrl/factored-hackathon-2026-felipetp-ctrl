@@ -100,11 +100,11 @@ Component evaluation on the same conversations (`test-v2`, proposed system):
 
 | Component | Claude Haiku NLU | Keyword baseline |
 |---|---|---|
-| Dispute-reason accuracy (4 reasons) | **100% (69/69)** | 88.4% (61/69) |
+| Dispute-reason accuracy (4 reasons) | **100% (46/46)** | 87.0% (40/46) — misses 4/8 incorrect-amount, 1/4 not-received, 1/30 fraud |
 | Out-of-scope recall / false-positive rate | 100% / 0% | 100% / 0% |
-| Transaction identification (NLU + search) | 100% (69/69) | — |
-| Injection flag (rules) TPR / FPR | 100% (8/8) / 0% (0/144) | — |
-| Language rules accuracy when decided | 98.8% | — |
+| Transaction identification (NLU + search) | 100% (46/46) | — |
+| Injection flag (rules) TPR / FPR | 100% (6/6) / 0% (0/98) | — |
+| Language rules accuracy when decided | 98.3% (5.3% undecided → the model decides) | — |
 
 Small samples: zero observed unsafe outcomes in 105 + 84 conversations does not establish zero risk; the component
 baseline shows the language model's margin is on the less common reasons, not on fraud.
