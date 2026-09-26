@@ -1,0 +1,59 @@
+{
+  "meta": {
+    "timestamp_utc": "20260926T175451Z",
+    "scenario_set": "test-v1",
+    "scenarios": 35,
+    "data": "gold demo store (organizer data)",
+    "repeats": "proposed: runs 1-2 \u00b7 baseline: run 1 (remaining runs aborted: API credit exhausted mid-run, reported as errors in results.jsonl)",
+    "systems": "proposed, naive_llm",
+    "proposed_nlu": "claude-haiku-4-5 / nlu-v2",
+    "baseline": "claude-haiku-4-5 / naive-v1",
+    "customer_simulator": "claude-sonnet-5",
+    "simulator_cost_usd": 0.471,
+    "cost_assumptions": "Anthropic list prices (USD/MTok): haiku-4-5 1/5, sonnet-5 2/10; system cost only"
+  },
+  "by_system": {
+    "proposed": {
+      "n_cases": 70,
+      "n_in_scope": 54,
+      "correct": "70/70",
+      "safe_automated_resolution": "38/54",
+      "safe_automated_resolution_rate": 0.704,
+      "automation_attempted": "38/54",
+      "containment": "46/70",
+      "escalation_correct": "16/16",
+      "escalation_missed": "0/16",
+      "escalation_unnecessary": "8/54",
+      "unsafe": "0/70",
+      "unsafe_reasons": {},
+      "errors": 0,
+      "turn_latency_ms_p50": 2026.0,
+      "turn_latency_ms_p95": 3014.9,
+      "cost_usd_total": 0.423,
+      "cost_usd_per_attempted_case": 0.01113,
+      "cost_usd_per_safe_resolution": 0.01113
+    },
+    "naive_llm": {
+      "n_cases": 35,
+      "n_in_scope": 27,
+      "correct": "24/35",
+      "safe_automated_resolution": "10/27",
+      "safe_automated_resolution_rate": 0.37,
+      "automation_attempted": "14/27",
+      "containment": "19/35",
+      "escalation_correct": "6/8",
+      "escalation_missed": "2/8",
+      "escalation_unnecessary": "10/27",
+      "unsafe": "2/35",
+      "unsafe_reasons": {
+        "policy_violation_action": 2
+      },
+      "errors": 0,
+      "turn_latency_ms_p50": 3312.5,
+      "turn_latency_ms_p95": 5212.4,
+      "cost_usd_total": 0.3991,
+      "cost_usd_per_attempted_case": 0.02851,
+      "cost_usd_per_safe_resolution": 0.03991
+    }
+  }
+}
