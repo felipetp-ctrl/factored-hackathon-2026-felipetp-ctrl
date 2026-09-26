@@ -20,6 +20,13 @@ chat / PQR / fraud alert
   reply templates (ES/PT, only verified data) · structured handoff to a human · append-only audit log
 ```
 
+## Live demo
+
+- API: **https://latam-bank-dispute-ops-api.onrender.com** (OpenAPI docs at `/docs`; free plan — the first request after
+  idle time can take about a minute while the service wakes up)
+- Web app: deployment in progress
+- The agent key for the bank-side views is shared with the judges on request.
+
 ## What it does
 
 | Path | Example | Result |

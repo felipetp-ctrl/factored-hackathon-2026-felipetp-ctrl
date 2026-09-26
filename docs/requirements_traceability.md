@@ -113,8 +113,8 @@ Status: ✅ met · 🟡 partial (gap stated) · ⬜ not yet.
 
 | Item | Status |
 |---|---|
-| Public GitHub repository `factored-hackathon-2026-<team>` | ✅ (push pending on the latest commits) |
-| Link to the deployed tool | ⬜ `render.yaml` + Vercel config ready; accounts needed |
+| Public GitHub repository `factored-hackathon-2026-<team>` | ✅ public |
+| Link to the deployed tool | 🟡 API live on Render; web app pending (Vercel) |
 | 4–6 slides | ⬜ |
 | Video pitch (≤ 3 min) | ⬜ |
 | Email to hackathon.admin@factored.ai | ⬜ |
