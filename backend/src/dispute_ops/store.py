@@ -145,6 +145,16 @@ class Store:
             for r in rows
         ]
 
+    def list_audit_by_kind(self, *kinds: str) -> list[AuditEvent]:
+        marks = ",".join("?" * len(kinds))
+        rows = self.conn.execute(
+            f"SELECT * FROM audit_events WHERE kind IN ({marks}) ORDER BY seq", kinds
+        ).fetchall()
+        return [
+            AuditEvent(trace_id=r["trace_id"], at=r["at"], kind=r["kind"], data=json.loads(r["data"]))
+            for r in rows
+        ]
+
     @staticmethod
     def _row_to_case(row: sqlite3.Row) -> DisputeCase:
         data = dict(row)
