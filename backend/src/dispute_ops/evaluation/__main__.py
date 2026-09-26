@@ -44,8 +44,8 @@ def render_markdown(meta: dict, results: list[ScenarioResult]) -> str:
         "|---|" + "---|" * len(systems),
         *[f"| {k} | " + " | ".join(str(summaries[s][k]) for s in systems) + " |" for k in keys],
     ]
-    for key, title in (("language", "By language"), ("country", "By country"), ("segment", "By customer segment"),
-                       ("category", "By category")):
+    for key, title in (("run", "By run (repeated-run variability)"), ("language", "By language"), ("country", "By country"),
+                       ("segment", "By customer segment"), ("category", "By category")):
         lines += ["", f"## {title}", "", "| System | Group | n | correct | safe resolution | unsafe | escalation missed |",
                   "|---|---|---|---|---|---|---|"]
         for s in systems:
