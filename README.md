@@ -121,6 +121,8 @@ See [ADR-009](docs/decisions/ADR-009-evaluation-method.md) for method and limita
 | `backend/src/dispute_ops/policy/disputes_v1.yaml` | the synthetic dispute policy (versioned) |
 | `frontend/` | Next.js: customer chat + decision inspector, agent console, operations |
 | `docs/decisions/` | architecture decision records (why each choice, alternatives, trade-offs) |
+| `docs/requirements_traceability.md` | every challenge requirement → evidence → how to verify |
+| `docs/problem_analysis.md` · `docs/data_quality_report.md` · `docs/operations.md` | the problem in numbers · data quality · running it |
 | `eval/results/` | evaluation reports |
 
 ## Data
