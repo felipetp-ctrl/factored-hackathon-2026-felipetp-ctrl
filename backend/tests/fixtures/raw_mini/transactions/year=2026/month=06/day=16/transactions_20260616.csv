@@ -1,0 +1,6 @@
+transaction_id,transaction_date,process_date,product_id,customer_id,transaction_type,transaction_category,amount,currency,amount_usd,channel,branch_id,merchant_name,merchant_category,transaction_country,transaction_city,transaction_status,response_code,is_fraud,fraud_score,latitude,longitude
+TX-1,2026-06-16 10:00:00,2026-06-16,PRD-A1,CLI-A,Purchase,Other,1250.0,MXN,68.5,POS,,Amazon MX,Other,Mexico,CDMX,Approved,00,False,12.0,19.4,-99.1
+TX-2,2026-06-16 22:00:00,2026-06-16,PRD-A1,CLI-A,Purchase,Other,15000.0,MXN,822.0,Web,,Electronica Online,Other,Mexico,CDMX,Approved,00,True,91.0,19.4,-99.1
+TX-3,2026-06-16 11:00:00,2026-06-16,PRD-B1,CLI-B,Purchase,Food,90000.0,COP,22.1,POS,,Rappi,Food,Colombia,Bogotá,Approved,00,False,not-a-number,4.6,-74.1
+TX-4,2026-06-16 12:00:00,2026-06-16,PRD-X9,CLI-GHOST,Purchase,Other,10.0,MXN,0.5,POS,,Ghost,Other,Mexico,CDMX,Approved,00,False,1.0,19.4,-99.1
+TX-5,"broken line with unclosed quote

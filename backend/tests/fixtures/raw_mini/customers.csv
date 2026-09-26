@@ -1,0 +1,4 @@
+customer_id,document_number,document_type,first_name,last_name,date_of_birth,gender,email,mobile_phone,landline_phone,address,city,state,country,postal_code,detected_accent,segment,credit_score,estimated_monthly_income,occupation,marital_status,education_level,registration_date,registration_branch_id,customer_status,last_updated,accepts_marketing
+CLI-A,D1,CURP,Ana,Pérez,1990-01-01,F,,,,,CDMX,CDMX,Mexico,,mexican,Plus,700,20000,,,,2020-01-01 10:00:00,SUC-1,Active,2026-01-01 00:00:00,True
+CLI-A,D1,CURP,Ana,Pérez,1990-01-01,F,,,,,CDMX,CDMX,Mexico,,mexican,Premium,700,20000,,,,2020-01-01 10:00:00,SUC-1,Active,2026-05-01 00:00:00,True
+CLI-B,D2,CC,Luis,Gómez,1985-01-01,M,,,,,Bogotá,Cundinamarca,Colombia,,colombian,Gold,650,3000000,,,,2021-01-01 10:00:00,SUC-1,Active,2026-01-01 00:00:00,False

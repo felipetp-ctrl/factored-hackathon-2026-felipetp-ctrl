@@ -1,0 +1,3 @@
+complaint_id,creation_date,process_date,customer_id,case_type,category,subcategory,reception_channel,affected_product_id,related_branch_id,origin_interaction_id,description,claimed_amount,currency,priority,status,assigned_agent_id,assignment_date,first_response_date,resolution_date,closing_date,sla_breached,resolution_days,resolution,compensation_granted,resolution_satisfaction,is_repeat_complainer
+Q-1,2026-06-16 13:00:00,2026-06-16,CLI-A,Complaint,Transactions,Cargo no reconocido,App,PRD-A1,,,Queja relacionada con transactions,1250,MXN,High,Open,,,,,,False,,,,,False
+Q-2,2026-06-16 14:00:00,2026-06-16,CLI-B,Claim,Transactions,Cargo no reconocido,Email,PRD-NOPE,,,Queja relacionada con transactions,,COP,Low,Open,,,,,,False,,,,,True

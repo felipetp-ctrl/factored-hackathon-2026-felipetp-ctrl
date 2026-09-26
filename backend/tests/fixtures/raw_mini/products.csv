@@ -1,0 +1,4 @@
+product_id,customer_id,product_type,product_number,currency,current_balance,credit_limit,interest_rate,opening_date,expiration_date,opening_branch_id,product_status,opening_channel,has_linked_app,days_past_due,last_transaction_date,last_updated
+PRD-A1,CLI-A,Credit Card,4000,MXN,100.0,5000,40,2022-01-01,,SUC-1,Active,App,True,0,,2026-06-01 00:00:00
+PRD-B1,CLI-B,Debit Card,5000,COP,900000,,,2022-01-01,,SUC-1,Active,Branch,True,,,2026-06-01 00:00:00
+PRD-X9,CLI-GHOST,Credit Card,6000,MXN,0,1000,40,2022-01-01,,SUC-1,Active,Web,False,,,2026-06-01 00:00:00
