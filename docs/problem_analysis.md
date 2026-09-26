@@ -42,6 +42,24 @@ from other complaints at intake.
 weeks for a resolution, while seven in ten cases sit open. The root cause visible in the data is an intake that captures
 neither the transaction, nor the reason, nor the evidence — so every case needs a person to reconstruct it.
 
+### Backtest: can written complaints alone be tied to a transaction?
+
+We applied the PQR channel's matching rule (`channels.match_complaint`, SQL twin in `pipeline/pqr_backtest.py`) to all
+13,580 dispute complaints: the customer's approved/pending charges in the 120 days before the complaint, narrowed by the
+affected product when it belongs to the customer and by the claimed amount (±1%).
+
+| Outcome | Complaints | Share |
+|---|---|---|
+| Exactly one candidate (automatable) | 2,141 | **15.8 %** |
+| Several candidates (median 2) | 8,625 | 63.5 % |
+| No candidate | 2,814 | 20.7 % |
+
+Two more data defects surfaced: **every** `affected_product_id` (9,001 of 9,001) belongs to a *different* customer than the
+complainant, so the rule ignores foreign product references (in production this would be a security alert), and the claimed
+amount never matches a transaction. **Conclusion: a written complaint cannot identify the disputed charge in 84 % of cases.**
+The conversation is what closes that gap — it asks the customer which charge, from their own history. The PQR channel is kept
+as triage: it resolves the matchable cases and hands the rest to an agent with the candidate shortlist attached.
+
 ## 3. What the service changes, and how it is measured
 
 | Target outcome | Mechanism | Evidence |

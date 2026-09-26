@@ -72,3 +72,36 @@ def test_proactive_recognized_closes_without_action(tools, store, policy, clock,
     r = handle_proactive_reply(flow, token=sessions.issue("CUST001"), transaction_id="TXN007", recognized=True)
     assert r.action == "cancelled"
     assert store.find_open_dispute("TXN007") is None
+
+
+def test_pqr_without_transaction_id_matches_by_product_and_amount(deps, store):
+    from decimal import Decimal
+
+    from dispute_ops.channels import match_complaint
+    from helpers import NOW
+
+    c = PqrComplaint(complaint_id="Q9", customer_id="CUST001", description="cargo raro", affected_product_id="PRD001",
+                     claimed_amount=Decimal("1250.00"), created_at=NOW)
+    matched, cands = match_complaint(store, c, NOW)
+    assert matched == "TXN001" and [t.transaction_id for t in cands] == ["TXN001"]
+
+
+def test_pqr_ambiguous_match_goes_to_agent_with_shortlist(deps):
+    from decimal import Decimal
+
+    c = PqrComplaint(complaint_id="Q10", customer_id="CUST001", description="cobro Netflix",
+                     affected_product_id="PRD001", claimed_amount=Decimal("399.00"))
+    r = run_pqr_complaint(c, reason_code=ReasonCode.DUPLICATE, classifier_confidence=0.9, **deps)
+    assert r.action == "handoff" and r.handoff.reason_for_handoff == ["async_missing_info"]
+    assert set(r.handoff.risk_signals["candidate_transactions"]) == {"TXN002", "TXN003"}
+
+
+def test_pqr_ignores_a_product_that_belongs_to_another_customer(store):
+    from decimal import Decimal
+
+    from dispute_ops.channels import match_complaint
+    from helpers import NOW
+
+    c = PqrComplaint(complaint_id="Q11", customer_id="CUST001", description="x", affected_product_id="PRD002",
+                     claimed_amount=Decimal("1250.00"), created_at=NOW)
+    assert match_complaint(store, c, NOW)[0] == "TXN001"

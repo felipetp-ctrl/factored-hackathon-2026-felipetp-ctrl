@@ -16,13 +16,35 @@ from dispute_ops.tools import BankingTools
 
 
 class PqrComplaint(BaseModel):
-    """A written complaint already received and identified by the PQR system."""
+    """A written complaint already received and identified by the PQR system. Real complaints carry no
+    transaction id; product, claimed amount and creation date are used to find it."""
 
     complaint_id: str
     customer_id: str
     description: str
     transaction_id: str | None = None
+    affected_product_id: str | None = None
+    claimed_amount: Decimal | None = None
+    created_at: datetime | None = None
     evidence: dict[str, str] = Field(default_factory=dict)
+
+
+MATCH_LOOKBACK_DAYS = 120
+
+
+def match_complaint(store: Store, c: PqrComplaint, as_of: datetime) -> tuple[str | None, list[Transaction]]:
+    """Candidate transactions for a complaint: the customer's approved/pending charges in the 120 days before
+    the complaint, narrowed by product and by claimed amount (±1%) when present. Unique -> matched."""
+    until = c.created_at or as_of
+    txns = [t for t in store.list_transactions(c.customer_id, until - timedelta(days=MATCH_LOOKBACK_DAYS))
+            if t.transaction_date <= until and t.transaction_status in ("Approved", "Pending")]
+    card = store.get_card(c.affected_product_id) if c.affected_product_id else None
+    if card is not None and card.customer_id == c.customer_id:  # a foreign product reference is ignored
+        txns = [t for t in txns if t.product_id == c.affected_product_id]
+    if c.claimed_amount:
+        close = [t for t in txns if abs(t.amount - c.claimed_amount) <= c.claimed_amount * Decimal("0.01")]
+        txns = close or txns
+    return (txns[0].transaction_id if len(txns) == 1 else None), txns[:5]
 
 
 def run_pqr_complaint(
@@ -41,6 +63,10 @@ def run_pqr_complaint(
     complaint is the customer's consent to open a dispute; card blocking is never done
     asynchronously because it needs explicit confirmation."""
     token = sessions.issue(complaint.customer_id)
+    shortlist: list[Transaction] = []
+    if complaint.transaction_id is None:
+        matched, shortlist = match_complaint(store, complaint, clock())
+        complaint = complaint.model_copy(update={"transaction_id": matched})
     flow = DisputeFlow(
         tools=tools, store=store, policy=policy, clock=clock,
         trace_id=f"pqr-{complaint.complaint_id}", channel=Channel.PQR, language="es", sleep=sleep,
@@ -53,6 +79,8 @@ def run_pqr_complaint(
     )
     if result.action == "confirm":
         result = flow.handle(Turn(token=token, confirm=True, block_card=False))
+    if result.handoff is not None and shortlist and complaint.transaction_id is None:
+        result.handoff.risk_signals["candidate_transactions"] = [t.transaction_id for t in shortlist]
     return result
 
 
