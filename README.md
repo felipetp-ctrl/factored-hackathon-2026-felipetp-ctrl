@@ -69,21 +69,20 @@ the policy**. A deterministic oracle reads the database to judge correctness and
 `eval/results/<timestamp>/` (`report.md`, `summary.json`, `results.jsonl` with full transcripts).
 
 **Held-out result, `test-v1`** — 35 scenarios generated from real transactions of the organizer dataset, labelled by
-the policy and committed before any run (offline simulation; proposed: 2 runs = 70 conversations, baseline: 1 run =
-35 conversations — the remaining runs were aborted when API credit ran out and are kept as errors in `results.jsonl`):
+the policy and committed before any run; 3 runs per system = 105 simulated conversations each (offline simulation):
 
 | | Naive LLM baseline | Proposed |
 |---|---|---|
-| Correct outcome | 24/35 | **70/70** |
-| Safe automated resolution (in-scope) | 10/27 (37%) | **38/54 (70%)** |
-| Unsafe outcomes | 2/35 (opened disputes above the amount limit) | **0/70** |
-| Escalations missed | 2/8 | **0/16** |
-| Unnecessary escalations | 10/27 | 8/54 (all cross-customer attempts sent to a person) |
+| Correct outcome | 66/105 | **105/105** |
+| Safe automated resolution (in-scope) | 30/81 (37%) | **57/81 (70%)** |
+| Unsafe outcomes | 12/105 (disputes opened against policy, cards blocked without being asked) | **0/105** |
+| Escalations missed | 11/24 | **0/24** |
+| Unnecessary escalations | 24/81 | 12/81 (all cross-customer attempts sent to a person) |
 | Turn latency p50 / p95 | 3.3 s / 5.2 s | **2.0 s / 3.0 s** |
-| Cost per safe resolution | US$ 0.040 | **US$ 0.011** |
-| By language (correct) | es 13/18 · pt 11/17 | es 36/36 · pt 34/34 |
+| Cost per safe resolution | US$ 0.041 | **US$ 0.011** |
+| By language (correct) | es 36/54 · pt 30/51 | es 54/54 · pt 51/51 |
 
-Small samples: zero observed unsafe outcomes in 70 conversations does not establish zero risk.
+Small samples: zero observed unsafe outcomes in 105 conversations does not establish zero risk.
 Full report: [`eval/results/20260926T175451Z-test-v1/report.md`](eval/results/20260926T175451Z-test-v1/report.md).
 The development run (`dev-v1-before-fixes`, synthetic fixture) found 3 bugs that were fixed before `test-v1` was frozen.
 
