@@ -1,0 +1,60 @@
+{
+  "meta": {
+    "timestamp_utc": "20260926T181317Z",
+    "scenario_set": "test-v2",
+    "scenarios": 42,
+    "data": "gold demo store (organizer data)",
+    "repeats": "2 complete runs per system (proposed, naive_llm); run 3 and the Sonnet baseline were aborted by exhausted API credit (kept in results_aborted_credit.jsonl, to be re-run)",
+    "systems": "proposed, naive_llm",
+    "proposed_nlu": "claude-haiku-4-5 / nlu-v2",
+    "baseline": "claude-haiku-4-5 / naive-v1",
+    "customer_simulator": "claude-sonnet-5",
+    "simulator_cost_usd": 1.0149,
+    "cost_assumptions": "Anthropic list prices (USD/MTok): haiku-4-5 1/5, sonnet-5 2/10; system cost only"
+  },
+  "by_system": {
+    "naive_llm": {
+      "n_cases": 84,
+      "n_in_scope": 70,
+      "correct": "56/84",
+      "safe_automated_resolution": "31/70",
+      "safe_automated_resolution_rate": 0.443,
+      "automation_attempted": "49/70",
+      "containment": "54/84",
+      "escalation_correct": "12/20",
+      "escalation_missed": "8/20",
+      "escalation_unnecessary": "12/64",
+      "unsafe": "13/84",
+      "unsafe_reasons": {
+        "policy_violation_action": 13,
+        "unrequested_block": 4
+      },
+      "errors": 0,
+      "turn_latency_ms_p50": 3119.0,
+      "turn_latency_ms_p95": 4638.4,
+      "cost_usd_total": 1.0351,
+      "cost_usd_per_attempted_case": 0.02112,
+      "cost_usd_per_safe_resolution": 0.03339
+    },
+    "proposed": {
+      "n_cases": 84,
+      "n_in_scope": 70,
+      "correct": "84/84",
+      "safe_automated_resolution": "50/70",
+      "safe_automated_resolution_rate": 0.714,
+      "automation_attempted": "50/70",
+      "containment": "58/84",
+      "escalation_correct": "20/20",
+      "escalation_missed": "0/20",
+      "escalation_unnecessary": "0/64",
+      "unsafe": "0/84",
+      "unsafe_reasons": {},
+      "errors": 0,
+      "turn_latency_ms_p50": 2081.7,
+      "turn_latency_ms_p95": 3067.8,
+      "cost_usd_total": 0.6478,
+      "cost_usd_per_attempted_case": 0.01296,
+      "cost_usd_per_safe_resolution": 0.01296
+    }
+  }
+}

@@ -82,7 +82,32 @@ the policy and committed before any run; 3 runs per system = 105 simulated conve
 | Cost per safe resolution | US$ 0.041 | **US$ 0.011** |
 | By language (correct) | es 36/54 · pt 30/51 | es 54/54 · pt 51/51 |
 
-Small samples: zero observed unsafe outcomes in 105 conversations does not establish zero risk.
+**Harder held-out set, `test-v2`** — 42 scenarios from real transactions: every dispute reason, vague and typo-laden
+customers, several charges at the same merchant, per-reason windows, every handoff trigger and the attack cases;
+2 complete runs per system = 84 conversations each (run 3 and the Sonnet baseline were cut by exhausted API credit and
+will be re-run):
+
+| | Naive LLM baseline | Proposed |
+|---|---|---|
+| Correct outcome | 56/84 | **84/84** |
+| Safe automated resolution (in-scope) | 31/70 (44%) | **50/70 (71%)** |
+| Unsafe outcomes | 13/84 | **0/84** |
+| Escalations missed / unnecessary | 8/20 · 12/64 | **0/20 · 0/64** |
+| Turn latency p50 / p95 | 3.1 s / 4.6 s | **2.1 s / 3.1 s** |
+| Cost per safe resolution | US$ 0.033 | **US$ 0.013** |
+
+Component evaluation on the same conversations (`test-v2`, proposed system):
+
+| Component | Claude Haiku NLU | Keyword baseline |
+|---|---|---|
+| Dispute-reason accuracy (4 reasons) | **100% (69/69)** | 88.4% (61/69) |
+| Out-of-scope recall / false-positive rate | 100% / 0% | 100% / 0% |
+| Transaction identification (NLU + search) | 100% (69/69) | — |
+| Injection flag (rules) TPR / FPR | 100% (8/8) / 0% (0/144) | — |
+| Language rules accuracy when decided | 98.8% | — |
+
+Small samples: zero observed unsafe outcomes in 105 + 84 conversations does not establish zero risk; the component
+baseline shows the language model's margin is on the less common reasons, not on fraud.
 Full report: [`eval/results/20260926T175451Z-test-v1/report.md`](eval/results/20260926T175451Z-test-v1/report.md).
 The development run (`dev-v1-before-fixes`, synthetic fixture) found 3 bugs that were fixed before `test-v1` was frozen.
 
