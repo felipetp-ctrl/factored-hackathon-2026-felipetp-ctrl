@@ -1,0 +1,29 @@
+# Fly.io: API (Docker). Secrets: fly secrets set ANTHROPIC_API_KEY=... AGENT_API_KEY=... SESSION_SECRET=...
+app = "latam-bank-disputes-api"
+primary_region = "gru"
+
+[build]
+
+[env]
+  DEMO_DB = "/app/demo_data/dispute_ops.db"
+  DEMO_NOW = "2026-06-17T12:00:00+00:00"
+  FRAUD_ALERT_LOOKBACK_HOURS = "720"
+  RATE_LIMIT_PER_MINUTE = "30"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0   # conversations live in memory: a stopped machine forgets open chats (documented)
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    path = "/health"
+    timeout = "5s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
