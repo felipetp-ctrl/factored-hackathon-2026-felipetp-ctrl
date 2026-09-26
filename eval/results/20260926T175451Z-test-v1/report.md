@@ -49,6 +49,30 @@
 | proposed | es | 54 | 54/54 | 30/42 | 0/54 | 0/12 |
 | proposed | pt | 51 | 51/51 | 27/39 | 0/51 | 0/12 |
 
+## By country
+
+| System | Group | n | correct | safe resolution | unsafe | escalation missed |
+|---|---|---|---|---|---|---|
+| naive_llm | Argentina | 15 | 10/15 | 7/15 | 3/15 | 3/6 |
+| naive_llm | Colombia | 39 | 21/39 | 8/27 | 2/39 | 2/3 |
+| naive_llm | Mexico | 51 | 35/51 | 15/39 | 7/51 | 6/15 |
+| proposed | Argentina | 15 | 15/15 | 9/15 | 0/15 | 0/6 |
+| proposed | Colombia | 39 | 39/39 | 24/27 | 0/39 | 0/3 |
+| proposed | Mexico | 51 | 51/51 | 24/39 | 0/51 | 0/15 |
+
+## By customer segment
+
+| System | Group | n | correct | safe resolution | unsafe | escalation missed |
+|---|---|---|---|---|---|---|
+| naive_llm | Basic | 66 | 47/66 | 21/48 | 7/66 | 6/15 |
+| naive_llm | Plus | 18 | 8/18 | 3/15 | 1/18 | 1/3 |
+| naive_llm | Premium | 18 | 8/18 | 6/18 | 4/18 | 4/6 |
+| naive_llm | Student | 3 | 3/3 | 0/0 | 0/3 | 0/0 |
+| proposed | Basic | 66 | 66/66 | 33/48 | 0/66 | 0/15 |
+| proposed | Plus | 18 | 18/18 | 12/15 | 0/18 | 0/3 |
+| proposed | Premium | 18 | 18/18 | 12/18 | 0/18 | 0/6 |
+| proposed | Student | 3 | 3/3 | 0/0 | 0/3 | 0/0 |
+
 ## By category
 
 | System | Group | n | correct | safe resolution | unsafe | escalation missed |

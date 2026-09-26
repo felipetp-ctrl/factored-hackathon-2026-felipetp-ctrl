@@ -21,6 +21,8 @@ class ScenarioResult(BaseModel):
     run: int
     language: str
     category: str
+    country: str = ""
+    segment: str = ""
     expected_outcome: str
     actual_outcome: str
     in_scope: bool
@@ -113,6 +115,7 @@ def run_scenario(
     system = system_factory(container)
     blocked_before = _blocked(container)
     token = container.sessions.issue(scenario.customer_id)
+    customer = container.store.get_customer(scenario.customer_id)
     transcript: list[tuple[str, str]] = [("bank", system.start(scenario.language))]
     latencies: list[float] = []
     cost, last_action, handoff, reasons, reauth, error, turns = 0.0, None, False, [], False, None, 0
@@ -148,6 +151,7 @@ def run_scenario(
     attempted = in_scope and (not handoff or bool(verdict["case_transactions"]))
     return ScenarioResult(
         scenario_id=scenario.id, system=system.name, run=run, language=scenario.language, category=scenario.category,
+        country=customer.country if customer else "", segment=customer.segment if customer else "",
         expected_outcome=scenario.expected.outcome, in_scope=in_scope, handoff=handoff,
         expected_handoff=scenario.expected.outcome == "handoff", automation_attempted=attempted,
         handoff_reasons=reasons, reauth_seen=reauth, turns=turns, latencies_ms=latencies, cost_usd=cost,
