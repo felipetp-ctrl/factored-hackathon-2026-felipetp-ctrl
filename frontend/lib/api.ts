@@ -70,6 +70,6 @@ export const api = {
   alerts: (agentKey: string) => call<{ transaction_id: string; customer_id: string; merchant_name: string; amount: string; currency: string; fraud_score: string; transaction_date: string }[]>("/agent/alerts", { agentKey }),
   metrics: (agentKey: string) => call<Record<string, any>>("/agent/metrics", { agentKey }),
   pqr: (agentKey: string, complaints: unknown[]) =>
-    call<{ complaint_id: string; action: string; state: string; case_id: string | null; handoff_reasons: string[]; rule_ids: string[] }[]>(
+    call<{ complaint_id: string; action: string; state: string; case_id: string | null; handoff_reasons: string[]; rule_ids: string[]; candidate_transactions: string[] }[]>(
       "/agent/pqr/run", { method: "POST", body: JSON.stringify({ complaints }), agentKey }),
 };

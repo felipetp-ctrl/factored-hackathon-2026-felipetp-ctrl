@@ -185,6 +185,7 @@ def create_app(container: Container) -> FastAPI:
                 "case_id": r.case.case_id if r.case else None,
                 "handoff_reasons": r.handoff.reason_for_handoff if r.handoff else [],
                 "rule_ids": r.policy.rule_ids if r.policy else [],
+                "candidate_transactions": (r.handoff.risk_signals.get("candidate_transactions", []) if r.handoff else []),
             })
         return out
 

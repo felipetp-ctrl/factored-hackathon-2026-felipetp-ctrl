@@ -9,6 +9,9 @@ const SAMPLE_PQR = [
     reason_code: "FRAUD_CNP", classifier_confidence: 0.9 },
   { complaint_id: "PQR-DEMO-3", customer_id: "CUST002", transaction_id: "TXN101", description: "Cargo no reconocido Rappi",
     evidence: { card_in_possession: "yes", recognizes_merchant: "no" }, reason_code: "FRAUD_CNP", classifier_confidence: 0.92 },
+  // Like the real complaints: no transaction id, only product and claimed amount -> the system searches.
+  { complaint_id: "PQR-DEMO-4", customer_id: "CUST001", affected_product_id: "PRD001", claimed_amount: "399.00",
+    description: "Cobro de Netflix que no reconozco", reason_code: "FRAUD_CNP", classifier_confidence: 0.9 },
 ];
 
 const LABELS: Record<string, string> = {
@@ -64,7 +67,8 @@ export function OpsView({ agentKey }: { agentKey: string }) {
             <tbody>{pqr.map((r) => (
               <tr key={r.complaint_id}>
                 <td className="mono">{r.complaint_id}</td><td>{r.action}</td><td className="mono">{r.case_id ?? "—"}</td>
-                <td>{[...r.handoff_reasons, ...r.rule_ids].map((x: string) => <span key={x} className="chip">{x}</span>)}</td>
+                <td>{[...r.handoff_reasons, ...r.rule_ids].map((x: string) => <span key={x} className="chip">{x}</span>)}
+                  {r.candidate_transactions?.length > 0 && <div className="muted">Candidates for the agent: {r.candidate_transactions.join(", ")}</div>}</td>
               </tr>))}
             </tbody>
           </table>

@@ -17,3 +17,5 @@ Every significant decision in the project, with the alternatives considered and 
 | [011](ADR-011-api-roles-and-test-identity.md) | API: roles, test identity and limits | accepted |
 | [012](ADR-012-data-pipeline.md) | Pipeline: SQL contracts in DuckDB, incremental ingestion, recomputed silver | accepted |
 | [013](ADR-013-policy-v2-calibration.md) | Policy v2: single USD 450 threshold calibrated on the data | accepted |
+| [014](ADR-014-suspicious-access.md) | Invalid transaction references: same reply, real reason for the agent | accepted |
+| [015](ADR-015-pqr-matching.md) | Written complaints: match to a transaction or hand off with a shortlist | accepted |
