@@ -34,6 +34,9 @@ class Settings(BaseModel):
     # dispute windows and fraud-alert look-backs are meaningful.
     demo_now: str = "2026-06-17T12:00:00+00:00"
     rate_limit_per_minute: int = 30
+    # Production would alert within 48 h; the demo looks back 30 days because high-risk charges are rare
+    # in the dataset (250 card transactions with score >= 80 in three years).
+    fraud_alert_lookback_hours: int = 48
 
     @classmethod
     def from_env(cls) -> Settings:
@@ -47,6 +50,7 @@ class Settings(BaseModel):
             agent_api_key=env.get("AGENT_API_KEY") or secrets.token_hex(16),
             demo_now=env.get("DEMO_NOW", "2026-06-17T12:00:00+00:00"),
             rate_limit_per_minute=int(env.get("RATE_LIMIT_PER_MINUTE", "30")),
+            fraud_alert_lookback_hours=int(env.get("FRAUD_ALERT_LOOKBACK_HOURS", "48")),
         )
 
 

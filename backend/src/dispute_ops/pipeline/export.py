@@ -23,6 +23,9 @@ def export_demo_store(gold: Path, db_path: Path, as_of: datetime, n_customers: i
         )
         (SELECT customer_id FROM active ORDER BY hash(customer_id) LIMIT {n_customers})
         UNION SELECT DISTINCT customer_id FROM {g('fraud_alert_candidates')}
+        -- keep every customer with a recent high-risk card charge so the proactive channel has real cases
+        UNION SELECT DISTINCT customer_id FROM {g('card_transactions')}
+              WHERE fraud_score >= 80 AND transaction_date BETWEEN {ts} - INTERVAL 30 DAY AND {ts}
     """)
     customers = con.execute(f"""
         SELECT customer_id, country, segment, is_repeat_complainer FROM {g('customer_dim')}

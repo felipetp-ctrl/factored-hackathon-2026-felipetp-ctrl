@@ -17,3 +17,7 @@ services:
         value: "30"
       - key: DEMO_NOW
         value: "2026-06-17T12:00:00+00:00"
+      - key: DEMO_DB
+        value: /app/demo_data/dispute_ops.db
+      - key: FRAUD_ALERT_LOOKBACK_HOURS
+        value: "720"

@@ -167,7 +167,8 @@ def create_app(container: Container) -> FastAPI:
 
     @app.get("/agent/alerts", dependencies=[AgentOnly])
     def alerts() -> list[dict[str, Any]]:
-        return [t.model_dump(mode="json") for t in select_fraud_alerts(c.store, c.clock)]
+        return [t.model_dump(mode="json") for t in select_fraud_alerts(
+            c.store, c.clock, lookback_hours=c.settings.fraud_alert_lookback_hours)]
 
     @app.post("/agent/pqr/run", dependencies=[AgentOnly])
     def pqr_run(body: PqrRun) -> list[dict[str, Any]]:

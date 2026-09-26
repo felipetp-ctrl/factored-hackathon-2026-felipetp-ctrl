@@ -6,6 +6,7 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 COPY src ./src
 COPY tests/fixtures ./tests/fixtures
+COPY demo_data ./demo_data
 RUN uv sync --frozen --no-dev
 RUN useradd --create-home app && chown -R app /app
 USER app
