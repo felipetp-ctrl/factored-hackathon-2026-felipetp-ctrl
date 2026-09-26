@@ -141,7 +141,7 @@ def test_component_report_scores_nlu_and_keyword_baseline_on_the_same_messages()
     oos = _res(scenario_id="oos-es", category="out_of_scope", expected_outcome="abstain",
                transcript=[("bank", "hola"), ("customer", "¿cuál es mi saldo?")],
                nlu_turns=[{"intent": "out_of_scope", "reason_code": None, "language": "es"}])
-    rep = component_report([good, miss, oos])
+    rep = component_report([r.model_copy(update={"system": "proposed"}) for r in (good, miss, oos)])
     assert rep["reason_code_accuracy"]["nlu_claude_haiku"]["value"] == 0.5
     assert rep["reason_code_accuracy"]["keyword_baseline"]["value"] == 0.5
     assert rep["out_of_scope_detection"]["nlu"]["recall"]["value"] == 1.0
