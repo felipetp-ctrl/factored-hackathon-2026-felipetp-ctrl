@@ -47,6 +47,9 @@ def test_gold_views(raw, tmp_path):
     assert gold["fraud_alert_candidates"] == 1  # TX-2, score 91, within 48h
     assert gold["dispute_complaints"] == 2
     assert q(out / "gold/customer_dim.parquet", "SELECT is_repeat_complainer FROM T WHERE customer_id='CLI-B'") == [(True,)]
+    # silver keeps (and reports) the raw 'México'; gold normalises it for the policy thresholds
+    assert q(out / "silver/customers.parquet", "SELECT country FROM T WHERE customer_id='CLI-A'") == [("México",)]
+    assert q(out / "gold/customer_dim.parquet", "SELECT country FROM T WHERE customer_id='CLI-A'") == [("Mexico",)]
 
 
 def test_rerun_without_new_files_is_idempotent(raw, tmp_path):

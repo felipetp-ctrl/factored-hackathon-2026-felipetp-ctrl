@@ -172,7 +172,7 @@ def run_silver(con: duckdb.DuckDBPyConnection, c: Contract, paths: Paths, report
         n = con.execute(f"SELECT count(*) FROM _dedup WHERE {orphan}").fetchone()[0]
         if not n:
             continue
-        if c.columns[col].required:  # the row is unusable without its parent: quarantine it
+        if col in c.essential_fks:  # the row is unusable without its parent: quarantine it
             quarantine_dir.mkdir(parents=True, exist_ok=True)
             con.execute(f"COPY (SELECT * FROM _dedup WHERE {orphan}) TO '{quarantine_dir / f'{c.name}__{col}.parquet'}' (FORMAT parquet)")
             con.execute(f"DELETE FROM _dedup WHERE {orphan}")
@@ -187,6 +187,9 @@ def run_silver(con: duckdb.DuckDBPyConnection, c: Contract, paths: Paths, report
 
 
 # ---------------------------------------------------------------------------------------------- gold
+# Business normalisation lives in gold (silver keeps and reports the raw value): the policy keys its
+# thresholds on the canonical country name.
+COUNTRY_SQL = "CASE c.country WHEN 'México' THEN 'Mexico' ELSE c.country END"
 def run_gold(con: duckdb.DuckDBPyConnection, paths: Paths, as_of: datetime) -> dict[str, int]:
     s = lambda t: f"read_parquet('{paths.silver / (t + '.parquet')}')"  # noqa: E731
     have = {p.stem for p in paths.silver.glob("*.parquet")}
@@ -198,12 +201,12 @@ def run_gold(con: duckdb.DuckDBPyConnection, paths: Paths, as_of: datetime) -> d
             SELECT t.* FROM {s('transactions')} t JOIN {s('products')} p USING (product_id)
             WHERE p.product_type ILIKE '%card%' OR p.product_type ILIKE '%tarjeta%'"""),
         "customer_dim": ({"customers"}, f"""
-            SELECT c.customer_id, c.country, c.segment, c.customer_status, c.detected_accent,
+            SELECT c.customer_id, {COUNTRY_SQL} AS country, c.segment, c.customer_status, c.detected_accent,
                    coalesce(r.is_repeat_complainer, false) AS is_repeat_complainer
             FROM {s('customers')} c
             LEFT JOIN (SELECT customer_id, bool_or(is_repeat_complainer) AS is_repeat_complainer
                        FROM {s('complaints')} GROUP BY 1) r USING (customer_id)""" if "complaints" in have else
-            f"SELECT customer_id, country, segment, customer_status, detected_accent, false AS is_repeat_complainer FROM {s('customers')}"),
+            f"SELECT customer_id, {COUNTRY_SQL} AS country, segment, customer_status, detected_accent, false AS is_repeat_complainer FROM {s('customers')} c"),
         "dispute_complaints": ({"complaints", "customers"}, f"""
             SELECT q.*, c.country, c.segment FROM {s('complaints')} q JOIN {s('customers')} c USING (customer_id)
             WHERE q.category = 'Transactions'"""),

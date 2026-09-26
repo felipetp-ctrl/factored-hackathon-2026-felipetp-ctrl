@@ -26,6 +26,9 @@ class Contract:
     columns: dict[str, Col]
     order_by: str  # newest-wins ordering for duplicates
     fks: dict[str, str] = field(default_factory=dict)  # column -> "table.column"
+    # FKs the dispute use case cannot work without: orphans are quarantined. Every other FK orphan
+    # keeps its row with the dangling reference set to NULL (and is counted).
+    essential_fks: tuple[str, ...] = ()
 
 
 V = Col()
@@ -70,6 +73,7 @@ CONTRACTS: dict[str, Contract] = {c.name: c for c in [
     Contract(
         name="products", source="products.csv", pk=("product_id",), order_by="last_updated",
         fks={"customer_id": "customers.customer_id", "opening_branch_id": "branches.branch_id"},
+        essential_fks=("customer_id",),
         columns={
             "product_id": REQ, "customer_id": REQ, "product_type": REQ, "product_number": REQ,
             "currency": Col(required=True, domain=("MXN", "COP", "ARS", "USD")),
@@ -85,6 +89,7 @@ CONTRACTS: dict[str, Contract] = {c.name: c for c in [
     Contract(
         name="transactions", source="transactions/**/*.csv", pk=("transaction_id",), order_by="process_date",
         fks={"customer_id": "customers.customer_id", "product_id": "products.product_id"},
+        essential_fks=("customer_id", "product_id"),
         columns={
             "transaction_id": REQ, "transaction_date": Col("TIMESTAMP", required=True),
             "process_date": Col("DATE", required=True), "product_id": REQ, "customer_id": REQ,
@@ -102,6 +107,7 @@ CONTRACTS: dict[str, Contract] = {c.name: c for c in [
     Contract(
         name="complaints", source="complaints/**/*.csv", pk=("complaint_id",), order_by="process_date",
         fks={"customer_id": "customers.customer_id", "affected_product_id": "products.product_id"},
+        essential_fks=("customer_id",),
         columns={
             "complaint_id": REQ, "creation_date": Col("TIMESTAMP", required=True), "process_date": Col("DATE", required=True),
             "customer_id": REQ, "case_type": Col(required=True, domain=("Complaint", "Claim", "Request", "Suggestion")),
@@ -120,7 +126,7 @@ CONTRACTS: dict[str, Contract] = {c.name: c for c in [
     ),
     Contract(
         name="call_center_interactions", source="call_center_interactions/**/*.csv", pk=("interaction_id",),
-        order_by="process_date", fks={"customer_id": "customers.customer_id"},
+        order_by="process_date", fks={"customer_id": "customers.customer_id"}, essential_fks=("customer_id",),
         columns={
             "interaction_id": REQ, "interaction_date": Col("TIMESTAMP", required=True),
             "process_date": Col("DATE", required=True), "customer_id": REQ, "agent_id": V,
