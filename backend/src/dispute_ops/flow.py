@@ -110,6 +110,8 @@ class DisputeFlow:
         self.attempts: dict[str, int] = {}
         self.last_policy: PolicyDecision | None = None
         self._final: FlowResult | None = None
+        self.rejected_references: list[str] = []
+        self.foreign_references = 0
 
     # ---- public API -------------------------------------------------------------------
     def handle(self, turn: Turn) -> FlowResult:
@@ -182,8 +184,14 @@ class DisputeFlow:
                 try:
                     self.txn = self._retry(lambda: self.tools.get_transaction(turn.token, turn.transaction_id))
                 except (AccessDenied, NotFound) as e:
-                    # Same answer for "not yours" and "does not exist": no existence leak.
+                    # The customer gets the same answer for "not yours" and "does not exist" (no existence
+                    # leak); the agent learns the real reason. Two invalid references end the automation.
                     self._audit("transaction_lookup_rejected", error=type(e).__name__, transaction_id=turn.transaction_id)
+                    self.rejected_references.append(turn.transaction_id)
+                    self.foreign_references += isinstance(e, AccessDenied)
+                    if len(self.rejected_references) >= 2:
+                        reason = "suspicious_access" if self.foreign_references else "invalid_transaction_references"
+                        return self._handoff([reason], open_questions=["transaction"])
                     return self._clarify(["transaction"], "transaction", State.IDENTIFY_TXN)
             elif turn.merchant or turn.amount is not None:
                 candidates = self._retry(
@@ -310,6 +318,8 @@ class DisputeFlow:
             summary=self.summary, transaction=self.txn, reason_code=self.reason_code, actions=self.actions,
             policy=policy or self.last_policy, open_questions=open_questions or [],
         )
+        if self.rejected_references:
+            pkg.risk_signals["rejected_references"] = list(self.rejected_references)
         self._audit("handoff", **pkg.model_dump(mode="json"))
         return self._finish(FlowResult(state=State.HANDOFF, action="handoff", handoff=pkg))
 

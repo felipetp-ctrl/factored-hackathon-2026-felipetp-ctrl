@@ -164,3 +164,28 @@ def test_old_transaction_is_found_so_ineligibility_can_be_explained(flow, token)
 def test_regulatory_threat_hands_off(flow, token):
     r = flow.handle(Turn(token=token, transaction_id="TXN001", reason_code=ReasonCode.FRAUD_CNP, regulatory_threat=True))
     assert "regulatory_or_legal_threat" in r.handoff.reason_for_handoff
+
+
+def test_repeated_references_to_another_customers_transaction_escalate_as_suspicious(flow, sessions, store):
+    attacker = sessions.issue("CUST002")
+    r1 = flow.handle(Turn(token=attacker, transaction_id="TXN001", reason_code=ReasonCode.FRAUD_CNP))
+    assert r1.action == "ask"
+    r2 = flow.handle(Turn(token=attacker, transaction_id="TXN001"))
+    assert r2.action == "handoff" and r2.handoff.reason_for_handoff == ["suspicious_access"]
+    assert r2.handoff.risk_signals["rejected_references"] == ["TXN001", "TXN001"]
+    assert r2.handoff.verified_facts == []  # nothing about the victim's transaction is shared
+
+
+def test_customer_sees_the_same_reply_for_foreign_and_nonexistent_ids(flow, sessions):
+    token = sessions.issue("CUST002")
+    foreign = flow.handle(Turn(token=token, transaction_id="TXN001", reason_code=ReasonCode.FRAUD_CNP))
+    other = DisputeFlow(tools=flow.tools, store=flow.store, policy=flow.policy, clock=flow.clock, trace_id="t2",
+                        sleep=lambda s: None)
+    missing = other.handle(Turn(token=token, transaction_id="TXN999", reason_code=ReasonCode.FRAUD_CNP))
+    assert (foreign.action, foreign.ask_for, foreign.state) == (missing.action, missing.ask_for, missing.state)
+
+
+def test_repeated_nonexistent_ids_are_not_labelled_suspicious(flow, token):
+    flow.handle(Turn(token=token, transaction_id="TXN998", reason_code=ReasonCode.FRAUD_CNP))
+    r = flow.handle(Turn(token=token, transaction_id="TXN999"))
+    assert r.handoff.reason_for_handoff == ["invalid_transaction_references"]

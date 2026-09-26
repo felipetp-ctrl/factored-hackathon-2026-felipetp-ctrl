@@ -16,6 +16,8 @@ const REASON_TEXT: Record<string, string> = {
   tool_failure: "Bank system unavailable",
   verification_failed: "Action could not be confirmed",
   nlu_unavailable: "Language service unavailable",
+  suspicious_access: "Asked about another customer's transaction",
+  invalid_transaction_references: "Gave transaction references that do not exist",
 };
 
 export function AgentView({ agentKey }: { agentKey: string }) {
