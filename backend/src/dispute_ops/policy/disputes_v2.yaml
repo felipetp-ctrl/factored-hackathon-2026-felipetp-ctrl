@@ -1,0 +1,29 @@
+# SYNTHETIC dispute policy authored by the team for the hackathon. v2 = thresholds calibrated on organizer data.
+# Not a real regulatory or card-network policy. Thresholds are placeholders
+# to be calibrated against the EDA (claimed_amount / resolution_days distributions).
+version: disputes_v2
+synthetic: true
+dispute_window_days:
+  FRAUD_CNP: 120
+  FRAUD_CP: 120
+  DUPLICATE: 120
+  INCORRECT_AMOUNT: 60
+  NOT_RECEIVED: 120
+  CANCELLED_RECURRING: 60
+eligible_txn_status: [Approved, Pending]
+required_evidence:
+  FRAUD_CNP: [card_in_possession, recognizes_merchant]
+  FRAUD_CP: [card_in_possession]
+  DUPLICATE: [duplicate_transaction_id]
+  INCORRECT_AMOUNT: [expected_amount]
+  NOT_RECEIVED: [expected_delivery_date, contacted_merchant]
+  CANCELLED_RECURRING: [cancellation_date]
+handoff:
+  # Calibrated 2026-09-26 on gold card purchases (1.08M rows): amount_usd ~ U(0, 500) in every country,
+  # p90 = 450. One threshold for all countries: v1's per-country values (MX 500 / CO 400 / AR 300) would
+  # escalate 0% / 20% / 40% of disputes with no risk difference in the data (ADR-013).
+  amount_usd_threshold: {}
+  amount_usd_threshold_default: 450
+  # Data: max 2 transaction complaints per customer in any 30-day window; 3 keeps the rule as a guard.
+  max_disputes_30d: 3
+  min_classifier_confidence: 0.6

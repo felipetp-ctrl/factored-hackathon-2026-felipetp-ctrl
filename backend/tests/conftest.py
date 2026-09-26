@@ -32,4 +32,4 @@ def failures() -> FailureInjector:
 
 @pytest.fixture
 def tools(store, sessions, clock, failures) -> BankingTools:
-    return BankingTools(store, sessions, clock, policy_version="disputes_v1", failures=failures)
+    return BankingTools(store, sessions, clock, policy_version="disputes_v2", failures=failures)

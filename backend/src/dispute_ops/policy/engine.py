@@ -35,8 +35,8 @@ class PolicyEngine:
         self.version: str = rules["version"]
 
     @classmethod
-    def load_default(cls) -> PolicyEngine:
-        text = resources.files("dispute_ops.policy").joinpath("disputes_v1.yaml").read_text()
+    def load_default(cls, version: str = "disputes_v2") -> PolicyEngine:
+        text = resources.files("dispute_ops.policy").joinpath(f"{version}.yaml").read_text()
         return cls(yaml.safe_load(text))
 
     def required_evidence(self, reason_code: ReasonCode) -> list[str]:

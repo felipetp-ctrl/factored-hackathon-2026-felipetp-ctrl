@@ -1,0 +1,3 @@
+date,source_currency,target_currency,exchange_rate,buy_rate,sell_rate,source
+2026-06-16,COP,USD,0.00025,0.000249,0.000251,Reuters
+2026-06-16,MXN,USD,0.055,0.0549,0.0551,Reuters

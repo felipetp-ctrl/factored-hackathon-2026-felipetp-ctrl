@@ -16,3 +16,4 @@ Cada decisão relevante do projeto é registrada aqui, com alternativas e trade-
 | [010](ADR-010-llm-interprets-templates-speak.md) | O LLM interpreta; templates falam | aceito |
 | [011](ADR-011-api-roles-and-test-identity.md) | API: papéis, identidade de teste e limites | aceito |
 | [012](ADR-012-data-pipeline.md) | Pipeline: contratos em SQL/DuckDB, incremental, silver recomputada | aceito |
+| [013](ADR-013-policy-v2-calibration.md) | Política v2: limite único US$ 450 calibrado nos dados | aceito |

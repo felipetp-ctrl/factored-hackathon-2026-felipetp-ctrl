@@ -36,7 +36,7 @@ def test_first_run_types_dedups_checks_and_quarantines(raw, tmp_path):
     assert tx["rejected_lines"] >= 1
     assert tx["cast_failures"] == {"fraud_score": 1}
     assert tx["orphans_quarantined"] == {"customer_id": 1}
-    assert tx["silver_rows"] == 3
+    assert tx["silver_rows"] == 4
     assert m["complaints"]["orphans_nulled"] == {"affected_product_id": 1}
     assert (out / "silver/_quarantine/transactions__customer_id.parquet").exists()
 
@@ -56,7 +56,7 @@ def test_rerun_without_new_files_is_idempotent(raw, tmp_path):
     out = tmp_path / "out"
     run_pipeline(raw, out, AS_OF)
     second = run_pipeline(raw, out, AS_OF)["tables"]["transactions"]
-    assert second["new_files"] == 0 and second["silver_rows"] == 3
+    assert second["new_files"] == 0 and second["silver_rows"] == 4
     assert len(list((out / "bronze/transactions").glob("*.parquet"))) == 1
 
 
@@ -74,7 +74,7 @@ def test_late_arrival_and_corrected_redelivery_are_applied(raw, tmp_path):
     )
     m = run_pipeline(raw, out, AS_OF)["tables"]["transactions"]
     assert m["new_files"] == 1 and m["unexpected_columns"] == ["channel_detail"]
-    assert m["silver_rows"] == 4
+    assert m["silver_rows"] == 5
     assert q(out / "silver/transactions.parquet", "SELECT transaction_status FROM T WHERE transaction_id='TX-1'") == [("Reversed",)]
 
 
@@ -99,7 +99,7 @@ def test_export_demo_store_feeds_the_service(raw, tmp_path):
     out = tmp_path / "out"
     run_pipeline(raw, out, AS_OF)
     counts = export_demo_store(out / "gold", tmp_path / "demo.db", AS_OF, n_customers=10)
-    assert counts == {"customers": 2, "products": 2, "transactions": 3}
+    assert counts == {"customers": 2, "products": 2, "transactions": 4}
     store = Store(tmp_path / "demo.db")
     t = store.get_transaction("TX-2")
     assert t.amount_usd == 822 and str(t.fraud_score) == "91.00"
@@ -117,7 +117,7 @@ def test_container_runs_on_exported_gold_store_without_touching_it(raw, tmp_path
     before = (tmp_path / "demo.db").read_bytes()
     c = Container.build(Settings(session_secret="s", demo_db=str(tmp_path / "demo.db")), nlu=ScriptedNlu())
     token = c.sessions.issue("CLI-A")
-    assert [t.transaction_id for t in c.tools.search_transactions(token)] == ["TX-2", "TX-1"]
+    assert [t.transaction_id for t in c.tools.search_transactions(token)] == ["TX-2", "TX-7", "TX-1"]
     c.tools.block_card(token, "PRD-A1", idempotency_key="k")
     assert (tmp_path / "demo.db").read_bytes() == before
 
@@ -136,3 +136,13 @@ def test_gold_scenario_generation_labels_with_policy(raw, tmp_path):
     assert by_txn.get("TX-2") == "handoff"       # 822 USD > MX threshold
     save(scenarios, tmp_path / "s.json", {"x": 1})
     assert load(tmp_path / "s.json") == scenarios
+
+
+def test_gold_fills_amount_usd_from_currency_or_daily_fx(raw, tmp_path):
+    out = tmp_path / "out"
+    run_pipeline(raw, out, AS_OF)
+    rows = dict((r[0], (r[1], r[2])) for r in q(out / "gold/card_transactions.parquet",
+                "SELECT transaction_id, amount_usd, amount_usd_source FROM T"))
+    assert rows["TX-1"] == (68.5, "reported")
+    assert rows["TX-7"] == (640.0, "identity_usd")
+    assert rows["TX-3"][0] == pytest.approx(22.5) and rows["TX-3"][1] == "fx_daily"

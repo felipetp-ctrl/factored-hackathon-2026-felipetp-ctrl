@@ -197,8 +197,15 @@ def run_gold(con: duckdb.DuckDBPyConnection, paths: Paths, as_of: datetime) -> d
     as_of_sql = f"TIMESTAMP '{as_of.replace(tzinfo=None).isoformat(sep=' ')}'"
     queries: dict[str, tuple[set[str], str]] = {
         "card_products": ({"products"}, f"SELECT * FROM {s('products')} WHERE product_type ILIKE '%card%' OR product_type ILIKE '%tarjeta%'"),
-        "card_transactions": ({"products", "transactions"}, f"""
-            SELECT t.* FROM {s('transactions')} t JOIN {s('products')} p USING (product_id)
+        "card_transactions": ({"products", "transactions", "daily_exchange_rates"}, f"""
+            SELECT t.* REPLACE (
+                     coalesce(t.amount_usd, CASE WHEN t.currency = 'USD' THEN t.amount END, t.amount * fx.exchange_rate) AS amount_usd),
+                   CASE WHEN t.amount_usd IS NOT NULL THEN 'reported'
+                        WHEN t.currency = 'USD' THEN 'identity_usd'
+                        WHEN fx.exchange_rate IS NOT NULL THEN 'fx_daily' ELSE 'missing' END AS amount_usd_source
+            FROM {s('transactions')} t JOIN {s('products')} p USING (product_id)
+            LEFT JOIN {s('daily_exchange_rates')} fx
+              ON fx.date = CAST(t.transaction_date AS DATE) AND fx.source_currency = t.currency AND fx.target_currency = 'USD'
             WHERE p.product_type ILIKE '%card%' OR p.product_type ILIKE '%tarjeta%'"""),
         "customer_dim": ({"customers"}, f"""
             SELECT c.customer_id, {COUNTRY_SQL} AS country, c.segment, c.customer_status, c.detected_accent,

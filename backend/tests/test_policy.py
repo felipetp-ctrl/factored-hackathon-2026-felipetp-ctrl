@@ -18,7 +18,19 @@ def ctx(store, txn_id, reason=ReasonCode.FRAUD_CNP, **kw):
 
 
 def test_version_is_exposed(policy):
-    assert policy.version == "disputes_v1"
+    assert policy.version == "disputes_v2"
+
+
+def test_v1_is_kept_for_reproducibility():
+    assert PolicyEngine.load_default("disputes_v1").version == "disputes_v1"
+
+
+@pytest.mark.parametrize("country", ["Mexico", "Colombia", "Argentina"])
+def test_v2_threshold_is_the_same_in_every_country(policy, store, country):
+    txn = store.get_transaction("TXN001").model_copy(update={"amount_usd": 451})
+    cust = store.get_customer("CUST001").model_copy(update={"country": country})
+    d = policy.evaluate(PolicyContext(transaction=txn, customer=cust, reason_code=ReasonCode.FRAUD_CNP, now=NOW))
+    assert d.handoff_reasons == ["amount_above_threshold"] and d.inputs["amount_usd_threshold"] == 450
 
 
 def test_eligible_reports_missing_evidence(policy, store):

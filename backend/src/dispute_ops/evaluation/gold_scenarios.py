@@ -119,7 +119,7 @@ if __name__ == "__main__":
     scenarios = generate(Store(a.db), as_of, per_category=a.per_category, seed=a.seed)
     save(scenarios, Path(a.out), {"source_db": a.db, "as_of": a.as_of, "seed": a.seed, "per_category": a.per_category,
                                   "generated_at": datetime.now().isoformat(timespec="seconds"),
-                                  "labels": "PolicyEngine disputes_v1 on real transactions (deterministic)"})
+                                  "labels": f"PolicyEngine {PolicyEngine.load_default().version} on real transactions (deterministic)"})
     from collections import Counter
 
     print(len(scenarios), "scenarios", Counter(s.category for s in scenarios), "->", a.out)
