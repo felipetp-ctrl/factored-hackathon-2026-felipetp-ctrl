@@ -49,7 +49,13 @@ make web                        # http://localhost:3000  (in another terminal)
 Open the web app, type the agent key in the top bar, pick a test customer and start a conversation. The right
 pane shows what the bank understood and decided at every step.
 
-Docker: `docker compose up --build` (API only; build not yet verified on CI).
+Docker: `docker compose up --build` (API on :8000, web on :3000).
+
+Real data: `make data` downloads nothing by itself — sync the organizer bucket to `data/raw/` first (read-only
+credentials from the organizers, never committed), then it builds bronze/silver/gold in ~20 s, writes
+`docs/data_quality_report.md` and a gold sample for the demo (`DEMO_DB=data/demo/dispute_ops.db make api`).
+
+Deploy: `render.yaml` (API, Docker) + Vercel for `frontend/` with `NEXT_PUBLIC_API_URL` pointing at the API.
 
 ## Evaluate it
 

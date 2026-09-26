@@ -6,3 +6,15 @@ services:
     environment:
       DB_PATH: /tmp/dispute_ops.db
       DEMO_NOW: "2026-06-17T12:00:00+00:00"
+      # Uncomment after `make data` to serve the gold sample of the organizer dataset instead of the fixture:
+      # DEMO_DB: /data/demo/dispute_ops.db
+    # volumes:
+    #   - ./data/demo:/data/demo:ro
+  web:
+    image: node:22-alpine
+    working_dir: /app
+    command: sh -c "corepack enable && pnpm install --frozen-lockfile && pnpm build && pnpm start"
+    volumes: ["./frontend:/app"]
+    ports: ["3000:3000"]
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
