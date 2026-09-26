@@ -114,7 +114,7 @@ Status: ✅ met · 🟡 partial (gap stated) · ⬜ not yet.
 | Item | Status |
 |---|---|
 | Public GitHub repository `factored-hackathon-2026-<team>` | ✅ public |
-| Link to the deployed tool | 🟡 API live on Render; web app pending (Vercel) |
+| Link to the deployed tool | ✅ web https://latam-bank-disputes.vercel.app · API https://latam-bank-dispute-ops-api.onrender.com |
 | 4–6 slides | ⬜ |
 | Video pitch (≤ 3 min) | ⬜ |
 | Email to hackathon.admin@factored.ai | ⬜ |

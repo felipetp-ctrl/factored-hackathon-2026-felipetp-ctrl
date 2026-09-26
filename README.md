@@ -24,7 +24,8 @@ chat / PQR / fraud alert
 
 - API: **https://latam-bank-dispute-ops-api.onrender.com** (OpenAPI docs at `/docs`; free plan — the first request after
   idle time can take about a minute while the service wakes up)
-- Web app: deployment in progress
+- Web app: **https://latam-bank-disputes.vercel.app** — pick a test customer, start a conversation; type the agent key in the
+  top bar to see the bank-side decision inspector, the agent console and operations
 - The agent key for the bank-side views is shared with the judges on request.
 
 ## What it does
