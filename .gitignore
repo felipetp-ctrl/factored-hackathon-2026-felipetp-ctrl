@@ -3,7 +3,7 @@
 __pycache__/
 *.db
 .env
-data/raw/
+data/
 mlruns/
 node_modules/
 
