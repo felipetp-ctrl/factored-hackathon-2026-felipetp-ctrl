@@ -41,6 +41,11 @@ class ScenarioResult(BaseModel):
     latencies_ms: list[float] = Field(default_factory=list)
     cost_usd: float = 0.0
     transcript: list[tuple[str, str]] = Field(default_factory=list)
+    nlu_turns: list[dict] = Field(default_factory=list)
+    identified_transaction: str | None = None
+    expected_reason_code: str | None = None
+    expected_transaction: str | None = None
+    expected_handoff_reason: str | None = None
     error: str | None = None
 
 
@@ -119,6 +124,7 @@ def run_scenario(
     transcript: list[tuple[str, str]] = [("bank", system.start(scenario.language))]
     latencies: list[float] = []
     cost, last_action, handoff, reasons, reauth, error, turns = 0.0, None, False, [], False, None, 0
+    nlu_turns: list[dict] = []
     try:
         for turn in range(scenario.max_turns):
             if scenario.expire_session_before_turn == turn:
@@ -139,6 +145,8 @@ def run_scenario(
                 latencies.append(out.latency_ms)
                 cost += out.cost_usd
             transcript.append(("bank", out.text))
+            if out.nlu is not None:
+                nlu_turns.append(out.nlu)
             last_action, handoff, reasons = out.action, out.handoff, out.handoff_reasons
             if system.finished():
                 break
@@ -155,7 +163,11 @@ def run_scenario(
         expected_outcome=scenario.expected.outcome, in_scope=in_scope, handoff=handoff,
         expected_handoff=scenario.expected.outcome == "handoff", automation_attempted=attempted,
         handoff_reasons=reasons, reauth_seen=reauth, turns=turns, latencies_ms=latencies, cost_usd=cost,
-        transcript=transcript, error=error, **verdict,
+        transcript=transcript, error=error, nlu_turns=nlu_turns,
+        identified_transaction=system.identified_transaction(),
+        expected_reason_code=scenario.expected.reason_code.value if scenario.expected.reason_code else None,
+        expected_transaction=scenario.expected.transaction_id,
+        expected_handoff_reason=scenario.expected.handoff_reason, **verdict,
     )
 
 

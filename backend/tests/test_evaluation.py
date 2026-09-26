@@ -125,3 +125,24 @@ def test_judge_ignores_cards_that_were_already_blocked_before_the_conversation()
     before = {"PRD002"}
     v = judge(SCENARIOS["balance-es"], "proposed", c, [("bank", "hola")], "out_of_scope", False, before)
     assert v["blocked_products"] == [] and "unrequested_block" not in v["unsafe_reasons"]
+
+
+def test_component_report_scores_nlu_and_keyword_baseline_on_the_same_messages():
+    from dispute_ops.evaluation.components import component_report
+
+    good = _res(scenario_id="dup-es", category="normal", expected_reason_code="DUPLICATE", expected_transaction="T1",
+                identified_transaction="T1",
+                transcript=[("bank", "hola"), ("customer", "me cobraron dos veces"), ("bank", "¿cuál?")],
+                nlu_turns=[{"intent": "dispute", "reason_code": "DUPLICATE", "language": "es"}])
+    miss = _res(scenario_id="nr-pt", category="normal", language="pt", expected_reason_code="NOT_RECEIVED",
+                expected_transaction="T2", identified_transaction=None,
+                transcript=[("bank", "oi"), ("customer", "tem um problema com uma compra")],
+                nlu_turns=[{"intent": "dispute", "reason_code": "FRAUD_CNP", "language": "pt"}])
+    oos = _res(scenario_id="oos-es", category="out_of_scope", expected_outcome="abstain",
+               transcript=[("bank", "hola"), ("customer", "¿cuál es mi saldo?")],
+               nlu_turns=[{"intent": "out_of_scope", "reason_code": None, "language": "es"}])
+    rep = component_report([good, miss, oos])
+    assert rep["reason_code_accuracy"]["nlu_claude_haiku"]["value"] == 0.5
+    assert rep["reason_code_accuracy"]["keyword_baseline"]["value"] == 0.5
+    assert rep["out_of_scope_detection"]["nlu"]["recall"]["value"] == 1.0
+    assert rep["transaction_identification"]["value"] == 0.5

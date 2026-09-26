@@ -32,6 +32,7 @@ class TurnOut:
     auth_failed: bool = False
     handoff: bool = False
     handoff_reasons: list[str] = field(default_factory=list)
+    nlu: dict[str, Any] | None = None  # structured interpretation of this turn (proposed system only)
 
 
 class System(Protocol):
@@ -40,6 +41,7 @@ class System(Protocol):
     def start(self, language: str) -> str: ...
     def send(self, text: str, token: str) -> TurnOut: ...
     def finished(self) -> bool: ...
+    def identified_transaction(self) -> str | None: ...
 
 
 class ProposedSystem:
@@ -61,10 +63,15 @@ class ProposedSystem:
             text=r.text, action=r.action, latency_ms=r.latency_ms, cost_usd=r.usage.cost_usd if r.usage else 0.0,
             auth_failed=r.action == "reauth", handoff=r.action == "handoff",
             handoff_reasons=r.handoff.reason_for_handoff if r.handoff else [],
+            nlu=r.nlu.model_dump(mode="json") if r.nlu else None,
         )
 
     def finished(self) -> bool:
         return self.done
+
+    def identified_transaction(self) -> str | None:
+        txn = self.c.conversations.get(self.cid).flow.txn
+        return txn.transaction_id if txn else None
 
 
 BASELINE_MODEL = "claude-haiku-4-5"
@@ -173,3 +180,6 @@ class NaiveLlmSystem:
 
     def finished(self) -> bool:
         return self.transferred
+
+    def identified_transaction(self) -> str | None:
+        return None  # the naive agent exposes no structured state

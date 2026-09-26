@@ -12,6 +12,7 @@ from dotenv import find_dotenv, load_dotenv
 
 from dispute_ops.container import Settings
 from dispute_ops.evaluation.gold_scenarios import load as load_scenarios
+from dispute_ops.evaluation.components import component_markdown, component_report
 from dispute_ops.evaluation.metrics import breakdown, summarize
 from dispute_ops.evaluation.runner import ScenarioResult, run_scenario
 from dispute_ops.evaluation.scenarios import SCENARIO_SET_VERSION, build_scenarios
@@ -49,6 +50,8 @@ def render_markdown(meta: dict, results: list[ScenarioResult]) -> str:
             for group, m in breakdown([r for r in results if r.system == s], key).items():
                 lines.append(f"| {s} | {group} | {m['n_cases']} | {m['correct']} | {m['safe_automated_resolution']} | "
                              f"{m['unsafe']} | {m['escalation_missed']} |")
+    if any(r.system == "proposed" for r in results):
+        lines += ["", component_markdown(component_report(results))]
     lines += ["", "## Failures (incorrect or unsafe)", "", "| System | Scenario | Run | Expected | Actual | Unsafe | Error |",
               "|---|---|---|---|---|---|---|"]
     for r in sorted(results, key=lambda x: (x.system, x.scenario_id, x.run)):
