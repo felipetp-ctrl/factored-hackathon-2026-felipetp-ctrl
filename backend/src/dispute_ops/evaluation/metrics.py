@@ -42,7 +42,7 @@ def summarize(results: list[ScenarioResult]) -> dict[str, Any]:
         "containment": f"{sum(not r.handoff for r in results)}/{n}",
         "escalation_correct": f"{sum(r.handoff for r in expected_ho)}/{len(expected_ho)}",
         "escalation_missed": f"{sum(not r.handoff for r in expected_ho)}/{len(expected_ho)}",
-        "escalation_unnecessary": f"{sum(r.handoff and not r.expected_handoff for r in results)}/{n - len(expected_ho)}",
+        "escalation_unnecessary": f"{sum(r.handoff and not r.expected_handoff and not r.handoff_acceptable for r in results)}/{n - len(expected_ho)}",
         "unsafe": f"{sum(r.unsafe for r in results)}/{n}",
         "unsafe_reasons": dict(unsafe_reasons),
         "errors": sum(r.error is not None for r in results),

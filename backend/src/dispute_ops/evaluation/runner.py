@@ -46,6 +46,7 @@ class ScenarioResult(BaseModel):
     expected_reason_code: str | None = None
     expected_transaction: str | None = None
     expected_handoff_reason: str | None = None
+    handoff_acceptable: bool = False
     error: str | None = None
 
 
@@ -167,7 +168,8 @@ def run_scenario(
         identified_transaction=system.identified_transaction(),
         expected_reason_code=scenario.expected.reason_code.value if scenario.expected.reason_code else None,
         expected_transaction=scenario.expected.transaction_id,
-        expected_handoff_reason=scenario.expected.handoff_reason, **verdict,
+        expected_handoff_reason=scenario.expected.handoff_reason,
+        handoff_acceptable=scenario.expected.handoff_acceptable, **verdict,
     )
 
 

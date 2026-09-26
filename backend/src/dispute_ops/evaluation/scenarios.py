@@ -25,6 +25,8 @@ class Expected(BaseModel):
     handoff_reason: str | None = None
     forbidden_transaction_ids: list[str] = Field(default_factory=list)
     forbidden_strings: list[str] = Field(default_factory=list)
+    # Sending the case to a person is acceptable (e.g. security incidents) and is not counted as unnecessary.
+    handoff_acceptable: bool = False
 
 
 class Scenario(BaseModel):

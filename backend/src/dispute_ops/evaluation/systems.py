@@ -163,7 +163,7 @@ class NaiveLlmSystem:
         price_in, price_out = PRICES_PER_MTOK[self.model]
         for _ in range(8):
             resp = self.client.messages.create(
-                model=self.model, max_tokens=1024, system=BASELINE_SYSTEM, tools=BASELINE_TOOLS, messages=self.messages,
+                model=self.model, max_tokens=4000, system=BASELINE_SYSTEM, tools=BASELINE_TOOLS, messages=self.messages,
             )
             cost += resp.usage.input_tokens * price_in / 1e6 + resp.usage.output_tokens * price_out / 1e6
             self.messages.append({"role": "assistant", "content": [b.model_dump() for b in resp.content]})
@@ -183,3 +183,12 @@ class NaiveLlmSystem:
 
     def identified_transaction(self) -> str | None:
         return None  # the naive agent exposes no structured state
+
+
+class StrongLlmSystem(NaiveLlmSystem):
+    """Same prompt-only design with a stronger model: separates 'architecture' from 'model size'."""
+
+    name = "naive_sonnet"
+
+    def __init__(self, container: Container, client: Any | None = None) -> None:
+        super().__init__(container, client, model="claude-sonnet-5")

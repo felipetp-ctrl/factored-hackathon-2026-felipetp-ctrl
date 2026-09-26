@@ -17,10 +17,12 @@ from dispute_ops.evaluation.metrics import breakdown, summarize
 from dispute_ops.evaluation.runner import ScenarioResult, run_scenario
 from dispute_ops.evaluation.scenarios import SCENARIO_SET_VERSION, build_scenarios
 from dispute_ops.evaluation.simulator import SIMULATOR_MODEL, ClaudeSimulator
-from dispute_ops.evaluation.systems import BASELINE_MODEL, BASELINE_PROMPT_VERSION, NaiveLlmSystem, ProposedSystem
+from dispute_ops.evaluation.systems import (
+    BASELINE_MODEL, BASELINE_PROMPT_VERSION, NaiveLlmSystem, ProposedSystem, StrongLlmSystem,
+)
 from dispute_ops.language.nlu import NLU_MODEL, PROMPT_VERSION
 
-SYSTEMS = {"proposed": ProposedSystem, "naive_llm": NaiveLlmSystem}
+SYSTEMS = {"proposed": ProposedSystem, "naive_llm": NaiveLlmSystem, "naive_sonnet": StrongLlmSystem}
 
 
 def render_markdown(meta: dict, results: list[ScenarioResult]) -> str:
@@ -93,7 +95,8 @@ def main() -> None:
         "cost_assumptions": "Anthropic list prices (USD/MTok): haiku-4-5 1/5, sonnet-5 2/10; system cost only",
     }
     (out / "results.jsonl").write_text("\n".join(r.model_dump_json() for r in results) + "\n")
-    summary = {"meta": meta, "by_system": {s: summarize([r for r in results if r.system == s]) for s in args.systems}}
+    names = sorted({r.system for r in results})
+    summary = {"meta": meta, "by_system": {s: summarize([r for r in results if r.system == s]) for s in names}}
     (out / "summary.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False))
     (out / "report.md").write_text(render_markdown(meta, results))
     print(render_markdown(meta, results))
