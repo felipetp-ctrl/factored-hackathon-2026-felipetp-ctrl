@@ -1,4 +1,4 @@
-.PHONY: install test lint api eval
+.PHONY: install test lint api eval web
 install:
 	cd backend && uv sync
 test:
@@ -9,3 +9,5 @@ api:
 	cd backend && uv run uvicorn dispute_ops.main:app --reload --port 8000
 eval:
 	cd backend && uv run python -m dispute_ops.evaluation $(ARGS)
+web:
+	cd frontend && pnpm install && pnpm dev

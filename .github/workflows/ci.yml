@@ -14,3 +14,17 @@ jobs:
       - run: uv sync --frozen
       - run: uvx ruff check --select F,E9 src tests
       - run: uv run pytest -q   # offline: live-LLM tests are skipped without RUN_LIVE_LLM
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm, cache-dependency-path: frontend/pnpm-lock.yaml }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm build
