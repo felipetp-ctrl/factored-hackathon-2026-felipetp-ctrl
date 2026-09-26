@@ -10,6 +10,8 @@ from pathlib import Path
 
 from dotenv import find_dotenv, load_dotenv
 
+from dispute_ops.container import Settings
+from dispute_ops.evaluation.gold_scenarios import load as load_scenarios
 from dispute_ops.evaluation.metrics import breakdown, summarize
 from dispute_ops.evaluation.runner import ScenarioResult, run_scenario
 from dispute_ops.evaluation.scenarios import SCENARIO_SET_VERSION, build_scenarios
@@ -27,7 +29,7 @@ def render_markdown(meta: dict, results: list[ScenarioResult]) -> str:
     lines = [
         "# Evaluation report",
         "",
-        "> **Offline simulation** on the team-generated synthetic seed fixture (not organizer data, not production).",
+        f"> **Offline simulation** on the {meta.get('data', 'synthetic seed fixture')} — not production.",
         "> Customers are simulated by an LLM; expected outcomes are derived deterministically from the policy.",
         "",
         "| Item | Value |", "|---|---|",
@@ -63,19 +65,24 @@ def main() -> None:
     p.add_argument("--only", default=None, help="substring filter on scenario id")
     p.add_argument("--workers", type=int, default=6)
     p.add_argument("--out", default=str(Path(__file__).resolve().parents[4] / "eval" / "results"))
+    p.add_argument("--scenarios", default=None, help="frozen scenario JSON (default: built-in dev set on the seed fixture)")
+    p.add_argument("--demo-db", default=None, help="gold demo SQLite the scenarios refer to")
     args = p.parse_args()
 
-    scenarios = [s for s in build_scenarios() if not args.only or args.only in s.id]
+    base = load_scenarios(Path(args.scenarios)) if args.scenarios else build_scenarios()
+    scenarios = [s for s in base if not args.only or args.only in s.id]
+    settings = Settings(session_secret="eval-secret", agent_api_key="eval", demo_db=args.demo_db or "")
     simulator = ClaudeSimulator()
     jobs = [(s, name, run) for run in range(args.repeats) for name in args.systems for s in scenarios]
     with ThreadPoolExecutor(max_workers=args.workers) as pool:
-        results = list(pool.map(lambda j: run_scenario(j[0], SYSTEMS[j[1]], simulator, run=j[2]), jobs))
+        results = list(pool.map(lambda j: run_scenario(j[0], SYSTEMS[j[1]], simulator, run=j[2], settings=settings), jobs))
 
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     out = Path(args.out) / stamp
     out.mkdir(parents=True, exist_ok=True)
     meta = {
-        "timestamp_utc": stamp, "scenario_set": SCENARIO_SET_VERSION, "scenarios": len(scenarios),
+        "timestamp_utc": stamp, "scenario_set": Path(args.scenarios).stem if args.scenarios else SCENARIO_SET_VERSION,
+        "scenarios": len(scenarios), "data": "gold demo store (organizer data)" if args.demo_db else "synthetic seed fixture",
         "repeats": args.repeats, "systems": ", ".join(args.systems),
         "proposed_nlu": f"{NLU_MODEL} / {PROMPT_VERSION}", "baseline": f"{BASELINE_MODEL} / {BASELINE_PROMPT_VERSION}",
         "customer_simulator": SIMULATOR_MODEL, "simulator_cost_usd": round(simulator.cost_usd, 4),

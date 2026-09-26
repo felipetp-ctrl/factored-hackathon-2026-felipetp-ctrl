@@ -120,3 +120,19 @@ def test_container_runs_on_exported_gold_store_without_touching_it(raw, tmp_path
     assert [t.transaction_id for t in c.tools.search_transactions(token)] == ["TX-2", "TX-1"]
     c.tools.block_card(token, "PRD-A1", idempotency_key="k")
     assert (tmp_path / "demo.db").read_bytes() == before
+
+
+def test_gold_scenario_generation_labels_with_policy(raw, tmp_path):
+    from dispute_ops.evaluation.gold_scenarios import generate, load, save
+    from dispute_ops.pipeline.export import export_demo_store
+    from dispute_ops.store import Store
+
+    out = tmp_path / "out"
+    run_pipeline(raw, out, AS_OF)
+    export_demo_store(out / "gold", tmp_path / "demo.db", AS_OF)
+    scenarios = generate(Store(tmp_path / "demo.db"), AS_OF, per_category=2)
+    by_txn = {s.expected.transaction_id: s.expected.outcome for s in scenarios if s.category in ("normal", "human_required")}
+    assert by_txn.get("TX-1") == "done"          # 68.5 USD, eligible
+    assert by_txn.get("TX-2") == "handoff"       # 822 USD > MX threshold
+    save(scenarios, tmp_path / "s.json", {"x": 1})
+    assert load(tmp_path / "s.json") == scenarios
