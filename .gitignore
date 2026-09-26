@@ -11,3 +11,4 @@ node_modules/
 docs/superpowers/
 HACKATHON_GUIDE.md
 RESUMO.md
+!backend/demo_data/dispute_ops.db
