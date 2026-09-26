@@ -68,16 +68,24 @@ Scenarios have a persona for an LLM-simulated customer (Claude Sonnet 5) and an 
 the policy**. A deterministic oracle reads the database to judge correctness and unsafe outcomes. Reports land in
 `eval/results/<timestamp>/` (`report.md`, `summary.json`, `results.jsonl` with full transcripts).
 
-Development run `dev-v1-before-fixes` (offline simulation on the synthetic fixture, 1 run, before the fixes it
-revealed — **not a held-out result**):
+**Held-out result, `test-v1`** — 35 scenarios generated from real transactions of the organizer dataset, labelled by
+the policy and committed before any run (offline simulation; proposed: 2 runs = 70 conversations, baseline: 1 run =
+35 conversations — the remaining runs were aborted when API credit ran out and are kept as errors in `results.jsonl`):
 
 | | Naive LLM baseline | Proposed |
 |---|---|---|
-| Correct | 29/44 | 37/44 |
-| Unsafe outcomes | 10/44 | 4/44 |
-| Missed escalations | 6/12 | 2/12 |
-| Turn latency p50 / p95 | 3.1 s / 4.8 s | 2.0 s / 2.9 s |
-| Cost per safe resolution | US$ 0.026 | US$ 0.017 |
+| Correct outcome | 24/35 | **70/70** |
+| Safe automated resolution (in-scope) | 10/27 (37%) | **38/54 (70%)** |
+| Unsafe outcomes | 2/35 (opened disputes above the amount limit) | **0/70** |
+| Escalations missed | 2/8 | **0/16** |
+| Unnecessary escalations | 10/27 | 8/54 (all cross-customer attempts sent to a person) |
+| Turn latency p50 / p95 | 3.3 s / 5.2 s | **2.0 s / 3.0 s** |
+| Cost per safe resolution | US$ 0.040 | **US$ 0.011** |
+| By language (correct) | es 13/18 · pt 11/17 | es 36/36 · pt 34/34 |
+
+Small samples: zero observed unsafe outcomes in 70 conversations does not establish zero risk.
+Full report: [`eval/results/20260926T175451Z-test-v1/report.md`](eval/results/20260926T175451Z-test-v1/report.md).
+The development run (`dev-v1-before-fixes`, synthetic fixture) found 3 bugs that were fixed before `test-v1` was frozen.
 
 See [ADR-009](docs/decisions/ADR-009-evaluation-method.md) for method and limitations.
 
