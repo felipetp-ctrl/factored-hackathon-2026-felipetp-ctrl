@@ -24,6 +24,7 @@ class PolicyContext:
     human_requested: bool = False
     very_negative_sentiment: bool = False
     ip_country_mismatch: bool = False
+    regulatory_threat: bool = False
 
 
 class PolicyEngine:
@@ -80,6 +81,7 @@ class PolicyEngine:
             (ctx.disputes_last_30d >= h["max_disputes_30d"], "R-HO-VELOCITY", "dispute_velocity"),
             (ctx.ip_country_mismatch, "R-HO-ATO", "account_takeover_signal"),
             (ctx.very_negative_sentiment, "R-HO-SENTIMENT", "very_negative_sentiment"),
+            (ctx.regulatory_threat, "R-HO-REGULATOR", "regulatory_or_legal_threat"),
             (ctx.classifier_confidence < h["min_classifier_confidence"], "R-HO-LOWCONF", "low_classifier_confidence"),
         ]
         hits = [(rule_id, reason) for hit, rule_id, reason in checks if hit]

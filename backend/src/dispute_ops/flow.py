@@ -21,6 +21,9 @@ from dispute_ops.store import Store
 from dispute_ops.tools import BankingTools
 
 MAX_CLARIFY = 2
+# Look further back than the dispute window when identifying a transaction, so the policy can
+# explain why an old charge is out of window instead of the customer never finding it.
+IDENTIFY_LOOKBACK_DAYS = 365
 
 
 class State(StrEnum):
@@ -55,6 +58,7 @@ class Turn(BaseModel):
     human_requested: bool = False
     very_negative_sentiment: bool = False
     ip_country_mismatch: bool = False
+    regulatory_threat: bool = False
 
 
 Action = Literal["ask", "confirm", "done", "ineligible", "handoff", "reauth", "cancelled"]
@@ -98,7 +102,10 @@ class DisputeFlow:
         self.confidence = 1.0
         self.evidence: dict[str, str] = {}
         self.summary = ""
-        self.flags = {"human_requested": False, "very_negative_sentiment": False, "ip_country_mismatch": False}
+        self.flags = {
+            "human_requested": False, "very_negative_sentiment": False, "ip_country_mismatch": False,
+            "regulatory_threat": False,
+        }
         self.actions: list[ActionRecord] = []
         self.attempts: dict[str, int] = {}
         self.last_policy: PolicyDecision | None = None
@@ -180,7 +187,9 @@ class DisputeFlow:
                     return self._clarify(["transaction"], "transaction", State.IDENTIFY_TXN)
             elif turn.merchant or turn.amount is not None:
                 candidates = self._retry(
-                    lambda: self.tools.search_transactions(turn.token, merchant=turn.merchant, amount=turn.amount)
+                    lambda: self.tools.search_transactions(
+                        turn.token, days=IDENTIFY_LOOKBACK_DAYS, merchant=turn.merchant, amount=turn.amount
+                    )
                 )
                 if len(candidates) != 1:
                     return self._clarify(["transaction"], "transaction", State.IDENTIFY_TXN, candidates=candidates[:5])
@@ -208,6 +217,7 @@ class DisputeFlow:
             classifier_confidence=self.confidence,
             very_negative_sentiment=self.flags["very_negative_sentiment"],
             ip_country_mismatch=self.flags["ip_country_mismatch"],
+            regulatory_threat=self.flags["regulatory_threat"],
         )
         decision = self.policy.evaluate(ctx)
         self.last_policy = decision

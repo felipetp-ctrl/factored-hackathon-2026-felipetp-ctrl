@@ -52,3 +52,9 @@ def test_candidates_are_listed(flow, sessions):
 def test_handoff_message_has_reference(flow, sessions):
     r = flow.handle(Turn(token=sessions.issue("CUST001"), human_requested=True))
     assert "HO-t-resp" in say(flow, "es", r)
+
+
+def test_candidates_show_time_to_tell_same_day_charges_apart(flow, sessions):
+    r = flow.handle(Turn(token=sessions.issue("CUST001"), merchant="Netflix", reason_code=ReasonCode.DUPLICATE))
+    text = say(flow, "es", r)
+    assert "09:00" in text and "09:05" in text

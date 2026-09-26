@@ -16,7 +16,7 @@ def result(**kw):
         reason_code=None, reason_confidence=0.0, card_in_possession=None, recognizes_merchant=None,
         duplicate_transaction_id=None, expected_amount=None, expected_delivery_date=None,
         contacted_merchant=None, cancellation_date=None, wants_block_card=None,
-        very_negative_sentiment=False, summary="",
+        very_negative_sentiment=False, regulatory_threat=False, summary="",
     )
     base.update(kw)
     return NluResult(**base)

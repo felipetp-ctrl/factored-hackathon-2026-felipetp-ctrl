@@ -154,3 +154,13 @@ def test_escalate_hands_off_with_given_reason_and_keeps_known_facts(flow, token)
     assert r.handoff.reason_for_handoff == ["nlu_unavailable"]
     assert r.handoff.verified_facts[0].source == "txn:TXN001"
     assert flow.handle(Turn(token=token)).action == "handoff"
+
+
+def test_old_transaction_is_found_so_ineligibility_can_be_explained(flow, token):
+    r = flow.handle(Turn(token=token, merchant="Liverpool", reason_code=ReasonCode.FRAUD_CNP))
+    assert r.action == "ineligible" and r.policy.rule_ids == ["R-WINDOW"]
+
+
+def test_regulatory_threat_hands_off(flow, token):
+    r = flow.handle(Turn(token=token, transaction_id="TXN001", reason_code=ReasonCode.FRAUD_CNP, regulatory_threat=True))
+    assert "regulatory_or_legal_threat" in r.handoff.reason_for_handoff

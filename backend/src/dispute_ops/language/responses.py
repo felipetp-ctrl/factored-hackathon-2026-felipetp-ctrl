@@ -131,7 +131,8 @@ def render(result: FlowResult, lang: str | None, *, transaction: Transaction | N
             lines.append(T[lang]["candidates"])
             for i, c in enumerate(result.candidates, 1):
                 f = _txn_fields(c)
-                lines.append(f"{i}) {f['merchant']} · {f['amount']} {f['currency']} · {f['date']} ({c.transaction_id})")
+                when = c.transaction_date.strftime("%H:%M")
+                lines.append(f"{i}) {f['merchant']} · {f['amount']} {f['currency']} · {f['date']} {when} ({c.transaction_id})")
             lines.append(T[lang]["pick"])
         else:
             lines.extend(QUESTIONS[lang].get(field, field) for field in result.ask_for)

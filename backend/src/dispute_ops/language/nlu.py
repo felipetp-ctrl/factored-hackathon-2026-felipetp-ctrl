@@ -20,7 +20,7 @@ PRICES_PER_MTOK = {  # USD (input, output), Anthropic first-party list prices
     "claude-haiku-4-5": (1.00, 5.00),
     "claude-sonnet-5": (2.00, 10.00),
 }
-PROMPT_VERSION = "nlu-v1"
+PROMPT_VERSION = "nlu-v2"
 
 YesNo = Literal["yes", "no"]
 
@@ -42,6 +42,7 @@ class NluResult(BaseModel):
     cancellation_date: str | None
     wants_block_card: bool | None
     very_negative_sentiment: bool
+    regulatory_threat: bool
     summary: str
 
     @field_validator("reason_confidence")
@@ -125,6 +126,8 @@ duplicate_transaction_id (candidate id of the other charge), expected_amount, ex
 contacted_merchant (yes/no), cancellation_date (ISO date when possible).
 wants_block_card: true/false only if they say whether they want the card blocked.
 very_negative_sentiment: true for insults, threats, or extreme distress.
+regulatory_threat: true when the customer threatens to complain to a regulator or ombudsman (e.g. CONDUSEF,
+Superintendencia Financiera, BCRA, Banco Central, Procon), to take legal action, or to go to the press.
 summary: one short sentence for a human agent describing what the customer wants, in the customer's
 language, without personal data."""
 

@@ -1,0 +1,64 @@
+{
+  "meta": {
+    "timestamp_utc": "20260926T141524Z",
+    "scenario_set": "seed-v1",
+    "scenarios": 44,
+    "repeats": 1,
+    "systems": "proposed, naive_llm",
+    "proposed_nlu": "claude-haiku-4-5 / nlu-v1",
+    "baseline": "claude-haiku-4-5 / naive-v1",
+    "customer_simulator": "claude-sonnet-5",
+    "simulator_cost_usd": 0.4289,
+    "cost_assumptions": "Anthropic list prices (USD/MTok): haiku-4-5 1/5, sonnet-5 2/10; system cost only"
+  },
+  "by_system": {
+    "proposed": {
+      "n_cases": 44,
+      "n_in_scope": 36,
+      "correct": "37/44",
+      "safe_automated_resolution": "19/36",
+      "safe_automated_resolution_rate": 0.528,
+      "automation_attempted": "23/36",
+      "containment": "27/44",
+      "escalation_correct": "10/12",
+      "escalation_missed": "2/12",
+      "escalation_unnecessary": "7/32",
+      "unsafe": "4/44",
+      "unsafe_reasons": {
+        "policy_violation_action": 4,
+        "unrequested_block": 2
+      },
+      "errors": 0,
+      "turn_latency_ms_p50": 1959.6,
+      "turn_latency_ms_p95": 2894.6,
+      "cost_usd_total": 0.3318,
+      "cost_usd_per_attempted_case": 0.01443,
+      "cost_usd_per_safe_resolution": 0.01746
+    },
+    "naive_llm": {
+      "n_cases": 44,
+      "n_in_scope": 36,
+      "correct": "29/44",
+      "safe_automated_resolution": "18/36",
+      "safe_automated_resolution_rate": 0.5,
+      "automation_attempted": "27/36",
+      "containment": "31/44",
+      "escalation_correct": "6/12",
+      "escalation_missed": "6/12",
+      "escalation_unnecessary": "7/32",
+      "unsafe": "10/44",
+      "unsafe_reasons": {
+        "wrong_transaction": 1,
+        "policy_violation_action": 7,
+        "unrequested_block": 4,
+        "data_leak": 2
+      },
+      "errors": 0,
+      "turn_latency_ms_p50": 3084.3,
+      "turn_latency_ms_p95": 4783.9,
+      "cost_usd_total": 0.475,
+      "cost_usd_per_attempted_case": 0.01759,
+      "cost_usd_per_safe_resolution": 0.02639
+    }
+  }
+}

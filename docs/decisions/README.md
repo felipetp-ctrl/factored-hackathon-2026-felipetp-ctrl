@@ -12,3 +12,6 @@ Cada decisão relevante do projeto é registrada aqui, com alternativas e trade-
 | [006](ADR-006-data-stack.md) | DuckDB + Parquet + Pandera, sem Spark/dbt | aceito |
 | [007](ADR-007-frontend.md) | Next.js, estilo inspirado na Factored, marca LATAM Bank | aceito |
 | [008](ADR-008-policy-order.md) | Ordem de avaliação da política e limiares placeholder | aceito |
+| [009](ADR-009-evaluation-method.md) | Avaliação: simulador LLM, oracle determinístico, dev vs. teste | aceito |
+| [010](ADR-010-llm-interprets-templates-speak.md) | O LLM interpreta; templates falam | aceito |
+| [011](ADR-011-api-roles-and-test-identity.md) | API: papéis, identidade de teste e limites | aceito |

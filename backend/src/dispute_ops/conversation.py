@@ -62,7 +62,7 @@ class Conversation:
 def _candidate(t: Transaction) -> dict[str, str]:
     return {
         "transaction_id": t.transaction_id, "merchant": t.merchant_name or "", "amount": str(t.amount),
-        "currency": t.currency, "date": t.transaction_date.date().isoformat(),
+        "currency": t.currency, "date": t.transaction_date.strftime("%Y-%m-%d %H:%M"),
     }
 
 
@@ -183,6 +183,7 @@ class ConversationService:
             block_card=bool(nlu.wants_block_card) if in_confirm else False,
             human_requested=nlu.intent == "human",
             very_negative_sentiment=nlu.very_negative_sentiment,
+            regulatory_threat=nlu.regulatory_threat,
         )
 
     def _proactive_turn(self, conv: Conversation, token: str, nlu: NluResult, started: float, base: dict) -> Reply:
