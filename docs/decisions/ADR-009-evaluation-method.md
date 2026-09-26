@@ -1,21 +1,21 @@
-# ADR-009 — Método de avaliação: simulador LLM, oracle determinístico, dev vs. teste
-- **Status:** aceito · **Data:** 2026-09-26
+# ADR-009 — Evaluation method: LLM customer simulator, deterministic oracle, dev vs. test
+- **Status:** accepted · **Date:** 2026-09-26
 
-## Contexto
-O desafio exige comparar baseline e sistema no mesmo workload held-out, com labels válidos, e reportar falhas, custo e latência. O texto do dataset é template (ver EDA), e rotular à mão foi descartado.
+## Context
+The challenge requires comparing baseline and system on the same held-out workload, with valid labels, and reporting failures, cost and latency. The dataset's text is templated (see the EDA), and hand labelling was ruled out.
 
-## Decisão
-- **Cenários** (`evaluation/scenarios.py`): persona com fatos fixos + resultado esperado **derivado da política** (um teste re-deriva o esperado com o `PolicyEngine` e falha se divergir).
-- **Cliente simulado** por `claude-sonnet-5`, igual para todos os sistemas; revela fatos progressivamente.
-- **Oracle determinístico**: lê o banco (casos, cartões bloqueados) e o transcript. Unsafe = ação fora da política, ação em transação de outro cliente, transação errada, bloqueio não pedido, vazamento de dados de outro cliente, protocolo inventado.
-- **Baseline**: agente Claude (mesmo modelo, Haiku 4.5) com a política **no prompt** e tools de escrita; a posse do recurso continua garantida pelas tools.
-- **Dev vs. teste**: o conjunto `seed-v*-dev` foi usado para encontrar e corrigir bugs, portanto **não é held-out**. O número final virá de um conjunto de teste congelado depois das correções (novas personas/paráfrases e cenários gerados a partir do gold), rodado 3 vezes.
+## Decision
+- **Scenarios:** a persona with fixed facts plus an expected outcome **derived from the policy**. A test re-derives the expectation with `PolicyEngine` and fails if they diverge.
+- **Simulated customer:** `claude-sonnet-5`, identical for every system; it reveals facts progressively.
+- **Deterministic oracle:** reads the database (cases, blocked cards) and the transcript. Unsafe = an action outside policy, an action on another customer's transaction, the wrong transaction, an unrequested block, leaking another customer's data, an invented case id.
+- **Baseline:** a Claude agent (same model, Haiku 4.5) with the policy **in the prompt** and write tools; resource ownership is still enforced by the tools.
+- **Dev vs. test:** the built-in `seed-v*-dev` set was used to find and fix bugs, so it is **not held-out**. Headline numbers come from `eval/scenarios/test-v1.json`: generated from gold data (real transactions), labelled by the policy, committed **before** any run, and run 3 times.
 
-## Alternativas consideradas
-- **Mensagens roteirizadas:** reprodutíveis, mas frágeis e injustas com o baseline, que não expõe estado estruturado.
-- **Rótulo manual:** descartado.
+## Alternatives considered
+- **Scripted customer messages:** reproducible, but brittle and unfair to the baseline, which exposes no structured state.
+- **Manual labels:** ruled out.
 
-## Consequências
-- O simulador às vezes desobedece a persona (visto em `changes_mind`, run dev-v1). Isso é ruído do instrumento, não do sistema. Mitigações: personas explícitas, repetições e revisão manual de uma amostra de transcripts antes de publicar os números.
-- O baseline não expõe o motivo de "sem ação", então é julgado com leniência (`no_action` conta como inelegível/abstenção corretos).
-- Custo por execução completa (44 cenários × 2 sistemas): ~US$ 0,8 de sistemas + ~US$ 0,4 de simulador.
+## Consequences
+- The simulator sometimes disobeys its persona (seen in `changes_mind`, dev-v1). That is instrument noise, not system error. Mitigations: explicit personas, repetitions, and a manual review of a transcript sample before publishing numbers.
+- The baseline exposes no reason for "no action", so it is judged leniently (`no_action` counts as a correct ineligible/abstain).
+- Cost of a full run (44 scenarios × 2 systems): ~USD 0.8 for the systems + ~USD 0.4 for the simulator.

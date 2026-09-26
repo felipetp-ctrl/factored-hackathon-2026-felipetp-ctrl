@@ -1,19 +1,19 @@
-# ADR-013 — Política `disputes_v2`: limite único de US$ 450, calibrado nos dados
-- **Status:** aceito · **Data:** 2026-09-26 · `disputes_v1` mantida para reprodutibilidade
+# ADR-013 — Policy `disputes_v2`: single USD 450 threshold calibrated on the data
+- **Status:** accepted · **Date:** 2026-09-26 · `disputes_v1` kept for reproducibility
 
-## Contexto
-A `disputes_v1` tinha limites de valor por país escolhidos a priori (MX 500, CO 400, AR 300 USD). Rodando o pipeline completo apareceram dois fatos:
-1. **As transações dos clientes mexicanos vêm em moeda USD, com `amount_usd` nulo** (541.812 compras de cartão), e ~5% das transações em ARS/COP também não têm `amount_usd`. Sem correção, nenhuma disputa mexicana acionaria o limite de valor.
-2. Depois da correção (gold: valor informado → identidade em USD → câmbio diário, com `amount_usd_source`), o valor em USD das compras de cartão é **~U(0, 500) nos três países** (p50 ≈ 252, p90 ≈ 450, p95 ≈ 475).
+## Context
+`disputes_v1` had per-country amount thresholds chosen a priori (MX 500, CO 400, AR 300 USD). Running the full pipeline revealed:
+1. **Mexican customers' transactions are in USD with a null `amount_usd`** (541,812 card purchases), and ~5% of ARS/COP transactions also lack `amount_usd`. Uncorrected, no Mexican dispute would ever trigger the amount rule.
+2. After the fix (gold: reported value → USD identity → daily FX, with `amount_usd_source`), card-purchase amounts in USD are **~U(0, 500) in all three countries** (p50 ≈ 252, p90 ≈ 450, p95 ≈ 475).
 
-## Decisão
-- Um limite único de **US$ 450** (p90): cerca de 10% das disputas de compra vão para humano por valor, igualmente em todos os países.
-- `max_disputes_30d = 3` foi mantido. Nos dados, o máximo observado é de 2 reclamações de transação por cliente em 30 dias, então a regra é uma salvaguarda que não dispara no histórico.
+## Decision
+- A single threshold of **USD 450** (p90): about 10% of purchase disputes go to a person for amount, equally in every country.
+- `max_disputes_30d = 3` is kept. The data never exceeds 2 transaction complaints per customer in 30 days, so the rule is a guard that does not fire on history.
 
-## Alternativas consideradas
-- **Manter os limites por país da v1:** escalaria 0% (MX), 20% (CO) e 40% (AR) das disputas sem diferença de risco nos dados. É uma disparidade injustificável entre segmentos, justamente o que o desafio pede para investigar.
-- **Limite no p95 (US$ 475):** automatiza mais, mas deixa uma margem menor para as compras de maior valor.
+## Alternatives considered
+- **Keep v1's per-country thresholds:** they would escalate 0% (MX), 20% (CO) and 40% (AR) of disputes with no risk difference in the data — an unjustifiable disparity between customer segments, exactly what the challenge asks us to investigate.
+- **Threshold at p95 (USD 475):** more automation, less margin on the highest-value purchases.
 
-## Consequências
-- A calibração é descritiva (distribuição de valores), não baseada em perda esperada: os dados não trazem um sinal de fraude correlacionado com valor (`is_fraud` ≈ 0,1% em qualquer faixa).
-- Os cenários de avaliação são rotulados com a política vigente; o gerador registra a versão usada nos metadados.
+## Consequences
+- The calibration is descriptive (value distribution), not loss-based: the data shows no fraud signal correlated with amount (`is_fraud` ≈ 0.1% in every band).
+- Evaluation scenarios are labelled with the policy in force; the generator records the version in its metadata.

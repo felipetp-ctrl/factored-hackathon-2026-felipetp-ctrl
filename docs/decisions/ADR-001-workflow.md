@@ -1,19 +1,19 @@
-# ADR-001 — Workflow: intake de disputa de transação
-- **Status:** aceito · **Data:** 2026-09-25
+# ADR-001 — Workflow: card-transaction dispute intake
+- **Status:** accepted · **Date:** 2026-09-25
 
-## Contexto
-O desafio pede um único workflow bancário coerente; mais workflows não dão bônus. As opções sugeridas: consultas de conta/pagamento, suporte a cartão, disputa de transação, elegibilidade de crédito. O time é uma pessoa em tempo parcial por 10 dias.
+## Context
+The challenge asks for one coherent banking workflow; more workflows earn no bonus. Suggested options: account/payment inquiries, card support, transaction disputes, credit eligibility. The team is one person working part-time for 10 days.
 
-## Decisão
-Intake de disputa de transação.
+## Decision
+Card-transaction dispute intake.
 
-## Alternativas consideradas
-- **Suporte a cartão:** ações verificáveis simples, mas componente de ML mais pobre.
-- **Conta/pagamentos:** o mais simples e o mais "típico"; os organizadores pediram criatividade.
-- **Crédito:** rico em ML, mas exige serviço de política sintético elaborado e separação conversa/risco/elegibilidade; arriscado solo.
+## Alternatives considered
+- **Card support:** simple verifiable actions, but a thinner ML component.
+- **Account/payments:** the simplest and most "typical"; the organizers asked for creativity.
+- **Credit:** rich in ML, but it needs an elaborate synthetic policy service and a strict split between conversation, risk estimate and eligibility; risky for a solo team.
 
-## Consequências
-- Dados ricos: `transactions` (status, `is_fraud`, `fraud_score`) + `complaints` (texto, categoria, resolução, SLA) + interações.
-- Os três caminhos obrigatórios aparecem naturalmente (normal, ambíguo, humano).
-- Domínio sensível: exige política determinística, confirmação e verificação (ver ADR-002 e ADR-004).
-- A escolha será revalidada pela EDA; se os dados a contradisserem, reabrimos antes do dia 3.
+## Consequences
+- Rich data: `transactions` (status, `is_fraud`, `fraud_score`), `complaints` (category, resolution, SLA) and interactions.
+- The three required paths appear naturally (normal, ambiguous, human).
+- A sensitive domain: it requires deterministic policy, confirmation and verification (see ADR-002 and ADR-004).
+- Validated by the EDA: "Cargo no reconocido" is the only subcategory of the `Transactions` category, 20% of all complaints.

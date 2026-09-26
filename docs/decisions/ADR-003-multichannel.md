@@ -1,20 +1,20 @@
-# ADR-003 — Sistema multicanal: chat + caixa PQR + alerta proativo
-- **Status:** aceito · **Data:** 2026-09-25
+# ADR-003 — Multichannel system: chat + written complaints (PQR) + proactive alert
+- **Status:** accepted · **Date:** 2026-09-25
 
-## Contexto
-Os organizadores pedem "não um chatbot, e sim um sistema de atendimento". O dataset já contém 80 mil reclamações escritas (`complaints`) com resultado humano histórico.
+## Context
+The organizers ask for "a customer-service system, not a chatbot". The dataset already holds 67k written complaints with historical human outcomes.
 
-## Decisão
-Um núcleo único com três entradas:
-- **Chat** ES/PT (requisitos conversacionais);
-- **Caixa PQR** (D1): triagem em lote de reclamações escritas; nunca clarifica de forma síncrona e, se faltar informação, faz handoff `async_missing_info`;
-- **Proativo** (D3): transações recentes com `fraud_score` alto geram "foi você?". É o primeiro item a cortar se faltar tempo.
+## Decision
+One core with three entry points:
+- **Chat** in Spanish/Portuguese (conversational requirements);
+- **PQR inbox** (D1): batch triage of written complaints; it never clarifies synchronously — missing information means a handoff (`async_missing_info`);
+- **Proactive alert** (D3): recent transactions with a high `fraud_score` trigger a "was it you?" message.
 
-## Alternativas consideradas
-- **Só chat:** mais barato, mas se aproxima de um chatbot e não usa o texto real do dataset.
-- **Transcript pós-ligação como canal:** redundante com o PQR.
-- **Voz:** sem áudio no dataset, alto risco.
+## Alternatives considered
+- **Chat only:** cheaper, but closer to a chatbot and ignores the dataset's text.
+- **Post-call transcript as a channel:** redundant with PQR.
+- **Voice:** no audio in the dataset, high risk.
 
-## Consequências
-- O canal PQR dá o baseline humano mais forte: mesmas complaints, comparação direta (spec §6.3).
-- Os canais diferem só no estado de entrada da máquina de estados; o custo marginal é pequeno.
+## Consequences
+- The channels differ only in the state-machine entry state; marginal cost is small.
+- Caveat found in the EDA: complaint descriptions are templated (5 distinct texts) and complaints carry no `transaction_id`, so the PQR value is operational (matching and policy), not language understanding.

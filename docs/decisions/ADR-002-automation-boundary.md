@@ -1,20 +1,20 @@
-# ADR-002 — Fronteira de automação: intake completo + bloqueio de cartão confirmado
-- **Status:** aceito · **Data:** 2026-09-25
+# ADR-002 — Automation boundary: full intake + confirmed card block
+- **Status:** accepted · **Date:** 2026-09-25
 
-## Contexto
-É preciso definir o que o sistema resolve sozinho, o que exige confirmação e o que vai para humano. O desafio não autoriza movimentação de dinheiro.
+## Context
+We must define what the system resolves alone, what needs confirmation and what goes to a person. The challenge does not authorize moving money.
 
-## Decisão
-O sistema autentica, identifica a transação, classifica o reason code, coleta evidências, checa elegibilidade por política, abre o caso e verifica que ele existe. Em fraude, oferece bloquear o cartão; o bloqueio só ocorre com confirmação explícita e é verificado por leitura.
+## Decision
+The system authenticates, identifies the transaction, classifies the reason code, collects evidence, checks eligibility against the policy, opens the case and verifies that it exists. For fraud it offers to block the card; the block only happens with explicit confirmation and is verified by reading it back.
 
-| Automático | Com confirmação | Humano |
+| Automatic | Needs confirmation | Human |
 |---|---|---|
-| Consultar transações, checar política, classificar, abrir caso | Abrir a disputa (resumo confirmado), bloquear cartão | Valor acima do limiar, reincidência, velocidade de disputas, sinais de ATO, pedido explícito, sentimento muito negativo, baixa confiança, falha de tool/verificação |
+| Look up transactions, check policy, classify, open the case | Open the dispute (summary confirmed), block the card | Amount above threshold, repeat complainer, dispute velocity, account-takeover signals, explicit request, very negative sentiment, regulator/legal threat, low confidence, tool or verification failure |
 
-## Alternativas consideradas
-- **Só intake:** mais seguro, mas sem ciclo act→verify real.
-- **Crédito provisório simulado:** configura movimentação de dinheiro, que está fora do escopo; abre flanco de segurança.
+## Alternatives considered
+- **Intake only:** safer, but without a real act-and-verify cycle.
+- **Simulated provisional credit:** that is money movement, out of scope, and opens a safety gap.
 
-## Consequências
-- "Resolução segura" = caso aberto com reason code e evidências corretos, ou recusa correta por política com a regra explicada.
-- Nenhuma ação monetária; o canal assíncrono nunca bloqueia cartão (não há confirmação síncrona).
+## Consequences
+- "Safe resolution" = case opened with the correct transaction, reason code and evidence, or a correct refusal by policy with the rule explained.
+- No monetary action; the asynchronous channel never blocks a card (no synchronous confirmation is possible there).

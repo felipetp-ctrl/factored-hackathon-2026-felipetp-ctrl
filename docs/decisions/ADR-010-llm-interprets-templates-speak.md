@@ -1,19 +1,19 @@
-# ADR-010 — O LLM interpreta; templates falam
-- **Status:** aceito · **Data:** 2026-09-26
+# ADR-010 — The LLM interprets; templates speak
+- **Status:** accepted · **Date:** 2026-09-26
 
-## Contexto
-O desafio pede "report only actions whose outcomes the system has verified" e que a política seja aplicada fora da prosa do modelo.
+## Context
+The challenge asks to "report only actions whose outcomes the system has verified" and to enforce policy outside model prose.
 
-## Decisão
-- O Claude Haiku 4.5 transforma a mensagem, já redigida pelo gateway, num objeto estruturado validado por Pydantic (`NluResult`). Ele não chama tools de escrita e não escreve as respostas.
-- As respostas ao cliente saem de templates ES/PT preenchidos só com dados verificados: protocolo lido de volta, status do cartão lido de volta, regra e números da política.
-- **Isso substitui, por ora, o spec (§3), que previa o Claude como agente com tools de leitura.** A extração estruturada mostrou-se suficiente, é mais barata e é avaliável.
+## Decision
+- Claude Haiku 4.5 turns the message, already redacted by the gateway, into a structured object validated with Pydantic (`NluResult`). It calls no write tools and writes no replies.
+- Customer replies come from Spanish/Portuguese templates filled only with verified data: the case id read back, the card status read back, the rule and the numbers from the policy.
+- **This replaces, for now, the spec's plan of Claude as an agent with read-only tools.** Structured extraction proved sufficient, cheaper and easier to evaluate.
 
-## Alternativas consideradas
-- **LLM gera a resposta livre:** mais natural, mas pode afirmar ações inexistentes; exigiria um verificador extra.
-- **Agente com tools de leitura:** mais flexível, porém com mais variância e mais custo.
+## Alternatives considered
+- **LLM writes free replies:** more natural, but it can claim actions that never happened; it would need an extra verifier.
+- **Agent with read-only tools:** more flexible, but more variance and cost.
 
-## Consequências
-- Nenhuma resposta pode inventar protocolo ou bloqueio; o oracle verifica isso (`fabricated_case_id`).
-- As respostas são menos fluidas. A lista de candidatas precisou mostrar a hora (bug encontrado na avaliação dev).
-- A mensagem do cliente vai delimitada como dado, com o HTML escapado; sinais de injection vão como contexto, sem conceder nem remover permissões.
+## Consequences
+- No reply can invent a case id or a block; the oracle checks this (`fabricated_case_id`).
+- Replies are less fluid. The candidate list had to show the time of day (a bug found in the dev evaluation).
+- The customer message is delimited as data with HTML escaped; injection signals are passed as context and never grant or remove permissions.

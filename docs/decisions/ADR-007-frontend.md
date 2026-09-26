@@ -1,15 +1,15 @@
-# ADR-007 — Frontend: Next.js com linguagem visual inspirada na Factored
-- **Status:** aceito · **Data:** 2026-09-25
+# ADR-007 — Frontend: Next.js with a Factored-inspired visual language
+- **Status:** accepted · **Date:** 2026-09-25
 
-## Contexto
-Juízes vão usar a ferramenta. São necessárias três telas: chat do cliente, console do agente e operações.
+## Context
+Judges will use the tool. Three views are needed: customer chat, agent console and operations.
 
-## Decisão
-Next.js + Tailwind com os tokens visuais de factored.ai: Roboto / Roboto Mono, `#0047e5`, `#f2a100` nos botões primários, `#00f2f2` nos detalhes, preto e branco. **Sem logo nem nome da Factored**: a marca exibida é a do banco fictício "LATAM Bank".
+## Decision
+Next.js with Factored's public visual tokens (Roboto / Roboto Mono, `#0047e5`, `#f2a100` for primary buttons, `#00f2f2` for details, black and white). **No Factored logo or name**: the brand shown is the fictitious "LATAM Bank". The distinctive element is a live decision inspector next to the chat.
 
-## Alternativas consideradas
-- **Streamlit:** cerca de 1 dia mais rápido, mas apresentação inferior.
+## Alternatives considered
+- **Streamlit:** about one day faster, weaker presentation.
 
-## Consequências
-- Cerca de 1 dia de esforço extra, compensado por D3 ser o primeiro corte.
-- Não há risco de confusão de marca.
+## Consequences
+- About one extra day of work.
+- No brand confusion.
