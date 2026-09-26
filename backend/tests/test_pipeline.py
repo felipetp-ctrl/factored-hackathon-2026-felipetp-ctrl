@@ -87,3 +87,33 @@ def test_contracts_cover_every_column_in_the_dictionary_for_core_tables():
     assert len(CONTRACTS["transactions"].columns) == 22
     assert len(CONTRACTS["complaints"].columns) == 27
     assert len(CONTRACTS["customers"].columns) == 27
+
+
+def test_export_demo_store_feeds_the_service(raw, tmp_path):
+    from dispute_ops.pipeline.export import export_demo_store
+    from dispute_ops.store import Store
+
+    out = tmp_path / "out"
+    run_pipeline(raw, out, AS_OF)
+    counts = export_demo_store(out / "gold", tmp_path / "demo.db", AS_OF, n_customers=10)
+    assert counts == {"customers": 2, "products": 2, "transactions": 3}
+    store = Store(tmp_path / "demo.db")
+    t = store.get_transaction("TX-2")
+    assert t.amount_usd == 822 and str(t.fraud_score) == "91.00"
+    assert store.get_customer("CLI-B").is_repeat_complainer is True
+
+
+def test_container_runs_on_exported_gold_store_without_touching_it(raw, tmp_path):
+    from dispute_ops.container import Container, Settings
+    from dispute_ops.pipeline.export import export_demo_store
+    from nlu_fakes import ScriptedNlu
+
+    out = tmp_path / "out"
+    run_pipeline(raw, out, AS_OF)
+    export_demo_store(out / "gold", tmp_path / "demo.db", AS_OF)
+    before = (tmp_path / "demo.db").read_bytes()
+    c = Container.build(Settings(session_secret="s", demo_db=str(tmp_path / "demo.db")), nlu=ScriptedNlu())
+    token = c.sessions.issue("CLI-A")
+    assert [t.transaction_id for t in c.tools.search_transactions(token)] == ["TX-2", "TX-1"]
+    c.tools.block_card(token, "PRD-A1", idempotency_key="k")
+    assert (tmp_path / "demo.db").read_bytes() == before

@@ -25,6 +25,8 @@ DEFAULT_SEED = Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "see
 class Settings(BaseModel):
     seed_path: str = str(DEFAULT_SEED)
     db_path: str = ":memory:"
+    # Pipeline-exported SQLite (gold sample). When set, a private copy is used and no seed is loaded.
+    demo_db: str = ""
     session_secret: str = ""
     session_ttl_minutes: int = 15
     agent_api_key: str = ""
@@ -39,6 +41,7 @@ class Settings(BaseModel):
         return cls(
             seed_path=env.get("SEED_PATH", str(DEFAULT_SEED)),
             db_path=env.get("DB_PATH", ":memory:"),
+            demo_db=env.get("DEMO_DB", ""),
             session_secret=env.get("SESSION_SECRET") or secrets.token_hex(32),
             session_ttl_minutes=int(env.get("SESSION_TTL_MINUTES", "15")),
             agent_api_key=env.get("AGENT_API_KEY") or secrets.token_hex(16),
@@ -76,9 +79,17 @@ class Container:
     @classmethod
     def build(cls, settings: Settings, *, nlu: Nlu | None = None, sleep: Callable[[float], None] = time.sleep) -> Container:
         clock = SimClock(datetime.fromisoformat(settings.demo_now))
-        store = Store(settings.db_path)
-        if settings.seed_path:
-            store.load_seed(settings.seed_path)
+        if settings.demo_db:
+            import shutil
+            import tempfile
+
+            working_copy = Path(tempfile.mkdtemp()) / "dispute_ops.db"
+            shutil.copy(settings.demo_db, working_copy)
+            store = Store(working_copy)
+        else:
+            store = Store(settings.db_path)
+            if settings.seed_path:
+                store.load_seed(settings.seed_path)
         sessions = SessionService(
             settings.session_secret.encode(), timedelta(minutes=settings.session_ttl_minutes), clock
         )

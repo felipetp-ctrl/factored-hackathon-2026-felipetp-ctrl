@@ -15,3 +15,4 @@ Cada decisão relevante do projeto é registrada aqui, com alternativas e trade-
 | [009](ADR-009-evaluation-method.md) | Avaliação: simulador LLM, oracle determinístico, dev vs. teste | aceito |
 | [010](ADR-010-llm-interprets-templates-speak.md) | O LLM interpreta; templates falam | aceito |
 | [011](ADR-011-api-roles-and-test-identity.md) | API: papéis, identidade de teste e limites | aceito |
+| [012](ADR-012-data-pipeline.md) | Pipeline: contratos em SQL/DuckDB, incremental, silver recomputada | aceito |

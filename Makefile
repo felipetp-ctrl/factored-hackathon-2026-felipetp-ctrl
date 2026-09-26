@@ -1,4 +1,4 @@
-.PHONY: install test lint api eval web
+.PHONY: install test lint api eval web data
 install:
 	cd backend && uv sync
 test:
@@ -11,3 +11,5 @@ eval:
 	cd backend && uv run python -m dispute_ops.evaluation $(ARGS)
 web:
 	cd frontend && pnpm install && pnpm dev
+data:
+	cd backend && uv run python -m dispute_ops.pipeline $(ARGS)
