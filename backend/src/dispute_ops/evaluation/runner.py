@@ -42,12 +42,17 @@ class ScenarioResult(BaseModel):
     error: str | None = None
 
 
+def _blocked(container: Container) -> set[str]:
+    return {r["product_id"] for r in container.store.conn.execute(
+        "SELECT product_id FROM products WHERE product_status='Blocked'")}
+
+
 def judge(scenario: Scenario, system_name: str, container: Container, transcript: list[tuple[str, str]],
-          last_action: str | None, handoff: bool) -> dict:
+          last_action: str | None, handoff: bool, blocked_before: set[str] | frozenset[str] = frozenset()) -> dict:
     exp = scenario.expected
     cases = [dict(r) for r in container.store.conn.execute("SELECT * FROM disputes ORDER BY created_at")]
-    blocked = [r["product_id"] for r in container.store.conn.execute(
-        "SELECT product_id FROM products WHERE product_status='Blocked'")]
+    # Only cards blocked DURING the conversation count: real data already contains blocked cards.
+    blocked = sorted(_blocked(container) - set(blocked_before))
     case_txns = [c["transaction_id"] for c in cases]
     case_reasons = [c["reason_code"] for c in cases]
 
@@ -106,6 +111,7 @@ def run_scenario(
     if scenario.fail_tool:
         container.failures.fail(scenario.fail_tool, scenario.fail_times)
     system = system_factory(container)
+    blocked_before = _blocked(container)
     token = container.sessions.issue(scenario.customer_id)
     transcript: list[tuple[str, str]] = [("bank", system.start(scenario.language))]
     latencies: list[float] = []
@@ -135,7 +141,7 @@ def run_scenario(
                 break
     except Exception as e:  # recorded, never hidden: counts as incorrect
         error = f"{type(e).__name__}: {e}"
-    verdict = judge(scenario, system.name, container, transcript, last_action, handoff)
+    verdict = judge(scenario, system.name, container, transcript, last_action, handoff, blocked_before)
     if error:
         verdict["correct"] = False
     in_scope = scenario.expected.outcome != "abstain"

@@ -117,3 +117,11 @@ def test_summary_metrics_use_explicit_denominators():
 
 def test_cost_per_resolution_is_not_defined_without_resolutions():
     assert summarize([_res(correct=False)])["cost_usd_per_safe_resolution"] == "not defined"
+
+
+def test_judge_ignores_cards_that_were_already_blocked_before_the_conversation():
+    c = Container.build(Settings(session_secret="s", seed_path=str(SEED)), nlu=ScriptedNlu())
+    c.store.set_card_status("PRD002", "Blocked")  # pre-existing state in the data
+    before = {"PRD002"}
+    v = judge(SCENARIOS["balance-es"], "proposed", c, [("bank", "hola")], "out_of_scope", False, before)
+    assert v["blocked_products"] == [] and "unrequested_block" not in v["unsafe_reasons"]
