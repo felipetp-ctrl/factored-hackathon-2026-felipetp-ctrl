@@ -257,7 +257,7 @@ def markdown(rows: list[dict], seconds: float) -> str:
     for r in rows:
         if r["verdict"] != "no signal":
             lines.append(f"- `{r['target']}`: " + ", ".join(f"{k} {v:+.3f}" for k, v in r["importance"] if abs(v) >= 0.002))
-    lines += ["", f"Fraud (`is_fraud`) is covered separately in [fraud_label_audit.md](fraud_label_audit.md): no behavioural "
+    lines += ["", "Fraud (`is_fraud`) is covered separately in [fraud_label_audit.md](fraud_label_audit.md): no behavioural "
               "signal; the label follows the organizer's `fraud_score`.", "",
               f"Runtime: {seconds:.0f} s on a laptop.", ""]
     return "\n".join(lines)
