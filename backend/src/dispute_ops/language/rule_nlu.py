@@ -225,6 +225,11 @@ class RuleNlu:
             fields["amount"] = None  # the pick already identifies the charge
 
         answered = self._evidence(text, t, ctx, fields, yes, no)
+        if reason is None and fields["recognizes_merchant"] == "no" and ctx.state in ("START", "IDENTIFY_TXN", "CLASSIFY"):
+            # "No la reconozco" answers the reason question even without the baseline's exact wording.
+            reason = ReasonCode.FRAUD_CNP
+            fields.update(reason_code=reason, reason_confidence=RULE_CONFIDENCE)
+            answered = answered or "reason_code" in ctx.ask_for
         if is_out_of_scope(text) and not answered and fields["transaction_id"] is None:
             return done("out_of_scope")
         if ctx.ask_for and (answered or picked):

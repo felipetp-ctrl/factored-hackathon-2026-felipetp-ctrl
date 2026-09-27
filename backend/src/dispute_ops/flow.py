@@ -316,7 +316,7 @@ class DisputeFlow:
         pkg = build_handoff(
             trace_id=self.trace_id, channel=self.channel, language=self.language, reasons=reasons,
             summary=self.summary, transaction=self.txn, reason_code=self.reason_code, actions=self.actions,
-            policy=policy or self.last_policy, open_questions=open_questions or [],
+            policy=policy or self.last_policy, open_questions=open_questions or [], customer_id=self.customer_id,
         )
         if self.rejected_references:
             pkg.risk_signals["rejected_references"] = list(self.rejected_references)

@@ -84,6 +84,7 @@ T = {
         "recognized": "Gracias por confirmar. No haremos ningún cambio.",
         "goodbye": "Entendido, no hay nada que disputar. Si más adelante ve un cargo que no reconoce, estoy aquí. ¡Que tenga un buen día!",
         "goodbye_redirect": "Para esas consultas, use la app de LATAM Bank o hable con un asesor. Si más adelante necesita disputar un cargo, estoy aquí. ¡Que tenga un buen día!",
+        "purchase_intro": "Sobre su compra de {amount} {currency} en {merchant} del {date}:",
         "ended": "Esta conversación terminó. Si necesita disputar otro cargo, inicie una nueva conversación.",
     },
     "pt": {
@@ -107,6 +108,7 @@ T = {
         "recognized": "Obrigado por confirmar. Não faremos nenhuma alteração.",
         "goodbye": "Entendido, não há nada para contestar. Se depois você vir uma cobrança que não reconhece, é só me chamar. Tenha um bom dia!",
         "goodbye_redirect": "Para esses assuntos, use o app do LATAM Bank ou fale com um atendente. Se depois precisar contestar uma cobrança, é só me chamar. Tenha um bom dia!",
+        "purchase_intro": "Sobre a sua compra de {amount} {currency} em {merchant} do dia {date}:",
         "ended": "Esta conversa terminou. Se precisar contestar outra cobrança, comece uma nova conversa.",
     },
 }
@@ -138,6 +140,10 @@ def _txn_fields(t: Transaction, lang: str | None = None) -> dict[str, object]:
         "amount": fmt_amount(t.amount, t.currency, _lang(lang)), "currency": t.currency,
         "merchant": t.merchant_name or "—", "date": t.transaction_date.strftime("%d/%m/%Y"),
     }
+
+
+def purchase_intro(t: Transaction, lang: str | None) -> str:
+    return message("purchase_intro", lang, **_txn_fields(t, lang))
 
 
 def proactive_prompt(t: Transaction, lang: str | None) -> str:

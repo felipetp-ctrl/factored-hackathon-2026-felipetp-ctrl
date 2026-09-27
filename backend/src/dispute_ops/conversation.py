@@ -28,6 +28,17 @@ class Nlu(Protocol):
     def interpret(self, text: str, ctx: NluContext) -> NluOutcome: ...
 
 
+class Budget:
+    """Spend cap for model calls, shared by every workspace of a process. The hard cap is the provider's
+    workspace limit; this one switches the service to the free rule-based NLU before that is reached."""
+
+    def __init__(self, limit_usd: float | None) -> None:
+        self.limit_usd, self.spent_usd = limit_usd, 0.0
+
+    def exhausted(self) -> bool:
+        return self.limit_usd is not None and self.spent_usd >= self.limit_usd
+
+
 class Reply(BaseModel):
     conversation_id: str
     text: str
@@ -81,13 +92,12 @@ class ConversationService:
         clock: Callable[[], datetime],
         sleep: Callable[[float], None] = time.sleep,
         fallback: Nlu | None = None,
-        llm_budget_usd: float | None = None,
+        budget: Budget | None = None,
     ) -> None:
         self.tools, self.store, self.policy, self.nlu = tools, store, policy, nlu
         self.breaker, self.clock, self.sleep = breaker, clock, sleep
         # Free rule-based NLU used when the model fails, its circuit is open or the spend cap is reached.
-        self.fallback, self.llm_budget_usd = fallback, llm_budget_usd
-        self.llm_spent_usd = 0.0
+        self.fallback, self.budget = fallback, budget or Budget(None)
         self.conversations: dict[str, Conversation] = {}
 
     def nlu_status(self) -> dict[str, Any]:
@@ -101,7 +111,7 @@ class ConversationService:
         return {"mode": primary, "reason": None, "fallback": self.fallback is not None}
 
     def _over_budget(self) -> bool:
-        return self.llm_budget_usd is not None and self.llm_spent_usd >= self.llm_budget_usd
+        return self.budget.exhausted()
 
     # ---- lifecycle ----------------------------------------------------------------------
     def _new(self, channel: Channel, language: str) -> Conversation:
@@ -125,6 +135,16 @@ class ConversationService:
         self._audit(conv, "proactive_alert", transaction_id=transaction_id, fraud_score=str(txn.fraud_score))
         conv.history.append(f"bank: {opening}")
         return conv.id, opening
+
+    def start_from_purchase(self, token: str, transaction_id: str, language: str = "es") -> Reply:
+        """The customer tapped "I don't recognise this" on a purchase in the app: the transaction is already
+        known (ownership checked by the tool layer), so the conversation starts at the reason question."""
+        started = time.perf_counter()
+        txn = self.tools.get_transaction(token, transaction_id)
+        conv = self._new(Channel.CHAT, language)
+        self._audit(conv, "started_from_purchase", transaction_id=transaction_id)
+        result = conv.flow.handle(Turn(token=token, transaction_id=transaction_id))
+        return self._reply(conv, result, started, prefix=responses.purchase_intro(txn, language))
 
     def get(self, conversation_id: str) -> Conversation:
         return self.conversations[conversation_id]
@@ -195,7 +215,7 @@ class ConversationService:
         nlu, usage = outcome.result, outcome.usage
         if usage.model == "rules":
             mode = "rules"
-        self.llm_spent_usd += usage.cost_usd
+        self.budget.spent_usd += usage.cost_usd
         conv.usages.append(usage)
         if first_turn:
             self._set_language(conv, nlu.language)
@@ -256,12 +276,17 @@ class ConversationService:
             return self._reply(conv, conv.flow.handle(turn), started, **base)
         return self._text_reply(conv, "proactive", started, override=responses.proactive_prompt(txn, conv.language), **base)
 
-    def _reply(self, conv: Conversation, result: FlowResult, started: float, text_key: str | None = None, **extra: Any) -> Reply:
+    def _reply(
+        self, conv: Conversation, result: FlowResult, started: float, text_key: str | None = None,
+        prefix: str | None = None, **extra: Any,
+    ) -> Reply:
         flow = conv.flow
         text = (
             responses.message(text_key, conv.language) if text_key
             else responses.render(result, conv.language, transaction=flow.txn, reason=flow.reason_code)
         )
+        if prefix:
+            text = f"{prefix}\n{text}"
         conv.candidates = [_candidate(c) for c in result.candidates]
         conv.last_ask = list(result.ask_for)
         conv.history.append(f"bank: {text}")

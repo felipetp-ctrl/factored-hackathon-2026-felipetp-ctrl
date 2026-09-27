@@ -36,6 +36,9 @@ class HandoffPackage(BaseModel):
     open_questions: list[str]
     risk_signals: dict[str, Any]
     trace_id: str
+    # Who and what the case is about, so an agent can act on it without reading the conversation.
+    customer_id: str | None = None
+    transaction_id: str | None = None
 
 
 def build_handoff(
@@ -50,6 +53,7 @@ def build_handoff(
     actions: list[ActionRecord],
     policy: PolicyDecision | None,
     open_questions: list[str],
+    customer_id: str | None = None,
 ) -> HandoffPackage:
     facts: list[VerifiedFact] = []
     risk: dict[str, Any] = {}
@@ -85,4 +89,6 @@ def build_handoff(
         open_questions=questions,
         risk_signals=risk,
         trace_id=trace_id,
+        customer_id=customer_id,
+        transaction_id=transaction.transaction_id if transaction is not None else None,
     )

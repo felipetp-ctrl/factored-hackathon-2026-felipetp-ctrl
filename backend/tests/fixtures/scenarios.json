@@ -1,0 +1,6 @@
+[
+ {"id": "normal", "label": "Normal", "customer_id": "CUST001", "language": "es",
+  "try": "Tap “No reconozco” on Amazon MX.", "expected": "Case opened and read back."},
+ {"id": "human", "label": "Needs a person", "customer_id": "CUST001", "language": "es",
+  "try": "Tap “No reconozco” on Electronica Online.", "expected": "Handed off: above the amount limit."}
+]

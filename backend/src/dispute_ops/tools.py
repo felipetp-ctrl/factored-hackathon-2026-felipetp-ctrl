@@ -6,13 +6,13 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 
 from dispute_ops.auth import SessionService
-from dispute_ops.domain import Card, DisputeCase, ReasonCode, Transaction
+from dispute_ops.domain import Card, Customer, DisputeCase, ReasonCode, Transaction
 from dispute_ops.errors import AccessDenied, NotFound, ToolUnavailable
 from dispute_ops.store import Store
 
 # Only READ_TOOLS may ever be exposed to the LLM. WRITE_TOOLS are called by the orchestrator
 # after policy + customer confirmation.
-READ_TOOLS = frozenset({"search_transactions", "get_transaction", "get_card", "get_case_status", "list_cards", "list_cases"})
+READ_TOOLS = frozenset({"search_transactions", "get_transaction", "get_card", "get_case_status", "list_cards", "list_cases", "get_profile"})
 WRITE_TOOLS = frozenset({"open_dispute", "block_card"})
 
 
@@ -95,6 +95,12 @@ class BankingTools:
         if case.customer_id != customer_id:
             raise AccessDenied(case_id)
         return case
+
+    def get_profile(self, token: str) -> Customer:
+        customer = self.store.get_customer(self._customer_id(token))
+        if customer is None:
+            raise NotFound("customer")
+        return customer
 
     def list_cards(self, token: str) -> list[Card]:
         self.failures.check("list_cards")

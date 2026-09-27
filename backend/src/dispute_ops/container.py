@@ -13,7 +13,7 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from dispute_ops.auth import SessionService
-from dispute_ops.conversation import ConversationService, Nlu
+from dispute_ops.conversation import Budget, ConversationService, Nlu
 from dispute_ops.language.breaker import CircuitBreaker
 from dispute_ops.policy.engine import PolicyEngine
 from dispute_ops.store import Store
@@ -37,6 +37,13 @@ class Settings(BaseModel):
     # Production would alert within 48 h; the demo looks back 30 days because high-risk charges are rare
     # in the dataset (250 card transactions with score >= 80 in three years).
     fraud_alert_lookback_hours: int = 48
+    # Public demo: every browser gets its own copy of the data (workspace) and the bank-side views open without
+    # a key, because judges have no staff login. Off by default; production keeps the agent key.
+    demo_mode: bool = False
+    scenarios_path: str = ""
+    # auto = Claude with the free rule-based NLU as fallback (rules only when no API key); claude; rules.
+    nlu_mode: str = "auto"
+    llm_budget_usd: float | None = 20.0
 
     @classmethod
     def from_env(cls) -> Settings:
@@ -51,7 +58,16 @@ class Settings(BaseModel):
             demo_now=env.get("DEMO_NOW", "2026-06-17T12:00:00+00:00"),
             rate_limit_per_minute=int(env.get("RATE_LIMIT_PER_MINUTE", "30")),
             fraud_alert_lookback_hours=int(env.get("FRAUD_ALERT_LOOKBACK_HOURS", "48")),
+            demo_mode=env.get("DEMO_MODE", "false").lower() in ("1", "true", "yes"),
+            scenarios_path=env.get("SCENARIOS_PATH", ""),
+            nlu_mode=env.get("NLU_MODE", "auto"),
+            llm_budget_usd=float(env["LLM_BUDGET_USD"]) if env.get("LLM_BUDGET_USD") else 20.0,
         )
+
+    def resolved_scenarios_path(self) -> Path:
+        if self.scenarios_path:
+            return Path(self.scenarios_path)
+        return Path(self.demo_db or self.seed_path).parent / "scenarios.json"
 
 
 class SimClock:
@@ -81,7 +97,10 @@ class Container:
     conversations: ConversationService
 
     @classmethod
-    def build(cls, settings: Settings, *, nlu: Nlu | None = None, sleep: Callable[[float], None] = time.sleep) -> Container:
+    def build(
+        cls, settings: Settings, *, nlu: Nlu | None = None, sleep: Callable[[float], None] = time.sleep,
+        budget: Budget | None = None,
+    ) -> Container:
         clock = SimClock(datetime.fromisoformat(settings.demo_now))
         if settings.demo_db:
             import shutil
@@ -100,12 +119,26 @@ class Container:
         policy = PolicyEngine.load_default()
         failures = FailureInjector()
         tools = BankingTools(store, sessions, clock, policy_version=policy.version, failures=failures)
+        fallback: Nlu | None = None
         if nlu is None:
-            from dispute_ops.language.nlu import ClaudeNlu
-
-            nlu = ClaudeNlu()
+            nlu, fallback = _select_nlu(settings, store)
         conversations = ConversationService(
             tools=tools, store=store, policy=policy, nlu=nlu,
             breaker=CircuitBreaker(failure_threshold=3, reset_seconds=60, clock=clock), clock=clock, sleep=sleep,
+            fallback=fallback, budget=budget or Budget(settings.llm_budget_usd),
         )
         return cls(settings, clock, store, sessions, policy, failures, tools, conversations)
+
+
+def _select_nlu(settings: Settings, store: Store) -> tuple[Nlu, Nlu | None]:
+    from dispute_ops.language.rule_nlu import RuleNlu
+
+    rules = RuleNlu(store.distinct_merchants())
+    mode = settings.nlu_mode
+    if mode == "auto" and not os.environ.get("ANTHROPIC_API_KEY"):
+        mode = "rules"
+    if mode == "rules":
+        return rules, None
+    from dispute_ops.language.nlu import ClaudeNlu
+
+    return ClaudeNlu(), (rules if mode == "auto" else None)

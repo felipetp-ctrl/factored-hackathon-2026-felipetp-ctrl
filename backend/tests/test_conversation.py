@@ -182,12 +182,13 @@ def test_no_answer_to_an_evidence_question_is_not_treated_as_goodbye(tools, stor
 # ---- v0.0.2: free rule-based fallback when the model is unavailable or over budget -------------------
 
 def make_fallback_service(tools, store, clock, nlu, budget_usd=None):
+    from dispute_ops.conversation import Budget
     from dispute_ops.language.rule_nlu import RuleNlu
 
     return ConversationService(
         tools=tools, store=store, policy=PolicyEngine.load_default(), nlu=nlu,
         breaker=CircuitBreaker(failure_threshold=2, reset_seconds=60, clock=clock), clock=clock,
-        sleep=lambda s: None, fallback=RuleNlu(["Amazon MX", "Netflix"]), llm_budget_usd=budget_usd,
+        sleep=lambda s: None, fallback=RuleNlu(["Amazon MX", "Netflix"]), budget=Budget(budget_usd),
     )
 
 
