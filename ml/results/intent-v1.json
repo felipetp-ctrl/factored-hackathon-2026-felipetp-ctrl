@@ -1,0 +1,703 @@
+{
+  "version": "intent-v1",
+  "corpus": {
+    "examples": 937,
+    "used": 936,
+    "dropped_near_duplicates": [
+      {
+        "corpus": "no conozco ese comercio, nunca he comprado ahi",
+        "eval_message": "No, no reconozco ese comercio, nunca he comprado ahí ni sé quién es.",
+        "jaccard": 0.65
+      }
+    ],
+    "labels": {
+      "CANCELLED_RECURRING": 100,
+      "DISPUTE_NO_REASON": 140,
+      "DUPLICATE": 100,
+      "FRAUD_CNP": 97,
+      "FRAUD_CP": 99,
+      "HUMAN": 100,
+      "INCORRECT_AMOUNT": 100,
+      "NOT_RECEIVED": 100,
+      "OUT_OF_SCOPE": 100
+    }
+  },
+  "candidates": [
+    {
+      "name": "keyword-baseline",
+      "params": {},
+      "accuracy": 0.47115384615384615,
+      "macro_f1": 0.5076757302786121,
+      "ece": 0.5288461538461539,
+      "cv_seconds": 0.06093162501929328,
+      "per_class_recall": {
+        "FRAUD_CNP": 0.38144329896907214,
+        "FRAUD_CP": 0.5858585858585859,
+        "DUPLICATE": 0.61,
+        "INCORRECT_AMOUNT": 0.15,
+        "NOT_RECEIVED": 0.38,
+        "CANCELLED_RECURRING": 0.24,
+        "OUT_OF_SCOPE": 0.25,
+        "HUMAN": 0.45,
+        "DISPUTE_NO_REASON": 0.9857142857142858
+      }
+    },
+    {
+      "name": "tfidf[wbc]+lr C=1",
+      "params": {
+        "feature_kinds": "wbc",
+        "C": 1.0
+      },
+      "accuracy": 0.8878205128205128,
+      "macro_f1": 0.890909109438105,
+      "ece": 0.4390004526988122,
+      "cv_seconds": 2.0586579579976387,
+      "per_class_recall": {
+        "FRAUD_CNP": 0.6701030927835051,
+        "FRAUD_CP": 0.9696969696969697,
+        "DUPLICATE": 0.85,
+        "INCORRECT_AMOUNT": 0.88,
+        "NOT_RECEIVED": 0.91,
+        "CANCELLED_RECURRING": 1.0,
+        "OUT_OF_SCOPE": 0.82,
+        "HUMAN": 0.96,
+        "DISPUTE_NO_REASON": 0.9142857142857143
+      }
+    },
+    {
+      "name": "tfidf[wbc]+lr C=3",
+      "params": {
+        "feature_kinds": "wbc",
+        "C": 3.0
+      },
+      "accuracy": 0.9209401709401709,
+      "macro_f1": 0.9232392816324543,
+      "ece": 0.30651328556055707,
+      "cv_seconds": 2.5514436670055147,
+      "per_class_recall": {
+        "FRAUD_CNP": 0.8041237113402062,
+        "FRAUD_CP": 0.9595959595959596,
+        "DUPLICATE": 0.89,
+        "INCORRECT_AMOUNT": 0.92,
+        "NOT_RECEIVED": 0.93,
+        "CANCELLED_RECURRING": 1.0,
+        "OUT_OF_SCOPE": 0.92,
+        "HUMAN": 0.96,
+        "DISPUTE_NO_REASON": 0.9071428571428571
+      }
+    },
+    {
+      "name": "tfidf[wbc]+lr C=10",
+      "params": {
+        "feature_kinds": "wbc",
+        "C": 10.0
+      },
+      "accuracy": 0.9326923076923077,
+      "macro_f1": 0.9346279370308088,
+      "ece": 0.18925594096212103,
+      "cv_seconds": 3.096852500020759,
+      "per_class_recall": {
+        "FRAUD_CNP": 0.8247422680412371,
+        "FRAUD_CP": 0.9696969696969697,
+        "DUPLICATE": 0.94,
+        "INCORRECT_AMOUNT": 0.91,
+        "NOT_RECEIVED": 0.95,
+        "CANCELLED_RECURRING": 1.0,
+        "OUT_OF_SCOPE": 0.93,
+        "HUMAN": 0.98,
+        "DISPUTE_NO_REASON": 0.9
+      }
+    },
+    {
+      "name": "tfidf[wbc]+lr C=30",
+      "params": {
+        "feature_kinds": "wbc",
+        "C": 30.0
+      },
+      "accuracy": 0.936965811965812,
+      "macro_f1": 0.9391064742538836,
+      "ece": 0.1198708121138215,
+      "cv_seconds": 3.1955649589945097,
+      "per_class_recall": {
+        "FRAUD_CNP": 0.865979381443299,
+        "FRAUD_CP": 0.9696969696969697,
+        "DUPLICATE": 0.95,
+        "INCORRECT_AMOUNT": 0.91,
+        "NOT_RECEIVED": 0.95,
+        "CANCELLED_RECURRING": 1.0,
+        "OUT_OF_SCOPE": 0.94,
+        "HUMAN": 0.98,
+        "DISPUTE_NO_REASON": 0.8857142857142857
+      }
+    },
+    {
+      "name": "tfidf[wb]+lr C=1",
+      "params": {
+        "feature_kinds": "wb",
+        "C": 1.0
+      },
+      "accuracy": 0.8247863247863247,
+      "macro_f1": 0.8289665903600011,
+      "ece": 0.4243061653323453,
+      "cv_seconds": 0.5091782080125995,
+      "per_class_recall": {
+        "FRAUD_CNP": 0.5567010309278351,
+        "FRAUD_CP": 0.9292929292929293,
+        "DUPLICATE": 0.68,
+        "INCORRECT_AMOUNT": 0.85,
+        "NOT_RECEIVED": 0.9,
+        "CANCELLED_RECURRING": 0.98,
+        "OUT_OF_SCOPE": 0.76,
+        "HUMAN": 0.88,
+        "DISPUTE_NO_REASON": 0.8642857142857143
+      }
+    },
+    {
+      "name": "tfidf[wb]+lr C=3",
+      "params": {
+        "feature_kinds": "wb",
+        "C": 3.0
+      },
+      "accuracy": 0.8504273504273504,
+      "macro_f1": 0.8532145279804287,
+      "ece": 0.285363836549523,
+      "cv_seconds": 0.6919323339825496,
+      "per_class_recall": {
+        "FRAUD_CNP": 0.6701030927835051,
+        "FRAUD_CP": 0.9191919191919192,
+        "DUPLICATE": 0.71,
+        "INCORRECT_AMOUNT": 0.86,
+        "NOT_RECEIVED": 0.9,
+        "CANCELLED_RECURRING": 0.97,
+        "OUT_OF_SCOPE": 0.82,
+        "HUMAN": 0.91,
+        "DISPUTE_NO_REASON": 0.8785714285714286
+      }
+    },
+    {
+      "name": "tfidf[wb]+lr C=10",
+      "params": {
+        "feature_kinds": "wb",
+        "C": 10.0
+      },
+      "accuracy": 0.8525641025641025,
+      "macro_f1": 0.8558620838765125,
+      "ece": 0.15625035801153997,
+      "cv_seconds": 0.765657874988392,
+      "per_class_recall": {
+        "FRAUD_CNP": 0.7010309278350515,
+        "FRAUD_CP": 0.9292929292929293,
+        "DUPLICATE": 0.71,
+        "INCORRECT_AMOUNT": 0.87,
+        "NOT_RECEIVED": 0.89,
+        "CANCELLED_RECURRING": 0.97,
+        "OUT_OF_SCOPE": 0.82,
+        "HUMAN": 0.91,
+        "DISPUTE_NO_REASON": 0.8642857142857143
+      }
+    },
+    {
+      "name": "tfidf[wb]+lr C=30",
+      "params": {
+        "feature_kinds": "wb",
+        "C": 30.0
+      },
+      "accuracy": 0.8547008547008547,
+      "macro_f1": 0.8570518542660134,
+      "ece": 0.08649487271108258,
+      "cv_seconds": 0.7539458340033889,
+      "per_class_recall": {
+        "FRAUD_CNP": 0.6804123711340206,
+        "FRAUD_CP": 0.9292929292929293,
+        "DUPLICATE": 0.72,
+        "INCORRECT_AMOUNT": 0.89,
+        "NOT_RECEIVED": 0.89,
+        "CANCELLED_RECURRING": 0.97,
+        "OUT_OF_SCOPE": 0.82,
+        "HUMAN": 0.91,
+        "DISPUTE_NO_REASON": 0.8714285714285714
+      }
+    },
+    {
+      "name": "tfidf[c]+lr C=1",
+      "params": {
+        "feature_kinds": "c",
+        "C": 1.0
+      },
+      "accuracy": 0.8920940170940171,
+      "macro_f1": 0.8945449234795461,
+      "ece": 0.43775021096191097,
+      "cv_seconds": 1.8674072499852628,
+      "per_class_recall": {
+        "FRAUD_CNP": 0.6907216494845361,
+        "FRAUD_CP": 0.9696969696969697,
+        "DUPLICATE": 0.86,
+        "INCORRECT_AMOUNT": 0.88,
+        "NOT_RECEIVED": 0.9,
+        "CANCELLED_RECURRING": 1.0,
+        "OUT_OF_SCOPE": 0.83,
+        "HUMAN": 0.96,
+        "DISPUTE_NO_REASON": 0.9214285714285714
+      }
+    },
+    {
+      "name": "tfidf[c]+lr C=3",
+      "params": {
+        "feature_kinds": "c",
+        "C": 3.0
+      },
+      "accuracy": 0.9188034188034188,
+      "macro_f1": 0.9216958452218277,
+      "ece": 0.29923637100551886,
+      "cv_seconds": 2.408454541990068,
+      "per_class_recall": {
+        "FRAUD_CNP": 0.8144329896907216,
+        "FRAUD_CP": 0.9595959595959596,
+        "DUPLICATE": 0.93,
+        "INCORRECT_AMOUNT": 0.89,
+        "NOT_RECEIVED": 0.94,
+        "CANCELLED_RECURRING": 1.0,
+        "OUT_OF_SCOPE": 0.89,
+        "HUMAN": 0.96,
+        "DISPUTE_NO_REASON": 0.8928571428571429
+      }
+    },
+    {
+      "name": "tfidf[c]+lr C=10",
+      "params": {
+        "feature_kinds": "c",
+        "C": 10.0
+      },
+      "accuracy": 0.9273504273504274,
+      "macro_f1": 0.9293688218082592,
+      "ece": 0.1810227365572761,
+      "cv_seconds": 2.630601375014521,
+      "per_class_recall": {
+        "FRAUD_CNP": 0.8247422680412371,
+        "FRAUD_CP": 0.9494949494949495,
+        "DUPLICATE": 0.95,
+        "INCORRECT_AMOUNT": 0.89,
+        "NOT_RECEIVED": 0.95,
+        "CANCELLED_RECURRING": 1.0,
+        "OUT_OF_SCOPE": 0.92,
+        "HUMAN": 0.98,
+        "DISPUTE_NO_REASON": 0.8928571428571429
+      }
+    },
+    {
+      "name": "tfidf[c]+lr C=30",
+      "params": {
+        "feature_kinds": "c",
+        "C": 30.0
+      },
+      "accuracy": 0.9337606837606838,
+      "macro_f1": 0.9358127969174155,
+      "ece": 0.1165165428190402,
+      "cv_seconds": 2.73186558301677,
+      "per_class_recall": {
+        "FRAUD_CNP": 0.845360824742268,
+        "FRAUD_CP": 0.9595959595959596,
+        "DUPLICATE": 0.95,
+        "INCORRECT_AMOUNT": 0.9,
+        "NOT_RECEIVED": 0.95,
+        "CANCELLED_RECURRING": 1.0,
+        "OUT_OF_SCOPE": 0.94,
+        "HUMAN": 0.98,
+        "DISPUTE_NO_REASON": 0.8928571428571429
+      }
+    }
+  ],
+  "selected": "tfidf[wbc]+lr C=30",
+  "threshold": 0.6,
+  "threshold_curve": [
+    {
+      "threshold": 0.2,
+      "coverage": 0.9989316239316239,
+      "accepted_accuracy": 0.9379679144385027
+    },
+    {
+      "threshold": 0.25,
+      "coverage": 0.9946581196581197,
+      "accepted_accuracy": 0.9398496240601504
+    },
+    {
+      "threshold": 0.3,
+      "coverage": 0.9818376068376068,
+      "accepted_accuracy": 0.9488574537540805
+    },
+    {
+      "threshold": 0.35,
+      "coverage": 0.9754273504273504,
+      "accepted_accuracy": 0.9518072289156626
+    },
+    {
+      "threshold": 0.4,
+      "coverage": 0.9551282051282052,
+      "accepted_accuracy": 0.9619686800894854
+    },
+    {
+      "threshold": 0.45,
+      "coverage": 0.9262820512820513,
+      "accepted_accuracy": 0.9688581314878892
+    },
+    {
+      "threshold": 0.5,
+      "coverage": 0.9027777777777778,
+      "accepted_accuracy": 0.9751479289940829
+    },
+    {
+      "threshold": 0.55,
+      "coverage": 0.8696581196581197,
+      "accepted_accuracy": 0.9828009828009828
+    },
+    {
+      "threshold": 0.6,
+      "coverage": 0.842948717948718,
+      "accepted_accuracy": 0.9860583016476553
+    },
+    {
+      "threshold": 0.65,
+      "coverage": 0.813034188034188,
+      "accepted_accuracy": 0.988173455978975
+    },
+    {
+      "threshold": 0.7,
+      "coverage": 0.7799145299145299,
+      "accepted_accuracy": 0.9876712328767123
+    },
+    {
+      "threshold": 0.75,
+      "coverage": 0.7329059829059829,
+      "accepted_accuracy": 0.9883381924198251
+    },
+    {
+      "threshold": 0.8,
+      "coverage": 0.6741452991452992,
+      "accepted_accuracy": 0.993660855784469
+    },
+    {
+      "threshold": 0.85,
+      "coverage": 0.5897435897435898,
+      "accepted_accuracy": 0.9945652173913043
+    },
+    {
+      "threshold": 0.9,
+      "coverage": 0.4754273504273504,
+      "accepted_accuracy": 0.9977528089887641
+    },
+    {
+      "threshold": 0.95,
+      "coverage": 0.31196581196581197,
+      "accepted_accuracy": 0.9965753424657534
+    }
+  ],
+  "oof_accepted": {
+    "coverage": 0.842948717948718,
+    "accuracy": 0.9860583016476553
+  },
+  "confusion_labels": [
+    "FRAUD_CNP",
+    "FRAUD_CP",
+    "DUPLICATE",
+    "INCORRECT_AMOUNT",
+    "NOT_RECEIVED",
+    "CANCELLED_RECURRING",
+    "OUT_OF_SCOPE",
+    "HUMAN",
+    "DISPUTE_NO_REASON"
+  ],
+  "confusion": [
+    [
+      84,
+      7,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      5
+    ],
+    [
+      3,
+      96,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      95,
+      1,
+      2,
+      1,
+      0,
+      0,
+      1
+    ],
+    [
+      3,
+      0,
+      1,
+      91,
+      0,
+      0,
+      0,
+      0,
+      5
+    ],
+    [
+      1,
+      0,
+      2,
+      2,
+      95,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      100,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      94,
+      2,
+      4
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      98,
+      2
+    ],
+    [
+      5,
+      0,
+      0,
+      3,
+      2,
+      0,
+      5,
+      1,
+      124
+    ]
+  ],
+  "heldout": {
+    "test-v2 reason": {
+      "n": 46,
+      "labels": {
+        "CANCELLED_RECURRING": 4,
+        "FRAUD_CNP": 30,
+        "INCORRECT_AMOUNT": 8,
+        "NOT_RECEIVED": 4
+      },
+      "model_hits": 34,
+      "model_ci": [
+        0.5974057019172069,
+        0.8439926480555066
+      ],
+      "keyword_hits": 40,
+      "keyword_ci": [
+        0.7433386576963865,
+        0.9388224286250797
+      ],
+      "accepted": 34,
+      "accepted_hits": 28,
+      "errors": [
+        {
+          "text": "Oi, tudo bem? Quero contestar uma cobrança de 1.575.714,48 COP feita na \"Conciertos Live\" no dia 12/05/2026, por volta das 04:25. Eu reconhe",
+          "expected": "NOT_RECEIVED",
+          "predicted": "FRAUD_CNP",
+          "p": 0.636
+        },
+        {
+          "text": "Hola, quiero disputar un cargo de $91.558,20 ARS en \"Mercado Central\" del 2 de mayo, el producto nunca me llegó.",
+          "expected": "NOT_RECEIVED",
+          "predicted": "DISPUTE_NO_REASON",
+          "p": 0.863
+        },
+        {
+          "text": "Hola, quiero disputar un cargo de Mercado Central, me cobraron de más en una compra.",
+          "expected": "INCORRECT_AMOUNT",
+          "predicted": "DISPUTE_NO_REASON",
+          "p": 0.83
+        },
+        {
+          "text": "Hola, quiero disputar un cargo de $1,814,899.57 COP en \"Mercado Central\", no lo reconozco.",
+          "expected": "FRAUD_CNP",
+          "predicted": "DISPUTE_NO_REASON",
+          "p": 0.537
+        },
+        {
+          "text": "oi td bem, tem uma cobranca estranha aq no meu cartao foi na mercado central, valor de 91.558,20 ARS, dia 02/05/2026 mais ou menos 18:48",
+          "expected": "FRAUD_CNP",
+          "predicted": "INCORRECT_AMOUNT",
+          "p": 0.49
+        },
+        {
+          "text": "Oi! É uma cobrança de 1.575.714,48 COP na \"Conciertos Live\", feita em 12/05/2026 por volta das 04:25. O produto nunca chegou.",
+          "expected": "NOT_RECEIVED",
+          "predicted": "DISPUTE_NO_REASON",
+          "p": 0.508
+        },
+        {
+          "text": "Hola, buenas. Quiero disputar un cargo de 91.558,20 ARS que me hicieron en Mercado Central, no me llegó el producto que compré.",
+          "expected": "NOT_RECEIVED",
+          "predicted": "DISPUTE_NO_REASON",
+          "p": 0.657
+        },
+        {
+          "text": "Hola, quiero disputar un cargo de Mercado Central del 2 de mayo, me cobraron de más.",
+          "expected": "INCORRECT_AMOUNT",
+          "predicted": "DISPUTE_NO_REASON",
+          "p": 0.906
+        },
+        {
+          "text": "Oi! Foi uma cobrança de 22,98 USD da \"Cable TV\" no dia 26 de abril de 2026, por volta das 11:23. Eu já tinha cancelado a assinatura uns 10 d",
+          "expected": "CANCELLED_RECURRING",
+          "predicted": "DISPUTE_NO_REASON",
+          "p": 0.501
+        },
+        {
+          "text": "Hola, quiero disputar un cargo de 404.33 USD de \"Cable TV\" del 24 de abril de 2026, como a las 22:07. Cancelé la suscripción de Cable TV hac",
+          "expected": "CANCELLED_RECURRING",
+          "predicted": "DISPUTE_NO_REASON",
+          "p": 0.614
+        },
+        {
+          "text": "Oi! É uma cobrança na Boutique Moda, dia 24 de março de 2026, foi cobrado errado.",
+          "expected": "INCORRECT_AMOUNT",
+          "predicted": "DISPUTE_NO_REASON",
+          "p": 0.477
+        },
+        {
+          "text": "Hola, veo un cargo de 169.582,75 ARS en \"Mercado Central\" del 1 de mayo a las 21:39 que yo no hice.",
+          "expected": "FRAUD_CNP",
+          "predicted": "DISPUTE_NO_REASON",
+          "p": 0.567
+        }
+      ],
+      "by_language": {
+        "es": "17/24",
+        "pt": "17/22"
+      }
+    },
+    "test-v1 reason": {
+      "n": 69,
+      "labels": {
+        "FRAUD_CNP": 69
+      },
+      "model_hits": 60,
+      "model_ci": [
+        0.7703148508859572,
+        0.9298345143119515
+      ],
+      "keyword_hits": 68,
+      "keyword_ci": [
+        0.9223669266494263,
+        0.9974371413556695
+      ],
+      "accepted": 50,
+      "accepted_hits": 48,
+      "errors": [
+        {
+          "text": "Hola, buenas. Hay un cargo de 854.203,18 COP en \"Farmacia Salud\" el 10 de abril de 2026 como a las 6:44 de la mañana que yo no hice.",
+          "expected": "FRAUD_CNP",
+          "predicted": "DISPUTE_NO_REASON",
+          "p": 0.525
+        },
+        {
+          "text": "Oi, tem uma cobrança de 1.582.903,60 COP na Uber, no dia 23/05/2026 por volta da 00:51, que eu não fiz.",
+          "expected": "FRAUD_CNP",
+          "predicted": "DISPUTE_NO_REASON",
+          "p": 0.691
+        },
+        {
+          "text": "Hola, buenas. Veo un cargo de 242.96 USD en \"Super Ahorro\" del 28 de febrero de 2026, como a las 2:30 de la mañana, y yo no hice esa compra.",
+          "expected": "FRAUD_CNP",
+          "predicted": "DISPUTE_NO_REASON",
+          "p": 0.508
+        },
+        {
+          "text": "Hola, buen día. Veo un cargo de 438.63 USD de \"Cable TV\" del 5 de abril de 2026, como a las 8:03 am, que yo no hice.",
+          "expected": "FRAUD_CNP",
+          "predicted": "DISPUTE_NO_REASON",
+          "p": 0.542
+        },
+        {
+          "text": "Hola, quiero disputar un cargo de 24,594.89 COP en \"Cable TV\" del 5 de junio de 2026, como a las 5:55 am. No lo reconozco.",
+          "expected": "FRAUD_CNP",
+          "predicted": "DISPUTE_NO_REASON",
+          "p": 0.731
+        },
+        {
+          "text": "Hola, veo un cargo de 242.96 USD en \"Super Ahorro\" del 28 de febrero de 2026, como a las 2:30 am, y yo no lo hice.",
+          "expected": "FRAUD_CNP",
+          "predicted": "DISPUTE_NO_REASON",
+          "p": 0.585
+        },
+        {
+          "text": "Hola, buenas. Veo un cargo de 438.63 USD de \"Cable TV\" del 5 de abril de 2026, como a las 08:03, que yo no hice.",
+          "expected": "FRAUD_CNP",
+          "predicted": "DISPUTE_NO_REASON",
+          "p": 0.522
+        },
+        {
+          "text": "Hola, veo un cargo de 7.071,04 ARS en \"Tienda Don José\" del 13 de marzo de 2026 como a las 20:19 que yo no hice.",
+          "expected": "FRAUD_CNP",
+          "predicted": "DISPUTE_NO_REASON",
+          "p": 0.48
+        },
+        {
+          "text": "Hola, buenas, quiero disputar un cobro de $24.594,89 COP de \"Cable TV\" que me hicieron el 05 de junio de 2026, no lo reconozco.",
+          "expected": "FRAUD_CNP",
+          "predicted": "DISPUTE_NO_REASON",
+          "p": 0.565
+        }
+      ],
+      "by_language": {
+        "es": "28/36",
+        "pt": "32/33"
+      }
+    },
+    "test-v2 out-of-scope (model)": {
+      "recall": "0/8",
+      "false_positives": "0/76"
+    },
+    "test-v2 out-of-scope (keyword)": {
+      "recall": "6/8",
+      "false_positives": "0/76"
+    }
+  },
+  "runtime": {
+    "latency_ms_per_message": 0.5580362809797585,
+    "artifact_kb": 806.916015625,
+    "vocabulary": 8129,
+    "parity_max_abs_diff": 2.8281293243948014e-06
+  }
+}
