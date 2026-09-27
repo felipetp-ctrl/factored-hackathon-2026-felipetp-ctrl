@@ -181,7 +181,8 @@ def markdown(s: dict) -> str:
         f"(raw agreement {s['agreement']:.1%}). Both are Sonnet instances and the writer was told to rewrite ambiguous "
         "messages, so this shows the set is unambiguous under the definitions, not that the labels are human-validated.",
         f"- A first blind annotation by Claude Haiku was discarded: κ = {s['haiku_kappa_discarded']:.3f}, it labelled most "
-        "messages with an explicit reason as 'no reason' (file kept: `independent-v1.annotator-haiku-discarded.tsv`).",
+        "messages with an explicit reason as 'no reason' — it had generated a keyword script instead of reading the messages "
+        "(file kept: `independent-v1.annotator-haiku-discarded.tsv`). The Sonnet annotator wrote its labels directly.",
         f"- {s['near_duplicates_of_training_corpus']} messages that are near-duplicates of the training corpus (char 3-gram "
         f"Jaccard ≥ 0.6) are excluded; gold set = {s['gold']} messages.",
         f"- Gold labels: `{s['gold_labels']}`", "",

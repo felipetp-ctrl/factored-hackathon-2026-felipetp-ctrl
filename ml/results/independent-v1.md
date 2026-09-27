@@ -5,7 +5,7 @@
 ## Label quality
 
 - 540 messages; Cohen's κ between writer and blind annotator = **1.000** (raw agreement 100.0%). Both are Sonnet instances and the writer was told to rewrite ambiguous messages, so this shows the set is unambiguous under the definitions, not that the labels are human-validated.
-- A first blind annotation by Claude Haiku was discarded: κ = 0.475, it labelled most messages with an explicit reason as 'no reason' (file kept: `independent-v1.annotator-haiku-discarded.tsv`).
+- A first blind annotation by Claude Haiku was discarded: κ = 0.475, it labelled most messages with an explicit reason as 'no reason' — it had generated a keyword script instead of reading the messages (file kept: `independent-v1.annotator-haiku-discarded.tsv`). The Sonnet annotator wrote its labels directly.
 - 15 messages that are near-duplicates of the training corpus (char 3-gram Jaccard ≥ 0.6) are excluded; gold set = 525 messages.
 - Gold labels: `{'FRAUD_CNP': 56, 'FRAUD_CP': 59, 'DUPLICATE': 58, 'INCORRECT_AMOUNT': 60, 'NOT_RECEIVED': 59, 'CANCELLED_RECURRING': 60, 'OUT_OF_SCOPE': 58, 'HUMAN': 57, 'DISPUTE_NO_REASON': 58}`
 
