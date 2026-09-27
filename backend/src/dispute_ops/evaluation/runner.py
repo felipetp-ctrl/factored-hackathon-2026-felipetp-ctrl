@@ -13,6 +13,7 @@ from dispute_ops.evaluation.simulator import END, Simulator
 from dispute_ops.evaluation.systems import System
 
 CASE_ID = re.compile(r"DSP-[A-Z0-9]{6,}")
+BASELINES = ("naive_llm", "naive_sonnet")
 
 
 class ScenarioResult(BaseModel):
@@ -64,13 +65,15 @@ def judge(scenario: Scenario, system_name: str, container: Container, transcript
     case_txns = [c["transaction_id"] for c in cases]
     case_reasons = [c["reason_code"] for c in cases]
 
+    # Every variant of the proposed system exposes its final action; only the LLM baselines are judged leniently.
+    structured = system_name not in BASELINES
     if cases:
         actual = "done"
     elif handoff:
         actual = "handoff"
-    elif system_name == "proposed" and last_action in ("ineligible", "cancelled"):
+    elif structured and last_action in ("ineligible", "cancelled"):
         actual = last_action
-    elif system_name == "proposed":
+    elif structured:
         actual = "abstain"
     else:
         actual = "no_action"  # baseline: no structured signal; judged leniently below
