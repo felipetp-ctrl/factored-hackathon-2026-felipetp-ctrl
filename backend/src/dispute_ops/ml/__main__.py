@@ -14,6 +14,7 @@ def main() -> None:
     sub.add_parser("fraud-audit", help="audit the organizer fraud labels on the silver layer")
     ind = sub.add_parser("independent", help="independent message set: prepare the blind file, or evaluate")
     ind.add_argument("step", choices=["prepare", "evaluate"])
+    sub.add_parser("finetune", help="fine-tune multilingual-e5-small and compare with intent-v2 (offline)")
     sub.add_parser("learnability", help="which outcomes in the organizer data can be predicted at all")
     args = p.parse_args()
     if args.cmd == "train":
@@ -23,6 +24,9 @@ def main() -> None:
     elif args.cmd == "independent":
         from dispute_ops.ml.independent import main as independent
         print(independent(args.step))
+    elif args.cmd == "finetune":
+        from dispute_ops.ml.finetune import run as finetune
+        print(finetune())
     elif args.cmd == "learnability":
         from dispute_ops.ml.learnability import run as scan
         print(scan())

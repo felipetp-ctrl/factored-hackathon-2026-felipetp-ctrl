@@ -41,8 +41,9 @@ dates, openers and trailers) gives 2,808 training examples. The organizer data h
 - Confident errors: at the 0.60 threshold it accepts 492/525 independent messages, 12 of them wrongly (2.4%).
 - Calibration: out-of-fold ECE 0.081 (slightly over-confident at C = 30).
 - Cross-author: trained on our corpus → 95.6% on the independent set; trained on the independent set → 85.5% on ours.
-- Alternatives compared: 12 TF-IDF variants; multilingual-e5-small embeddings + LR (macro-F1 0.935, needs PyTorch
-  and a 470 MB encoder — not deployable on the 512 MB instance).
+- Alternatives compared: 12 TF-IDF variants; multilingual-e5-small embeddings + LR (CV macro-F1 0.935); the same
+  encoder **fine-tuned** on the same data (independent set 93.0% vs 95.6% for TF-IDF, 15× slower on CPU; one seed,
+  no hyperparameter search — `ml/results/finetune-e5-small.md`). Neither is deployable on the 512 MB instance.
 
 ## Risks and limitations
 - All evaluation text is written by language models (simulated customers, subagent writers); none by real customers,

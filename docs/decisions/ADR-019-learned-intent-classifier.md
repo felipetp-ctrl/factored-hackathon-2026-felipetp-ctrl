@@ -66,6 +66,11 @@ reasons as "no reason"); 15 near-duplicates of the corpus removed → 525 gold. 
 Cross-author: our corpus → their set 95.6%, their set → our corpus 85.5%. Report: `ml/results/independent-v1.md`;
 model card: `docs/model_card_intent-v2.md`.
 
+### Fine-tuned transformer
+multilingual-e5-small fine-tuned (3 epochs, one seed, no search) on the same 2,808 examples: independent set 93.0% vs
+95.6% for TF-IDF, test-v3 23/23 both, run 3 22/23 vs 23/23, ~2 ms vs 0.13 ms per message on CPU
+(`ml/results/finetune-e5-small.md`). With this little (synthetic) data the transformer does not pay for itself.
+
 ### Offline cascade estimate
 Replaying test-v2 with the language model's recorded readings, the free NLU could take 92% of turns (structured
 answers, and free text where intent-v2 is confident) and agrees with the model on the fields the flow uses in 84% of

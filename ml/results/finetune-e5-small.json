@@ -1,0 +1,30 @@
+{
+  "rows": [
+    {
+      "set": "independent (525)",
+      "n": 525,
+      "finetuned": 488,
+      "tfidf": 502,
+      "finetuned_ms": 1.9265326190673346,
+      "tfidf_ms": 0.13109642857064804
+    },
+    {
+      "set": "test-v3 reasons (23)",
+      "n": 23,
+      "finetuned": 23,
+      "tfidf": 23,
+      "finetuned_ms": 3.292923913408152,
+      "tfidf_ms": 0.2597500000695657
+    },
+    {
+      "set": "test-v2 run 3 reasons (23)",
+      "n": 23,
+      "finetuned": 22,
+      "tfidf": 23,
+      "finetuned_ms": 3.633740956581238,
+      "tfidf_ms": 0.23780073894633222
+    }
+  ],
+  "params": 117657225,
+  "train_seconds": 64.48997395799961
+}
