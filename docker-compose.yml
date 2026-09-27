@@ -6,6 +6,7 @@ services:
     environment:
       DB_PATH: /tmp/dispute_ops.db
       DEMO_NOW: "2026-06-17T12:00:00+00:00"
+      DEMO_MODE: "true"
       # Uncomment after `make data` to serve the gold sample of the organizer dataset instead of the fixture:
       # DEMO_DB: /data/demo/dispute_ops.db
     # volumes:

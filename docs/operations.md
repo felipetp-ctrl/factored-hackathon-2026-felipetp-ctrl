@@ -18,7 +18,10 @@ Everything measured here is an offline measurement on a laptop or a simulation; 
 - Per customer turn: 1 model call, measured p50 ≈ 2.0 s and p95 ≈ 2.9 s end to end (dev run, 88 simulated conversations). Latency is dominated by the model call.
 - Cost: ≈ US$ 0.003 per turn, ≈ US$ 0.009–0.017 per resolved dispute (Haiku list prices, measured token usage).
 - Throughput limit is the model provider's rate limit for the account, not the API: the Python process spends < 50 ms per turn outside the model call.
-- The circuit breaker opens after 3 consecutive model failures for 60 s; during that window new turns are handed to a person with a reference, instead of failing silently.
+- The circuit breaker opens after 3 consecutive model failures for 60 s. Since v0.0.2 the rule-based NLU takes over
+  during that window, when the spend cap (`LLM_BUDGET_USD`, default 20, shared by the process) is reached, or when the
+  API key is missing (ADR-017); every turn records which NLU read it. Without a fallback configured, turns are handed
+  to a person with a reference.
 
 ## Monitoring
 
@@ -49,7 +52,8 @@ structured JSON logs. OpenTelemetry export (Langfuse) is not wired yet.
 | Who | How | Can reach |
 |---|---|---|
 | Customer | Session token (test identity provider today; bank OIDC + MFA in production) | Own conversation, own cases, own transactions through the tools |
-| Agent / operations | `X-Agent-Key` today; SSO with per-agent roles in production | Handoff queue, traces, metrics, PQR batch, fraud alerts |
+| Agent / operations | `X-Agent-Key` today; SSO with per-agent roles in production | Handoff queue and resolve actions, traces, metrics, PQR batch, fraud alerts |
+| Public demo (`DEMO_MODE=true`) | No key; each browser tab has its own workspace copy of the synthetic data | The agent views of its own workspace only. Never enable with real data |
 | Language model | No credentials at all | Receives redacted text and case context; cannot call write tools |
 
 Ownership is enforced in the tool layer on every call (tested for cross-customer access, forged, expired and swapped sessions).
@@ -65,7 +69,8 @@ Ownership is enforced in the tool layer on every call (tested for cross-customer
 
 ## Remaining work before production
 
-1. Real identity (OIDC/MFA) and per-agent SSO; remove the test identity provider.
+1. Real identity (OIDC/MFA) and per-agent SSO; remove the test identity provider and demo mode; record the real agent id
+   on agent actions (the demo records `agent-demo`).
 2. Move conversation state, rate limit and idempotency to Redis/Postgres; horizontal scaling.
 3. Replace mock tools with the bank's case-management and card-management APIs (same contracts).
 4. Legal review of the dispute policy (the current one is synthetic and calibrated only on value distributions).

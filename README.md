@@ -12,6 +12,7 @@ chat / PQR / fraud alert
   gateway ── session check · PII masking · injection signals · language
         │
   Claude Haiku 4.5 ── free text → validated structured fields (never decides, never writes to the customer)
+        │               └ rule-based NLU takes over when the model is down or over budget (same fields, US$ 0)
         │
   state machine ── identify transaction → reason → evidence → policy → confirm → act → verify
         │                                   │
@@ -22,11 +23,25 @@ chat / PQR / fraud alert
 
 ## Live demo
 
+- Web app: **https://latam-bank-disputes.vercel.app**
 - API: **https://latam-bank-dispute-ops-api.onrender.com** (OpenAPI docs at `/docs`; free plan — the first request after
   idle time can take about a minute while the service wakes up)
-- Web app: **https://latam-bank-disputes.vercel.app** — pick a test customer, start a conversation; type the agent key in the
-  top bar to see the bank-side decision inspector, the agent console and operations
-- The agent key for the bank-side views is shared with the judges on request.
+
+The page shows **what the customer sees** (a bank app in Spanish or Portuguese) next to **what the bank sees**
+(handoff queue, decision trail, operations). Pick one of the five guided scenarios in the top bar — each says what to
+do and what should happen — or any customer of the dataset sample:
+
+| # | Scenario | What to look for |
+|---|---|---|
+| 1 | Normal | "No reconozco" on a purchase → two questions → confirmation → case read back → appears under *Mis disputas* |
+| 2 | Ambiguous | Several charges at the same merchant → the assistant lists them and asks; it never picks for the customer |
+| 3 | Out of scope | Balance question → declined without touching any case → polite close |
+| 4 | Needs a person | Above US$ 450 → handoff lands in the bank **Queue** with verified facts → open it as the agent → the customer sees it |
+| 5 | Attack | Prompt injection + another customer's transaction id → same answer as "not found" → handed off as suspicious access |
+
+Every bank message has a **Why?** link with the rule that decided it. The top bar can expire the session or
+**simulate an AI outage** (the rule-based fallback takes over). Each browser tab gets its own copy of the data;
+*Reset demo* starts it over. No key is needed: the public deploy runs in demo mode on synthetic data (ADR-016).
 
 ## What it does
 
@@ -49,13 +64,14 @@ Requirements: Python 3.12+ with [uv](https://docs.astral.sh/uv/), Node 22 + pnpm
 ```bash
 cp .env.example .env            # set ANTHROPIC_API_KEY and AGENT_API_KEY
 make install                    # backend dependencies
-make test                       # 140+ offline tests (no API calls)
+make test                       # 240+ offline tests (no API calls)
 make api                        # http://localhost:8000  (OpenAPI docs at /docs)
 make web                        # http://localhost:3000  (in another terminal)
 ```
 
-Open the web app, type the agent key in the top bar, pick a test customer and start a conversation. The right
-pane shows what the bank understood and decided at every step.
+Open the web app and pick a scenario. Locally the bank side needs `DEMO_MODE=true` (or the agent key in production
+mode). Without `ANTHROPIC_API_KEY` the service runs the rule-based NLU only (`NLU_MODE=rules`), so the whole demo
+works offline and for free.
 
 Docker: `docker compose up --build` (API on :8000, web on :3000).
 
@@ -114,6 +130,10 @@ Component evaluation on the same conversations (`test-v2`, proposed system):
 | Injection flag (rules) TPR / FPR | 100% (6/6) / 0% (0/98) | — |
 | Language rules accuracy when decided | 98.3% (5.3% undecided → the model decides) | — |
 
+The rule-based fallback NLU (v0.0.2), re-scored offline on the same stored messages without model calls: dispute
+reason 87.0% (40/46), out-of-scope recall 8/8 (one rule fixed after reading two of these messages, so not held-out),
+human request 2/2 — [`components_rescored.md`](eval/results/20260926T181317Z-test-v2/components_rescored.md).
+
 Small samples: zero observed unsafe outcomes in 105 + 84 conversations does not establish zero risk; the component
 baseline shows the language model's margin is on the less common reasons, not on fraud.
 Full report: [`eval/results/20260926T175451Z-test-v1/report.md`](eval/results/20260926T175451Z-test-v1/report.md).
@@ -144,6 +164,9 @@ sub-category of 20% of complaints), while free text in complaints and transcript
 
 - Portuguese does not exist in the dataset; Portuguese behaviour is evaluated only through simulated customers.
 - The policy is synthetic; thresholds are placeholders to be calibrated with the data.
-- Conversation state, rate limiting and idempotency live in one process's memory.
+- Conversation state, rate limiting, idempotency and demo workspaces live in one process's memory (a restart resets them).
+- Demo mode opens the bank-side views without a key (synthetic data only); production mode keeps the agent key.
+- The rule-based fallback NLU understands fewer phrasings (87% on dispute reasons vs 100% for Claude on test-v2);
+  when it does not understand, the customer is asked again or handed to a person, never acted on wrongly.
 - Identity is a test provider (`POST /auth/session`), standing in for the bank's real login.
 - Name detection is not part of PII masking; structured identifiers (cards, emails, phones, national ids) are.

@@ -7,7 +7,7 @@ Status: ✅ met · 🟡 partial (gap stated) · ⬜ not yet.
 
 | Requirement | Status | Evidence | How to verify |
 |---|---|---|---|
-| Working prototype of one coherent workflow | ✅ | Card-charge dispute intake end to end ([ADR-001](decisions/ADR-001-workflow.md)) | `make api` + `make web`, start a conversation |
+| Working prototype of one coherent workflow | ✅ | Card-charge dispute intake end to end ([ADR-001](decisions/ADR-001-workflow.md)); judge-facing demo with guided scenarios ([ADR-016](decisions/ADR-016-judge-facing-demo.md)) | Live web app, scenarios 1–5 · `tests/test_demo_scenarios.py` |
 | Normal resolution path | ✅ | Identify → reason → evidence → policy → confirm → act → verify | Web: "No reconozco un cargo de …" · `tests/test_flow.py::test_normal_path_*` |
 | Ambiguous or unsupported request | ✅ | Candidate lists, bounded clarification, out-of-scope abstention | `test_ambiguous_merchant_asks_with_candidates`, `test_out_of_scope_abstains_*`; test-v2 `same-merchant-*`, `oos-*` |
 | Case requiring human intervention | ✅ | Structured handoff on 11 triggers | Agent view; `test_high_amount_hands_off_with_verified_facts`; test-v2 `human_required` 16/16 |
@@ -30,7 +30,7 @@ Status: ✅ met · 🟡 partial (gap stated) · ⬜ not yet.
 
 | Requirement | Status | Evidence |
 |---|---|---|
-| Maintain conversational context | ✅ | Flow state + recent turns in NLU context; multi-turn scenarios |
+| Maintain conversational context | ✅ | Flow state + recent turns in NLU context; language fixed after the first turn; polite endings ([ADR-018](decisions/ADR-018-conversation-fixes.md)) |
 | Clarify ambiguity | ✅ | Ask-for fields, candidate lists, max 2 attempts then handoff |
 | Ground factual responses in permitted information | ✅ | Replies are templates filled only from verified store data ([ADR-010](decisions/ADR-010-llm-interprets-templates-speak.md)) |
 | Use tools when they serve the workflow | ✅ | `BankingTools` (search, get card, case status, open dispute, block card) |
@@ -42,7 +42,7 @@ Status: ✅ met · 🟡 partial (gap stated) · ⬜ not yet.
 |---|---|---|
 | Define what is answered / needs confirmation / abstains or transfers | ✅ | [ADR-002](decisions/ADR-002-automation-boundary.md) table |
 | Enforce permissions and policy outside model prose | ✅ | Versioned policy YAML + state machine; write tools never exposed to the model ([ADR-004](decisions/ADR-004-hybrid-orchestration.md)) |
-| Handoff with request, verified facts, actions, evidence, open questions | ✅ | `HandoffPackage` (no raw transcript); agent console |
+| Handoff with request, verified facts, actions, evidence, open questions | ✅ | `HandoffPackage` (no raw transcript) with customer and transaction; agent queue can open the dispute under a human-review policy or close it, audited (ADR-016) | Web: scenario 4 → Queue · `tests/test_api_demo.py` |
 
 ## 4. Sound data and ML practice
 
@@ -77,7 +77,7 @@ Status: ✅ met · 🟡 partial (gap stated) · ⬜ not yet.
 |---|---|---|
 | Tracing | 🟡 | Per-conversation audit trace + request logs with ids; OpenTelemetry export not wired |
 | Bounded retries | ✅ | `call_with_retry` (max 2) |
-| Safe fallback | ✅ | Circuit breaker → retry prompt → handoff with reference |
+| Safe fallback | ✅ | Model down, circuit open or spend cap reached → rule-based NLU with the same guards ([ADR-017](decisions/ADR-017-rule-fallback-nlu.md)); no fallback → handoff with reference | Web: "Simulate AI outage" · `test_model_failure_uses_the_rule_fallback_*` |
 | Reproducible setup | ✅ | `uv`, `pnpm`, Makefile, Docker image verified, CI workflow |
 | Capacity, monitoring, access control, retention, remaining work | ✅ | [operations.md](operations.md) |
 | Explanations from sources, policy rules and execution records | ✅ | `rule_ids`, `policy_version`, `inputs` on every decision; decision inspector in the web app |

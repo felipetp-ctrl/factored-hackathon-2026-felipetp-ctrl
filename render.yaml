@@ -21,3 +21,11 @@ services:
         value: /app/demo_data/dispute_ops.db
       - key: FRAUD_ALERT_LOOKBACK_HOURS
         value: "720"
+      # Public demo: per-visitor workspaces, bank-side views without a key (synthetic data only, ADR-016)
+      - key: DEMO_MODE
+        value: "true"
+      # Claude first, free rule-based NLU when the model fails or the spend cap is reached (ADR-017)
+      - key: NLU_MODE
+        value: auto
+      - key: LLM_BUDGET_USD
+        value: "20"
