@@ -142,6 +142,7 @@ def run_scenario(
                 reauth = True
                 token = container.sessions.issue(scenario.customer_id)
                 transcript.append(("bank", out.text))
+                transcript.append(("system", "[customer signed in again]"))
                 out = system.send(text, token)
                 latencies.append(out.latency_ms)
                 cost += out.cost_usd

@@ -57,6 +57,8 @@ class Conversation:
     last_ask: list[str] = field(default_factory=list)
     history: list[str] = field(default_factory=list)
     usages: list[LlmUsage] = field(default_factory=list)
+    customer_turns: int = 0
+    out_of_scope_streak: int = 0
 
 
 def _candidate(t: Transaction) -> dict[str, str]:
@@ -124,7 +126,12 @@ class ConversationService:
 
         redacted, pii = redact_pii(text)
         flags = detect_injection(text)
-        conv.language = detect_language(text) or conv.language
+        # The language is chosen at the start; only the customer's first message may change it (they write in the
+        # language they read). Later switches, e.g. a mixed-language "sim", do not flip the replies.
+        first_turn = conv.customer_turns == 0
+        conv.customer_turns += 1
+        if first_turn:
+            self._set_language(conv, detect_language(text))
         self._audit(conv, "customer_message", text=redacted, pii=pii, injection_flags=flags)
         conv.history.append(f"customer: {redacted}")
         base = {"pii_redacted": pii, "injection_flags": flags}
@@ -134,7 +141,7 @@ class ConversationService:
         except Exception:
             return self._reply(conv, flow.handle(Turn(token=token)), started, **base)
         if flow.state in {State.DONE, State.INELIGIBLE, State.HANDOFF, State.CANCELLED}:
-            return self._reply(conv, flow.handle(Turn(token=token)), started, **base)
+            return self._reply(conv, flow.handle(Turn(token=token)), started, text_key="ended", **base)
 
         if not self.breaker.allow():
             return self._reply(conv, flow.escalate(["nlu_unavailable"]), started, **base)
@@ -153,16 +160,22 @@ class ConversationService:
         self.breaker.record_success()
         nlu, usage = outcome.result, outcome.usage
         conv.usages.append(usage)
-        if nlu.language in ("es", "pt"):
-            conv.language = nlu.language
-            flow.language = nlu.language
+        if first_turn:
+            self._set_language(conv, nlu.language)
         self._audit(conv, "nlu", result=nlu.model_dump(mode="json"), usage=usage.model_dump(mode="json"))
         base.update(nlu=nlu, usage=usage)
 
         if conv.proactive_txn is not None:
             return self._proactive_turn(conv, token, nlu, started, base)
         if nlu.intent == "out_of_scope":
+            conv.out_of_scope_streak += 1
+            if conv.out_of_scope_streak >= 2:  # a second unrelated request: redirect and end instead of looping
+                return self._reply(conv, flow.close("out_of_scope_repeated"), started, text_key="goodbye_redirect", **base)
             return self._text_reply(conv, "out_of_scope", started, **base)
+        conv.out_of_scope_streak = 0
+        if nlu.intent == "decline" and flow.state in {State.START, State.IDENTIFY_TXN}:
+            # "No, nothing to dispute" before a charge was chosen ends the conversation politely.
+            return self._reply(conv, flow.close("customer_has_nothing_to_dispute"), started, text_key="goodbye", **base)
         if nlu.intent == "greeting" and flow.state == State.START:
             return self._text_reply(conv, "greeting", started, **base)
         return self._reply(conv, flow.handle(self._turn(conv, token, nlu)), started, **base)
@@ -234,6 +247,12 @@ class ConversationService:
         )
         self._audit(conv, "reply", action=key, state=reply.state, text=text, latency_ms=reply.latency_ms)
         return reply
+
+    @staticmethod
+    def _set_language(conv: Conversation, language: str | None) -> None:
+        if language in ("es", "pt"):
+            conv.language = language
+            conv.flow.language = language
 
     def _audit(self, conv: Conversation, kind: str, **data: Any) -> None:
         self.store.append_audit(AuditEvent(trace_id=conv.id, at=self.clock(), kind=kind, data=data))

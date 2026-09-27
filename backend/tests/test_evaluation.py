@@ -76,6 +76,7 @@ def test_run_scenario_expired_session_reauthenticates_and_finishes():
     sim = ScriptedSimulator("no reconozco 1250 amazon", "la tengo, no conozco la tienda", "sí, bloquear")
     r = run_scenario(SCENARIOS["expired_session-es"], ProposedSystem, sim, container_factory=factory)
     assert r.reauth_seen and r.correct
+    assert ("system", "[customer signed in again]") in r.transcript
 
 
 def test_judge_flags_wrong_transaction_unrequested_block_leak_and_fabricated_id():

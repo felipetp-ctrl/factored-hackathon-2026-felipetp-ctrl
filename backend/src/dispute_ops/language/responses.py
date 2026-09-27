@@ -5,6 +5,8 @@ these messages, so the system cannot claim an action that did not happen."""
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 from dispute_ops.domain import DisputeCase, ReasonCode, Transaction
 from dispute_ops.flow import FlowResult
 
@@ -80,6 +82,9 @@ T = {
         "retry": "Tuve un problema técnico para entender su mensaje. ¿Podría repetirlo?",
         "proactive": "Detectamos una compra de {amount} {currency} en {merchant} el {date}. ¿Fue usted? (sí/no)",
         "recognized": "Gracias por confirmar. No haremos ningún cambio.",
+        "goodbye": "Entendido, no hay nada que disputar. Si más adelante ve un cargo que no reconoce, estoy aquí. ¡Que tenga un buen día!",
+        "goodbye_redirect": "Para esas consultas, use la app de LATAM Bank o hable con un asesor. Si más adelante necesita disputar un cargo, estoy aquí. ¡Que tenga un buen día!",
+        "ended": "Esta conversación terminó. Si necesita disputar otro cargo, inicie una nueva conversación.",
     },
     "pt": {
         "greeting": "Olá! Sou o assistente de contestações do LATAM Bank. Qual cobrança do seu cartão você quer contestar?",
@@ -100,6 +105,9 @@ T = {
         "retry": "Tive um problema técnico para entender sua mensagem. Pode repetir?",
         "proactive": "Identificamos uma compra de {amount} {currency} em {merchant} no dia {date}. Foi você? (sim/não)",
         "recognized": "Obrigado por confirmar. Não faremos nenhuma alteração.",
+        "goodbye": "Entendido, não há nada para contestar. Se depois você vir uma cobrança que não reconhece, é só me chamar. Tenha um bom dia!",
+        "goodbye_redirect": "Para esses assuntos, use o app do LATAM Bank ou fale com um atendente. Se depois precisar contestar uma cobrança, é só me chamar. Tenha um bom dia!",
+        "ended": "Esta conversa terminou. Se precisar contestar outra cobrança, comece uma nova conversa.",
     },
 }
 
@@ -112,15 +120,28 @@ def message(key: str, lang: str | None, **kw: object) -> str:
     return T[_lang(lang)][key].format(**kw)
 
 
-def _txn_fields(t: Transaction) -> dict[str, object]:
+# Currencies whose countries write 1.234,56 (Argentina, Colombia; Brazil for Portuguese readers).
+# Mexico and USD amounts keep 1,234.56 for Spanish readers, as Mexican customers write them.
+_COMMA_DECIMAL = {"ARS", "COP", "BRL"}
+
+
+def fmt_amount(amount: Decimal, currency: str, lang: str | None) -> str:
+    """Format an amount the way the customer reads it, so it matches what they typed."""
+    text = f"{amount:,.2f}"
+    if lang == "pt" or currency in _COMMA_DECIMAL:
+        text = text.replace(",", "_").replace(".", ",").replace("_", ".")
+    return text
+
+
+def _txn_fields(t: Transaction, lang: str | None = None) -> dict[str, object]:
     return {
-        "amount": f"{t.amount:,.2f}", "currency": t.currency,
-        "merchant": t.merchant_name or "—", "date": t.transaction_date.date().isoformat(),
+        "amount": fmt_amount(t.amount, t.currency, _lang(lang)), "currency": t.currency,
+        "merchant": t.merchant_name or "—", "date": t.transaction_date.strftime("%d/%m/%Y"),
     }
 
 
 def proactive_prompt(t: Transaction, lang: str | None) -> str:
-    return message("proactive", lang, **_txn_fields(t))
+    return message("proactive", lang, **_txn_fields(t, lang))
 
 
 def render(result: FlowResult, lang: str | None, *, transaction: Transaction | None, reason: ReasonCode | None) -> str:
@@ -130,7 +151,7 @@ def render(result: FlowResult, lang: str | None, *, transaction: Transaction | N
         if result.candidates:
             lines.append(T[lang]["candidates"])
             for i, c in enumerate(result.candidates, 1):
-                f = _txn_fields(c)
+                f = _txn_fields(c, lang)
                 when = c.transaction_date.strftime("%H:%M")
                 lines.append(f"{i}) {f['merchant']} · {f['amount']} {f['currency']} · {f['date']} {when} ({c.transaction_id})")
             lines.append(T[lang]["pick"])
@@ -139,7 +160,7 @@ def render(result: FlowResult, lang: str | None, *, transaction: Transaction | N
         return "\n".join(lines)
     if result.action == "confirm":
         assert transaction is not None and reason is not None
-        text = message("confirm", lang, reason=REASON_LABEL[lang][reason], **_txn_fields(transaction))
+        text = message("confirm", lang, reason=REASON_LABEL[lang][reason], **_txn_fields(transaction, lang))
         return f"{text}\n{T[lang]['offer_block']}" if result.offer_block_card else text
     if result.action == "done":
         case: DisputeCase = result.case  # type: ignore[assignment]

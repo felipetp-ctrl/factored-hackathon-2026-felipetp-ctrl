@@ -39,6 +39,8 @@ class ClaudeSimulator:
         # The bank speaks as "user", the simulated customer as "assistant".
         messages: list[dict[str, str]] = []
         for role, text in transcript:
+            if role == "system":  # harness events (e.g. re-login) are not part of the chat
+                continue
             messages.append({"role": "user" if role == "bank" else "assistant", "content": text})
         if not messages or messages[-1]["role"] != "user":
             messages.append({"role": "user", "content": "(continue)"})

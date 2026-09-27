@@ -122,3 +122,58 @@ def test_proactive_recognized_closes(tools, store, clock, token):
     cid, _ = svc.start_proactive(token, "TXN007", language="pt")
     r = svc.send(cid, token, "Sim, fui eu")
     assert r.action == "cancelled" and "Obrigado por confirmar" in r.text
+
+
+# ---- v0.0.2: sticky language and closing conversations that need nothing -----------------------------
+
+def test_language_is_fixed_after_the_first_customer_turn(tools, store, clock, token):
+    nlu = ScriptedNlu(
+        nlu_result(intent="dispute", language="es", merchant="Netflix", reason_code=ReasonCode.DUPLICATE,
+                   reason_confidence=0.9),
+        nlu_result(intent="provide_info", language="pt", transaction_id="TXN002"),
+    )
+    svc = make_service(tools, store, clock, nlu)
+    cid = svc.start("es")
+    assert svc.send(cid, token, "Me cobraron dos veces Netflix").language == "es"
+    r = svc.send(cid, token, "Sim, é a primeira")  # a Portuguese answer mid-conversation does not switch
+    assert r.language == "es"
+
+
+def test_first_customer_turn_may_set_the_language(tools, store, clock, token):
+    nlu = ScriptedNlu(nlu_result(intent="greeting", language="pt"))
+    svc = make_service(tools, store, clock, nlu)
+    r = svc.send(svc.start("es"), token, "Oi, tudo bem?")
+    assert r.language == "pt" and "Olá" in r.text
+
+
+def test_declining_before_choosing_a_charge_closes_politely(tools, store, clock, token):
+    nlu = ScriptedNlu(nlu_result(intent="out_of_scope"), nlu_result(intent="decline"))
+    svc = make_service(tools, store, clock, nlu)
+    cid = svc.start("es")
+    svc.send(cid, token, "solo quería saber mi saldo")
+    r = svc.send(cid, token, "no, no tengo ningún cargo que disputar, gracias")
+    assert r.state == State.CANCELLED and r.action == "cancelled"
+    assert "que tenga" in r.text.lower()
+    again = svc.send(cid, token, "gracias")
+    assert again.state == State.CANCELLED and "terminó" in again.text
+
+
+def test_two_out_of_scope_requests_in_a_row_close_with_a_redirect(tools, store, clock, token):
+    nlu = ScriptedNlu(nlu_result(intent="out_of_scope", language="pt"), nlu_result(intent="out_of_scope", language="pt"))
+    svc = make_service(tools, store, clock, nlu)
+    cid = svc.start("pt")
+    assert svc.send(cid, token, "qual o meu saldo?").action == "out_of_scope"
+    r = svc.send(cid, token, "e o limite do cartão?")
+    assert r.state == State.CANCELLED and "app" in r.text
+
+
+def test_no_answer_to_an_evidence_question_is_not_treated_as_goodbye(tools, store, clock, token):
+    nlu = ScriptedNlu(
+        nlu_result(intent="dispute", amount=1250, reason_code=ReasonCode.FRAUD_CNP, reason_confidence=0.9),
+        nlu_result(intent="decline", card_in_possession="no"),
+    )
+    svc = make_service(tools, store, clock, nlu)
+    cid = svc.start("es")
+    svc.send(cid, token, "No reconozco un cargo de 1250")
+    r = svc.send(cid, token, "no")
+    assert r.state != State.CANCELLED

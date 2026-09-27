@@ -2,7 +2,7 @@ import pytest
 
 from dispute_ops.domain import ReasonCode
 from dispute_ops.flow import DisputeFlow, Turn
-from dispute_ops.language.responses import T, render
+from dispute_ops.language.responses import T, fmt_amount, render
 from dispute_ops.policy.engine import PolicyEngine
 
 EVIDENCE = {"card_in_possession": "yes", "recognizes_merchant": "no"}
@@ -26,7 +26,7 @@ def test_confirm_message_uses_verified_transaction_data(flow, sessions):
     token = sessions.issue("CUST001")
     r = flow.handle(Turn(token=token, transaction_id="TXN001", reason_code=ReasonCode.FRAUD_CNP, evidence=EVIDENCE))
     text = say(flow, "pt", r)
-    assert "1,250.00 MXN" in text and "Amazon MX" in text and "2026-06-15" in text
+    assert "1.250,00 MXN" in text and "Amazon MX" in text and "15/06/2026" in text
     assert "bloquear" in text
 
 
@@ -58,3 +58,23 @@ def test_candidates_show_time_to_tell_same_day_charges_apart(flow, sessions):
     r = flow.handle(Turn(token=sessions.issue("CUST001"), merchant="Netflix", reason_code=ReasonCode.DUPLICATE))
     text = say(flow, "es", r)
     assert "09:00" in text and "09:05" in text
+
+
+@pytest.mark.parametrize("amount,currency,lang,expected", [
+    ("1575714.48", "COP", "es", "1.575.714,48"),
+    ("91558.20", "ARS", "es", "91.558,20"),
+    ("1250.00", "MXN", "es", "1,250.00"),
+    ("202.57", "USD", "es", "202.57"),
+    ("1250.00", "MXN", "pt", "1.250,00"),
+    ("452.16", "USD", "pt", "452,16"),
+])
+def test_amounts_follow_the_local_convention(amount, currency, lang, expected):
+    from decimal import Decimal
+    assert fmt_amount(Decimal(amount), currency, lang) == expected
+
+
+def test_confirm_in_spanish_for_mexico_keeps_dot_decimal_and_local_date(flow, sessions):
+    token = sessions.issue("CUST001")
+    r = flow.handle(Turn(token=token, transaction_id="TXN001", reason_code=ReasonCode.FRAUD_CNP, evidence=EVIDENCE))
+    text = say(flow, "es", r)
+    assert "1,250.00 MXN" in text and "15/06/2026" in text
