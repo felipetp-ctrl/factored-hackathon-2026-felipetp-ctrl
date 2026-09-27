@@ -99,7 +99,7 @@ class Container:
     @classmethod
     def build(
         cls, settings: Settings, *, nlu: Nlu | None = None, sleep: Callable[[float], None] = time.sleep,
-        budget: Budget | None = None,
+        budget: Budget | None = None, fallback: Nlu | None = None,
     ) -> Container:
         clock = SimClock(datetime.fromisoformat(settings.demo_now))
         if settings.demo_db:
@@ -119,7 +119,6 @@ class Container:
         policy = PolicyEngine.load_default()
         failures = FailureInjector()
         tools = BankingTools(store, sessions, clock, policy_version=policy.version, failures=failures)
-        fallback: Nlu | None = None
         if nlu is None:
             nlu, fallback = _select_nlu(settings, store)
         conversations = ConversationService(

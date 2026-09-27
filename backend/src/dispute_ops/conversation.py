@@ -12,7 +12,7 @@ from typing import Any, Protocol
 
 from pydantic import BaseModel, Field
 
-from dispute_ops.domain import AuditEvent, Channel, ReasonCode, Transaction
+from dispute_ops.domain import AuditEvent, Channel, PolicyDecision, ReasonCode, Transaction
 from dispute_ops.flow import DisputeFlow, FlowResult, State, Turn
 from dispute_ops.handoff import HandoffPackage
 from dispute_ops.language import responses
@@ -51,6 +51,7 @@ class Reply(BaseModel):
     case_id: str | None = None
     card_status: str | None = None
     handoff: HandoffPackage | None = None
+    policy: PolicyDecision | None = None  # the rule that decided this turn, shown as "why" in the app
     injection_flags: list[str] = Field(default_factory=list)
     pii_redacted: list[str] = Field(default_factory=list)
     nlu: NluResult | None = None
@@ -98,12 +99,15 @@ class ConversationService:
         self.breaker, self.clock, self.sleep = breaker, clock, sleep
         # Free rule-based NLU used when the model fails, its circuit is open or the spend cap is reached.
         self.fallback, self.budget = fallback, budget or Budget(None)
+        self.simulated_outage = False  # demo control: behave as if the model were down
         self.conversations: dict[str, Conversation] = {}
 
     def nlu_status(self) -> dict[str, Any]:
         """What the next turn will use, for the UI and /health."""
         primary = getattr(self.nlu, "mode", "claude")
         if primary == "claude" and self.fallback is not None:
+            if self.simulated_outage:
+                return {"mode": "rules", "reason": "simulated_outage", "fallback": True}
             if self._over_budget():
                 return {"mode": "rules", "reason": "llm_budget_reached", "fallback": True}
             if not self.breaker.allow():
@@ -188,7 +192,9 @@ class ConversationService:
         )
         outcome: NluOutcome | None = None
         mode = "claude"
-        if self._over_budget() and self.fallback is not None:
+        if self.simulated_outage and self.fallback is not None:
+            reason = "simulated_outage"
+        elif self._over_budget() and self.fallback is not None:
             reason = "llm_budget_reached"
         elif not self.breaker.allow():
             if self.fallback is None:
@@ -295,7 +301,7 @@ class ConversationService:
             ask_for=result.ask_for, candidates=conv.candidates, offer_block_card=result.offer_block_card,
             case_id=result.case.case_id if result.case else None,
             card_status=result.card.product_status if result.card else None,
-            handoff=result.handoff, latency_ms=(time.perf_counter() - started) * 1000, **extra,
+            handoff=result.handoff, policy=result.policy, latency_ms=(time.perf_counter() - started) * 1000, **extra,
         )
         self._audit(conv, "reply", action=reply.action, state=reply.state, text=text, latency_ms=reply.latency_ms)
         return reply

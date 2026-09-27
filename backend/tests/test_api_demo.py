@@ -15,7 +15,8 @@ def make_client(*, demo_mode=True, nlu=None):
         seed_path=str(SEED), session_secret="s", agent_api_key="agent-test-key", demo_now="2026-06-17T12:00:00+00:00",
         demo_mode=demo_mode, scenarios_path=SCENARIOS, fraud_alert_lookback_hours=720,
     )
-    factory = lambda: Container.build(settings, nlu=nlu or RuleNlu(["Amazon MX", "Netflix"]), sleep=lambda s: None)  # noqa: E731
+    rules = RuleNlu(["Amazon MX", "Netflix"])
+    factory = lambda: Container.build(settings, nlu=nlu or rules, fallback=rules if nlu else None, sleep=lambda s: None)  # noqa: E731
     return TestClient(create_app(factory(), workspace_factory=factory if demo_mode else None))
 
 
@@ -133,3 +134,26 @@ def test_agent_can_close_without_action_and_unknown_refs_are_404():
     r = client.post(f"/agent/handoffs/{ref}/resolve", json={"action": "close", "note": "Customer withdrew"}, headers=ws)
     assert r.json()["status"] == "closed"
     assert client.post("/agent/handoffs/HO-nope/resolve", json={"action": "close"}, headers=ws).status_code == 404
+
+
+def test_reply_carries_the_policy_decision_for_the_why_link():
+    client = make_client()
+    auth = login(client)
+    start = client.post("/conversations", json={"transaction_id": "TXN001"}, headers=auth).json()
+    r = client.post(f"/conversations/{start['conversation_id']}/messages", json={"text": "no lo reconozco"}, headers=auth).json()
+    assert r["policy"]["rule_ids"] == ["R-ELIGIBLE"] and r["policy"]["missing_evidence"] == ["card_in_possession"]
+
+
+def test_simulated_model_outage_is_per_workspace():
+    from nlu_fakes import ScriptedNlu, nlu_result
+
+    client = make_client(nlu=ScriptedNlu(*[nlu_result(intent="greeting")] * 5))
+    ws = {"X-Demo-Workspace": "judge-x"}
+    assert client.get("/health", headers=ws).json()["nlu"]["mode"] == "claude"
+    assert client.post("/demo/outage", json={"on": True}, headers=ws).json()["nlu"]["mode"] == "rules"
+    auth = login(client, ws="judge-x")
+    cid = client.post("/conversations", json={}, headers=auth).json()["conversation_id"]
+    r = client.post(f"/conversations/{cid}/messages", json={"text": "hola"}, headers=auth).json()
+    assert r["nlu_mode"] == "rules"
+    assert client.get("/health", headers={"X-Demo-Workspace": "judge-y"}).json()["nlu"]["mode"] == "claude"
+    assert client.post("/demo/outage", json={"on": False}, headers=ws).json()["nlu"]["mode"] == "claude"

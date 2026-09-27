@@ -38,6 +38,10 @@ class StartRequest(BaseModel):
     transaction_id: str | None = Field(default=None, max_length=64)
 
 
+class OutageRequest(BaseModel):
+    on: bool
+
+
 class ResolveRequest(BaseModel):
     action: Literal["open_dispute", "close"]
     note: str = Field(default="", max_length=500)
@@ -180,6 +184,14 @@ def create_app(container: Container, workspace_factory: Callable[[], Container] 
             raise HTTPException(400, "workspace id required")
         workspaces.reset(x_demo_workspace)
         return {"status": "reset"}
+
+    @app.post("/demo/outage")
+    def demo_outage(body: OutageRequest, c: C, x_demo_workspace: Annotated[str | None, Header()] = None) -> dict[str, Any]:
+        """Let a judge see the fallback: this workspace behaves as if the language model were down."""
+        if workspaces is None or not x_demo_workspace:
+            raise HTTPException(404, "not available")
+        c.conversations.simulated_outage = body.on
+        return {"nlu": c.conversations.nlu_status()}
 
     @app.post("/auth/session")
     def create_session(body: SessionRequest, c: C) -> dict[str, str]:
