@@ -48,6 +48,15 @@ There is no labelled text for this in the organizer data: complaints have 5 dist
 | test-v1 reason messages (n = 69, all fraud) | 60/69 (87%) | 69/69 *post-hoc* | 68/69 |
 | test-v2 run 3, never opened (n = 23) | — | 23/23 (CI 86–100%) | 21/23 |
 | Fallback NLU end to end on run 3: reason / out-of-scope / human | — | 22/23 · 3/3 · 1/1 | 21/23 · 3/3 · 1/1 |
+| **test-v3** (frozen before intent-v2), fallback NLU end to end: reason | — | **23/23** | 22/23 (rules) |
+| test-v3 end-to-end correct · unsafe · safe automated resolution | — | 42/42 · 0 · 25/35 | 42/42 · 0 · 25/35 |
+
+test-v3 customers were played by Claude Sonnet as a Claude Code subagent that saw only persona and transcript (no API
+call; the original simulator was `claude-sonnet-5` through the API). The one reason difference is `cancelled-sub-00-pt`,
+where the keyword rule matched "cobrado **2**43,12" as a duplicate charge. With n = 23 and one discordant pair the
+difference is not significant; the honest reading is "at least as good as the rules, and fixes a real keyword
+failure". Two keyword bugs found on test-v3 were fixed afterwards (`83d7ade`), so test-v3 is no longer held-out for
+the keyword rules. Details: `eval/results/test-v3-subagent/components.md`.
 
 ## How we got here (in order, all committed)
 1. intent-v1 trained on isolated clauses scored **worse than keywords** on held-out (74% vs 87%): the simulated
@@ -73,5 +82,5 @@ There is no labelled text for this in the organizer data: complaints have 5 dist
   real corpus would likely favour embeddings or fine-tuning.
 
 ## Next
-Run `test-v3` (proposed with `NLU_MODE=rules` and with Claude, ~US$ 1–2) for a clean number; a human review sample of
-the corpus labels; retrain on real, consented customer messages when available.
+An independent message set written by a different author with human-checked labels (inter-annotator agreement);
+a larger test for a significant comparison; retrain on real, consented customer messages when available.

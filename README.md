@@ -153,10 +153,13 @@ selected among 12 variants and a multilingual sentence-embedding model by groupe
 |---|---|---|---|
 | test-v2 held-out messages (n = 46) | 34/46 — worse than keywords | 45/46 *post-hoc* | 40/46 |
 | test-v2 run 3, never opened (n = 23) | — | 23/23 | 21/23 |
+| **test-v3**, frozen before intent-v2, fallback NLU end to end (n = 23) | — | **23/23** | 22/23 (rules) |
 
 intent-v1 lost to the keywords on held-out data; that result is committed. Reading its errors motivated intent-v2's
-augmentation, so intent-v2's test-v2 number is post-hoc. A new scenario set, `test-v3`, was frozen before intent-v2
-was trained and is the clean check once API credit is available.
+augmentation, so intent-v2's test-v2 number is post-hoc. `test-v3` was frozen before intent-v2 was trained and run with
+customers played by a Sonnet subagent (no API calls): 42/42 correct and 0 unsafe for both fallback variants; the one
+reason difference is a keyword false match ("cobrado 243" read as a duplicate) — not significant at n = 23
+([components](eval/results/test-v3-subagent/components.md)).
 
 **2. No fraud model, on evidence** ([ADR-020](docs/decisions/ADR-020-fraud-label-audit.md),
 [report](ml/results/fraud_label_audit.md)). On a temporal split, logistic regression and gradient boosting on
