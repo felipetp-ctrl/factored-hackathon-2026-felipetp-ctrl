@@ -1,0 +1,94 @@
+# Human review sample: 90 messages (5 per label from each source), shuffled.
+# For each line fill `agree` with s (yes) or n (no); if n, write the correct label in `your_label`.
+# Labels: FRAUD_CNP FRAUD_CP DUPLICATE INCORRECT_AMOUNT NOT_RECEIVED CANCELLED_RECURRING OUT_OF_SCOPE HUMAN DISPUTE_NO_REASON
+id	source	language	label	agree	your_label	text
+1	corpus	es	DUPLICATE			se me cobró 2 veces el mismo boleto de avión
+2	independent	es	HUMAN			me pasa con un asesor porfa tengo una duda
+3	corpus	es	NOT_RECEIVED			Compré unos audífonos en línea y nunca llegaron
+4	corpus	pt	DISPUTE_NO_REASON			é sobre uma compra no Mercado Livre da semana passada
+5	corpus	es	DUPLICATE			la misma transacción aparece repetida en mi app
+6	independent	es	FRAUD_CNP			Estoy furioso, hay un cargo de $5,000 pesos en una tienda de videojuegos que jamás visité.
+7	independent	es	DUPLICATE			Ese pago de $230 en "TiendaRopa" me lo cobraron dos veces el mismo minuto.
+8	independent	es	DISPUTE_NO_REASON			Estoy inconforme con un cargo que aparece hoy en mi cuenta.
+9	corpus	es	DISPUTE_NO_REASON			la más grande de la semana pasada
+10	corpus	es	FRAUD_CP			robaron mi tarjeta física y hay compras con contactless
+11	independent	pt	DISPUTE_NO_REASON			Preciso que investiguem a cobrança do dia 15 de abril no meu cartão.
+12	corpus	pt	INCORRECT_AMOUNT			o táxi cobrou o dobro do que marcava
+13	corpus	pt	CANCELLED_RECURRING			o serviço de música cobra mesmo depois de cancelado
+14	corpus	es	NOT_RECEIVED			compré un celular en una tienda online y jamás lo enviaron
+15	independent	es	FRAUD_CNP			Me llegó una notificación de un pago en "GameZoneStore" que no reconozco para nada.
+16	corpus	pt	HUMAN			cadê o atendimento humano
+17	independent	pt	FRAUD_CP			Me roubaram no ponto de ônibus, levaram tudo, incluindo o cartão.
+18	independent	es	HUMAN			¿Me puede pasar con alguien del banco?
+19	independent	es	INCORRECT_AMOUNT			Estoy molesto, la reserva del vuelo decía $5,200 y me cobraron $6,000.
+20	independent	es	DUPLICATE			Pagué el servicio de streaming pero me cobraron dos veces ese mes.
+21	corpus	pt	FRAUD_CNP			a compra de 12.500 ARS numa loja de roupas eu não reconheço
+22	corpus	es	HUMAN			quiero atención personalizada
+23	corpus	es	DISPUTE_NO_REASON			quisiera contestar un cargo del 12 de mayo
+24	corpus	es	OUT_OF_SCOPE			cuándo me llega la tarjeta nueva que pedí
+25	independent	pt	FRAUD_CP			Extraviei meu cartão na terça à noite e hoje tem compras que não reconheço.
+26	corpus	es	HUMAN			necesito que un agente me contacte
+27	corpus	es	OUT_OF_SCOPE			me dan un adelanto de nómina
+28	independent	es	NOT_RECEIVED			Buenas, compré una consola en "ElectroVentas" por $4,500 MXN hace tres semanas y nunca llegó el paquete.
+29	independent	es	HUMAN			Estoy muy molesto, comuníqueme con un humano ahora.
+30	independent	es	FRAUD_CNP			No fui yo quien hizo esa compra en Netshop.
+31	independent	es	CANCELLED_RECURRING			cancele el servicio de tv por cable hace rato y me siguen cobrando
+32	corpus	pt	HUMAN			chama um atendente pra mim
+33	corpus	pt	FRAUD_CNP			Boa tarde, gostaria de contestar uma compra que aparece na minha fatura e não é minha
+34	corpus	es	FRAUD_CP			Hola, me robaron y la tarjeta la pasaron en varias tiendas
+35	independent	pt	INCORRECT_AMOUNT			O jantar saiu R$ 90 mas me cobraram R$ 130.
+36	independent	es	OUT_OF_SCOPE			quiero cancelar mi cuenta de banco, ya no la uso
+37	independent	pt	INCORRECT_AMOUNT			Comprei roupa por R$ 75,90 e cobraram R$ 95,90, não entendo a diferença.
+38	independent	es	OUT_OF_SCOPE			Quisiera saber si puedo aumentar el límite de mi tarjeta de crédito.
+39	corpus	pt	NOT_RECEIVED			a loja fechou e meu pedido nunca chegou
+40	independent	pt	OUT_OF_SCOPE			Quais são as tarifas de saque em caixas de outro banco?
+41	corpus	es	CANCELLED_RECURRING			ya di de baja la tarjeta del club y me cobran la anualidad
+42	corpus	es	DUPLICATE			me debitaron dos veces el pago del colegio
+43	corpus	es	INCORRECT_AMOUNT			me pusieron una propina que yo no di, cobraron de más
+44	independent	es	OUT_OF_SCOPE			Quiero saber cuál es el horario de la sucursal.
+45	independent	pt	NOT_RECEIVED			Desculpa, já sou de idade, paguei por remédios com entrega e nunca chegaram.
+46	corpus	es	OUT_OF_SCOPE			me interesa un crédito para comprar auto
+47	independent	pt	DISPUTE_NO_REASON			Tenho dúvidas sobre uma compra que aparece hoje no meu resumo.
+48	independent	es	FRAUD_CNP			me clonaron la banda magnetica, aparecio un cargo en otro pais
+49	independent	es	DISPUTE_NO_REASON			Buen día, quiero disputar la compra de $3,450.90 hecha en "TechStoreMX" el lunes pasado a las 10am.
+50	corpus	es	FRAUD_CP			perdí mi tarjeta el fin de semana y aparecen cargos que no hice
+51	corpus	es	OUT_OF_SCOPE			quiero actualizar mi número de teléfono
+52	corpus	es	FRAUD_CNP			Hay un consumo en dólares que no hice, mi tarjeta está conmigo
+53	independent	pt	NOT_RECEIVED			Paguei por uns sapatos e nunca chegaram.
+54	corpus	es	INCORRECT_AMOUNT			la cuenta del restaurante era de 45.000 y me cobraron 54.000
+55	independent	es	NOT_RECEIVED			Compré una laptop hace dos semanas y el vendedor no responde ni envía el producto.
+56	corpus	es	FRAUD_CNP			tengo un movimiento de 560 pesos en Mercado Libre que no es mío
+57	independent	es	FRAUD_CNP			Cargo desconocido de $2.300 en mi estado de cuenta, la tarjeta la tengo yo.
+58	corpus	es	DISPUTE_NO_REASON			es por una compra en Mercado Libre de la semana pasada
+59	independent	es	NOT_RECEIVED			pague algo en una web y nunca me llego el producto
+60	corpus	es	NOT_RECEIVED			che, compré unas zapatillas y nunca llegaron
+61	independent	pt	OUT_OF_SCOPE			Preciso reportar que esqueci minha senha do aplicativo, não consigo entrar.
+62	corpus	pt	FRAUD_CP			levaram minha carteira e compraram com o cartão, o que eu faço
+63	independent	es	FRAUD_CP			Me robaron la tarjeta ayer y ya hay cargos que no hice.
+64	corpus	es	DUPLICATE			cargo repetido en mi tarjeta, es la misma compra
+65	independent	es	DUPLICATE			Hay un cargo duplicado de $500 en mi cuenta.
+66	corpus	pt	CANCELLED_RECURRING			desativei a renovação automática e cobraram mesmo assim
+67	corpus	es	NOT_RECEIVED			pagué la reparación del auto y no me la hicieron
+68	independent	pt	CANCELLED_RECURRING			Não uso mais o software e cancelei, mas continuam cobrando a licença mensal.
+69	corpus	pt	DUPLICATE			Vejo duas cobranças idênticas do Spotify no mesmo dia
+70	independent	pt	INCORRECT_AMOUNT			Comprei o pacote de viagem por R$ 4.500 mas me faturaram R$ 5.200.
+71	corpus	pt	INCORRECT_AMOUNT			me cobraram a mais no Uber, a corrida dizia outro preço
+72	independent	pt	FRAUD_CP			Denunciei o roubo do meu cartão e mesmo assim tem uma cobrança nova de R$ 80.
+73	independent	pt	CANCELLED_RECURRING			Bom dia, cancelei minha mensalidade da "GymPower" em dezembro e continuam me cobrando desde então.
+74	independent	pt	FRAUD_CP			Minha carteira caiu e alguém achou e já está usando o cartão.
+75	corpus	pt	OUT_OF_SCOPE			como pago boleto pelo app
+76	independent	pt	DUPLICATE			Duplicaram sem querer o pagamento da matrícula do curso.
+77	corpus	es	INCORRECT_AMOUNT			me cobraron un precio diferente al acordado por el servicio
+78	corpus	es	FRAUD_CNP			cargo desconocido en mi tarjeta, necesito que lo revisen
+79	corpus	es	HUMAN			quiero que un ejecutivo revise mi caso
+80	independent	es	INCORRECT_AMOUNT			El plomero cobró de más respecto a lo que habíamos acordado por teléfono.
+81	corpus	pt	FRAUD_CP			fui assaltado e usaram o cartão num supermercado
+82	corpus	pt	DISPUTE_NO_REASON			a do iFood de 56
+83	independent	es	DUPLICATE			Buen día, realicé un solo pago en "ZapatosExpress" por $890 pero el sistema lo registró dos veces.
+84	corpus	es	CANCELLED_RECURRING			tengo cancelado el servicio y aparece el cargo mensual de nuevo
+85	independent	es	HUMAN			Quisiera que me atendiera un representante en vivo, por favor.
+86	independent	es	CANCELLED_RECURRING			Pedí que dieran de baja mi membresía del spa hace dos meses, siguen cobrando.
+87	independent	pt	CANCELLED_RECURRING			Pedi pra cancelar minha mensalidade do spa há dois meses, continuam cobrando.
+88	independent	es	DISPUTE_NO_REASON			Es sobre el movimiento de $2.300 que vi el miércoles a mediodía.
+89	independent	pt	HUMAN			Desculpa, já sou de idade e prefiro falar com uma pessoa, não sei usar bem o chat.
+90	corpus	pt	CANCELLED_RECURRING			cancelei o cartão do clube e cobram a anuidade

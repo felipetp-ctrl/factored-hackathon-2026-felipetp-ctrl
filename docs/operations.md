@@ -32,6 +32,10 @@ Available now at `GET /agent/metrics` (agent key) and in the Operations view:
 - handoffs by reason, verified vs failed actions
 - model calls, model cost, reply latency p50/p95
 
+Learned classifier (`intent_classifier` in `/agent/metrics`): turns read, share accepted at the 0.60 threshold, mean
+confidence, label mix and PSI of the confidence distribution against the training reference (alarm > 0.2 from 30
+turns). See `docs/model_card_intent-v2.md`.
+
 Alerts to add in production:
 
 | Signal | Threshold (initial) | Why |

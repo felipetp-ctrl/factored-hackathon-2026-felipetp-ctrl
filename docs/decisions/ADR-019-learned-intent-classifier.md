@@ -58,6 +58,20 @@ difference is not significant; the honest reading is "at least as good as the ru
 failure". Two keyword bugs found on test-v3 were fixed afterwards (`83d7ade`), so test-v3 is no longer held-out for
 the keyword rules. Details: `eval/results/test-v3-subagent/components.md`.
 
+### Independent message set (after test-v3)
+540 messages written by a different author (a Sonnet subagent that never saw the corpus or the code), re-labelled
+blind by a second Sonnet instance (κ = 1.0; a Haiku annotation was discarded at κ = 0.48 for labelling explicit
+reasons as "no reason"); 15 near-duplicates of the corpus removed → 525 gold. Inside the fallback NLU:
+**94.1% with intent-v2 vs 45.7% with rules only** (McNemar p = 8e-69); intent-v2 alone 95.6%; ES 243/261, PT 251/264.
+Cross-author: our corpus → their set 95.6%, their set → our corpus 85.5%. Report: `ml/results/independent-v1.md`;
+model card: `docs/model_card_intent-v2.md`.
+
+### Offline cascade estimate
+Replaying test-v2 with the language model's recorded readings, the free NLU could take 92% of turns (structured
+answers, and free text where intent-v2 is confident) and agrees with the model on the fields the flow uses in 84% of
+them (`eval/results/…-test-v2/cascade_offline.md`). Not deployed: the saving is ~US$ 3 per 1,000 turns, and a cascade
+changes the main path, so it needs a live evaluation first.
+
 ## How we got here (in order, all committed)
 1. intent-v1 trained on isolated clauses scored **worse than keywords** on held-out (74% vs 87%): the simulated
    customers open with "quiero disputar un cargo de X en Y del día Z" and then give the reason, and the model had
@@ -82,5 +96,5 @@ the keyword rules. Details: `eval/results/test-v3-subagent/components.md`.
   real corpus would likely favour embeddings or fine-tuning.
 
 ## Next
-An independent message set written by a different author with human-checked labels (inter-annotator agreement);
-a larger test for a significant comparison; retrain on real, consented customer messages when available.
+Human review of the 90-message sample (`ml/corpus/human-review.tsv`); a live cascade evaluation; retrain on real,
+consented customer messages when available.
