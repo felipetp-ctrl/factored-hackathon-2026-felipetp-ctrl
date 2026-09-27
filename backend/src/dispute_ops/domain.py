@@ -31,6 +31,7 @@ class Customer(BaseModel):
     country: str
     segment: str
     is_repeat_complainer: bool = False
+    first_name: str | None = None  # synthetic, from the organizer dataset; only used to greet the customer
 
 
 class Card(BaseModel):

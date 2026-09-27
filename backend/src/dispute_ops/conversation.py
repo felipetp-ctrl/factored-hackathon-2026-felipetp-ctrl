@@ -44,6 +44,7 @@ class Reply(BaseModel):
     pii_redacted: list[str] = Field(default_factory=list)
     nlu: NluResult | None = None
     usage: LlmUsage | None = None
+    nlu_mode: str = "none"  # "claude" | "rules" | "none" (no interpretation needed this turn)
     latency_ms: float = 0.0
 
 
@@ -79,10 +80,28 @@ class ConversationService:
         breaker: CircuitBreaker,
         clock: Callable[[], datetime],
         sleep: Callable[[float], None] = time.sleep,
+        fallback: Nlu | None = None,
+        llm_budget_usd: float | None = None,
     ) -> None:
         self.tools, self.store, self.policy, self.nlu = tools, store, policy, nlu
         self.breaker, self.clock, self.sleep = breaker, clock, sleep
+        # Free rule-based NLU used when the model fails, its circuit is open or the spend cap is reached.
+        self.fallback, self.llm_budget_usd = fallback, llm_budget_usd
+        self.llm_spent_usd = 0.0
         self.conversations: dict[str, Conversation] = {}
+
+    def nlu_status(self) -> dict[str, Any]:
+        """What the next turn will use, for the UI and /health."""
+        primary = getattr(self.nlu, "mode", "claude")
+        if primary == "claude" and self.fallback is not None:
+            if self._over_budget():
+                return {"mode": "rules", "reason": "llm_budget_reached", "fallback": True}
+            if not self.breaker.allow():
+                return {"mode": "rules", "reason": "model_unavailable", "fallback": True}
+        return {"mode": primary, "reason": None, "fallback": self.fallback is not None}
+
+    def _over_budget(self) -> bool:
+        return self.llm_budget_usd is not None and self.llm_spent_usd >= self.llm_budget_usd
 
     # ---- lifecycle ----------------------------------------------------------------------
     def _new(self, channel: Channel, language: str) -> Conversation:
@@ -143,27 +162,45 @@ class ConversationService:
         if flow.state in {State.DONE, State.INELIGIBLE, State.HANDOFF, State.CANCELLED}:
             return self._reply(conv, flow.handle(Turn(token=token)), started, text_key="ended", **base)
 
-        if not self.breaker.allow():
-            return self._reply(conv, flow.escalate(["nlu_unavailable"]), started, **base)
         ctx = NluContext(
             state=("PROACTIVE_CONFIRM" if conv.proactive_txn else flow.state.value),
             ask_for=conv.last_ask, candidates=conv.candidates, injection_flags=flags, history=conv.history,
         )
-        try:
-            outcome = self.nlu.interpret(redacted, ctx)
-        except NluUnavailable as e:
-            self.breaker.record_failure()
-            self._audit(conv, "nlu_failed", error=str(e), breaker_open=not self.breaker.allow())
-            if not self.breaker.allow():
+        outcome: NluOutcome | None = None
+        mode = "claude"
+        if self._over_budget() and self.fallback is not None:
+            reason = "llm_budget_reached"
+        elif not self.breaker.allow():
+            if self.fallback is None:
                 return self._reply(conv, flow.escalate(["nlu_unavailable"]), started, **base)
-            return self._text_reply(conv, "retry", started, **base)
-        self.breaker.record_success()
+            reason = "model_unavailable"
+        else:
+            reason = None
+            try:
+                outcome = self.nlu.interpret(redacted, ctx)
+                self.breaker.record_success()
+            except NluUnavailable as e:
+                self.breaker.record_failure()
+                self._audit(conv, "nlu_failed", error=str(e), breaker_open=not self.breaker.allow())
+                if self.fallback is None:
+                    if not self.breaker.allow():
+                        return self._reply(conv, flow.escalate(["nlu_unavailable"]), started, **base)
+                    return self._text_reply(conv, "retry", started, **base)
+                reason = "model_unavailable"
+        if outcome is None:
+            assert self.fallback is not None
+            outcome = self.fallback.interpret(redacted, ctx)
+            mode = "rules"
+            self._audit(conv, "nlu_fallback", reason=reason)
         nlu, usage = outcome.result, outcome.usage
+        if usage.model == "rules":
+            mode = "rules"
+        self.llm_spent_usd += usage.cost_usd
         conv.usages.append(usage)
         if first_turn:
             self._set_language(conv, nlu.language)
         self._audit(conv, "nlu", result=nlu.model_dump(mode="json"), usage=usage.model_dump(mode="json"))
-        base.update(nlu=nlu, usage=usage)
+        base.update(nlu=nlu, usage=usage, nlu_mode=mode)
 
         if conv.proactive_txn is not None:
             return self._proactive_turn(conv, token, nlu, started, base)

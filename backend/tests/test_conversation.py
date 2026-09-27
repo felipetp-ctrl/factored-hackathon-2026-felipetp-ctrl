@@ -177,3 +177,45 @@ def test_no_answer_to_an_evidence_question_is_not_treated_as_goodbye(tools, stor
     svc.send(cid, token, "No reconozco un cargo de 1250")
     r = svc.send(cid, token, "no")
     assert r.state != State.CANCELLED
+
+
+# ---- v0.0.2: free rule-based fallback when the model is unavailable or over budget -------------------
+
+def make_fallback_service(tools, store, clock, nlu, budget_usd=None):
+    from dispute_ops.language.rule_nlu import RuleNlu
+
+    return ConversationService(
+        tools=tools, store=store, policy=PolicyEngine.load_default(), nlu=nlu,
+        breaker=CircuitBreaker(failure_threshold=2, reset_seconds=60, clock=clock), clock=clock,
+        sleep=lambda s: None, fallback=RuleNlu(["Amazon MX", "Netflix"]), llm_budget_usd=budget_usd,
+    )
+
+
+def test_model_failure_uses_the_rule_fallback_and_the_case_still_completes(tools, store, clock, token):
+    svc = make_fallback_service(tools, store, clock, ScriptedNlu(*[unavailable()] * 5))
+    cid = svc.start("es")
+    r1 = svc.send(cid, token, "No reconozco un cargo de 1.250,00 en Amazon MX")
+    assert r1.nlu_mode == "rules" and r1.action == "ask" and r1.ask_for == ["card_in_possession"]
+    assert svc.send(cid, token, "sí, la tengo").action == "confirm"
+    r3 = svc.send(cid, token, "sí, confirmo, sin bloquear")
+    assert r3.state == State.DONE and r3.case_id and r3.card_status is None
+    kinds = [e.kind for e in store.list_audit(cid)]
+    assert "nlu_failed" in kinds and "nlu_fallback" in kinds
+
+
+def test_budget_exhausted_switches_to_rules_without_calling_the_model(tools, store, clock, token):
+    nlu = ScriptedNlu(nlu_result(intent="greeting"))
+    svc = make_fallback_service(tools, store, clock, nlu, budget_usd=0.0001)
+    cid = svc.start("es")
+    assert svc.send(cid, token, "hola").nlu_mode == "claude"  # spends 0.0002, above the budget
+    r = svc.send(cid, token, "Me cobraron dos veces Netflix")
+    assert r.nlu_mode == "rules" and len(nlu.seen) == 1 and r.candidates
+
+
+def test_status_reports_degraded_mode(tools, store, clock, token):
+    svc = make_fallback_service(tools, store, clock, ScriptedNlu(*[unavailable()] * 3))
+    assert svc.nlu_status()["mode"] == "claude"
+    cid = svc.start("es")
+    svc.send(cid, token, "hola")
+    svc.send(cid, token, "hola")
+    assert svc.nlu_status() == {"mode": "rules", "reason": "model_unavailable", "fallback": True}

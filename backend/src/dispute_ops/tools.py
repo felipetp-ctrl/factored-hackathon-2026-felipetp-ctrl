@@ -12,7 +12,7 @@ from dispute_ops.store import Store
 
 # Only READ_TOOLS may ever be exposed to the LLM. WRITE_TOOLS are called by the orchestrator
 # after policy + customer confirmation.
-READ_TOOLS = frozenset({"search_transactions", "get_transaction", "get_card", "get_case_status"})
+READ_TOOLS = frozenset({"search_transactions", "get_transaction", "get_card", "get_case_status", "list_cards", "list_cases"})
 WRITE_TOOLS = frozenset({"open_dispute", "block_card"})
 
 
@@ -96,6 +96,14 @@ class BankingTools:
             raise AccessDenied(case_id)
         return case
 
+    def list_cards(self, token: str) -> list[Card]:
+        self.failures.check("list_cards")
+        return self.store.list_cards(self._customer_id(token))
+
+    def list_cases(self, token: str) -> list[DisputeCase]:
+        self.failures.check("list_cases")
+        return self.store.list_disputes(self._customer_id(token))
+
     def open_dispute(
         self,
         token: str,
@@ -118,6 +126,35 @@ class BankingTools:
             status="Open",
             created_at=self.clock(),
             policy_version=self.policy_version,
+        )
+        self.store.insert_dispute(case)
+        self._idempotent[idempotency_key] = case
+        return case
+
+    def open_dispute_as_agent(
+        self,
+        agent_id: str,
+        customer_id: str,
+        transaction_id: str,
+        reason_code: ReasonCode,
+        evidence: dict[str, str],
+        *,
+        idempotency_key: str,
+    ) -> DisputeCase:
+        """Staff path: a human agent resolving a handed-off case. The customer comes from the handoff, and the
+        transaction must belong to that customer; the caller has already applied the human-review policy."""
+        if idempotency_key in self._idempotent:
+            return self._idempotent[idempotency_key]  # type: ignore[return-value]
+        self.failures.check("open_dispute")
+        txn = self.store.get_transaction(transaction_id)
+        if txn is None:
+            raise NotFound(transaction_id)
+        if txn.customer_id != customer_id:
+            raise AccessDenied(transaction_id)
+        case = DisputeCase(
+            case_id=f"DSP-{uuid.uuid4().hex[:10].upper()}", customer_id=customer_id, transaction_id=transaction_id,
+            reason_code=reason_code, evidence={**evidence, "opened_by": f"agent:{agent_id}"}, status="Open",
+            created_at=self.clock(), policy_version=self.policy_version,
         )
         self.store.insert_dispute(case)
         self._idempotent[idempotency_key] = case

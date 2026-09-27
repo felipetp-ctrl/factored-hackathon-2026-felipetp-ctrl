@@ -93,6 +93,18 @@ class PolicyEngine:
         missing = [e for e in self.required_evidence(ctx.reason_code) if not ctx.evidence.get(e)]
         return decide("eligible", ["R-ELIGIBLE"], missing_evidence=missing)
 
+    def evaluate_human_review(self, ctx: PolicyContext) -> PolicyDecision:
+        """Decision for a human agent resolving a handed-off case. Handoff triggers exist to bring a person in,
+        so they no longer block; ineligibility rules (open duplicate, status, window) still apply."""
+        automated = self.evaluate(ctx)
+        if automated.decision == "ineligible":
+            return automated
+        overridden = automated.rule_ids if automated.decision == "handoff" else []
+        return PolicyDecision(
+            decision="eligible", rule_ids=["R-HUMAN-REVIEW"], policy_version=self.version,
+            inputs={**automated.inputs, "overridden_rules": overridden},
+        )
+
     def can_block_card(self, reason_code: ReasonCode, card: Card, customer_confirmed: bool) -> PolicyDecision:
         inputs = {
             "reason_code": reason_code.value,

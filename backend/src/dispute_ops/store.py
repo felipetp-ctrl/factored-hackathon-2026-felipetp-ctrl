@@ -11,7 +11,7 @@ from dispute_ops.domain import AuditEvent, Card, Customer, DisputeCase, Transact
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS customers (
     customer_id TEXT PRIMARY KEY, country TEXT NOT NULL, segment TEXT NOT NULL,
-    is_repeat_complainer INTEGER NOT NULL);
+    is_repeat_complainer INTEGER NOT NULL, first_name TEXT);
 CREATE TABLE IF NOT EXISTS products (
     product_id TEXT PRIMARY KEY, customer_id TEXT NOT NULL REFERENCES customers,
     product_type TEXT NOT NULL, product_status TEXT NOT NULL);
@@ -41,14 +41,19 @@ class Store:
         self.conn = sqlite3.connect(str(path), check_same_thread=False)
         self.conn.row_factory = sqlite3.Row
         self.conn.executescript(SCHEMA)
+        columns = {r["name"] for r in self.conn.execute("PRAGMA table_info(customers)")}
+        if "first_name" not in columns:  # stores exported before v0.0.2
+            with self.conn:
+                self.conn.execute("ALTER TABLE customers ADD COLUMN first_name TEXT")
 
     def load_seed(self, path: str | Path) -> None:
         seed = json.loads(Path(path).read_text())
         with self.conn:
             for c in seed["customers"]:
                 self.conn.execute(
-                    "INSERT INTO customers VALUES (?,?,?,?)",
-                    (c["customer_id"], c["country"], c["segment"], int(c["is_repeat_complainer"])),
+                    "INSERT INTO customers (customer_id, country, segment, is_repeat_complainer, first_name) "
+                    "VALUES (?,?,?,?,?)",
+                    (c["customer_id"], c["country"], c["segment"], int(c["is_repeat_complainer"]), c.get("first_name")),
                 )
             for p in seed["products"]:
                 self.conn.execute(
@@ -69,12 +74,20 @@ class Store:
             return None
         return Customer(
             customer_id=row["customer_id"], country=row["country"], segment=row["segment"],
-            is_repeat_complainer=bool(row["is_repeat_complainer"]),
+            is_repeat_complainer=bool(row["is_repeat_complainer"]), first_name=row["first_name"],
         )
 
     def get_card(self, product_id: str) -> Card | None:
         row = self.conn.execute("SELECT * FROM products WHERE product_id=?", (product_id,)).fetchone()
         return Card(**dict(row)) if row else None
+
+    def list_cards(self, customer_id: str) -> list[Card]:
+        rows = self.conn.execute("SELECT * FROM products WHERE customer_id=? ORDER BY product_id", (customer_id,))
+        return [Card(**dict(r)) for r in rows]
+
+    def distinct_merchants(self) -> list[str]:
+        rows = self.conn.execute("SELECT DISTINCT merchant_name FROM transactions WHERE merchant_name IS NOT NULL")
+        return sorted(r[0] for r in rows)
 
     def set_card_status(self, product_id: str, status: str) -> None:
         with self.conn:
@@ -121,6 +134,12 @@ class Store:
             "SELECT * FROM disputes WHERE transaction_id=? AND status='Open'", (transaction_id,)
         ).fetchone()
         return self._row_to_case(row) if row else None
+
+    def list_disputes(self, customer_id: str) -> list[DisputeCase]:
+        rows = self.conn.execute(
+            "SELECT * FROM disputes WHERE customer_id=? ORDER BY created_at DESC", (customer_id,)
+        ).fetchall()
+        return [self._row_to_case(r) for r in rows]
 
     def count_disputes_since(self, customer_id: str, since: datetime) -> int:
         (n,) = self.conn.execute(

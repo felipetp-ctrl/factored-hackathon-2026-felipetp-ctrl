@@ -1,8 +1,8 @@
 {
   "_note": "Synthetic test fixture authored by the team, shaped after the LATAM Bank data dictionary. Not organizer data.",
   "customers": [
-    {"customer_id": "CUST001", "country": "Mexico", "segment": "Premium", "is_repeat_complainer": false},
-    {"customer_id": "CUST002", "country": "Colombia", "segment": "Basic", "is_repeat_complainer": true}
+    {"customer_id": "CUST001", "first_name": "Lucía", "country": "Mexico", "segment": "Premium", "is_repeat_complainer": false},
+    {"customer_id": "CUST002", "first_name": "Andrés", "country": "Colombia", "segment": "Basic", "is_repeat_complainer": true}
   ],
   "products": [
     {"product_id": "PRD001", "customer_id": "CUST001", "product_type": "Credit Card", "product_status": "Active"},

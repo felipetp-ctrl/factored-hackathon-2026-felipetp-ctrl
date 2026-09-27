@@ -209,11 +209,11 @@ def run_gold(con: duckdb.DuckDBPyConnection, paths: Paths, as_of: datetime) -> d
             WHERE p.product_type ILIKE '%card%' OR p.product_type ILIKE '%tarjeta%'"""),
         "customer_dim": ({"customers"}, f"""
             SELECT c.customer_id, {COUNTRY_SQL} AS country, c.segment, c.customer_status, c.detected_accent,
-                   coalesce(r.is_repeat_complainer, false) AS is_repeat_complainer
+                   coalesce(r.is_repeat_complainer, false) AS is_repeat_complainer, c.first_name
             FROM {s('customers')} c
             LEFT JOIN (SELECT customer_id, bool_or(is_repeat_complainer) AS is_repeat_complainer
                        FROM {s('complaints')} GROUP BY 1) r USING (customer_id)""" if "complaints" in have else
-            f"SELECT customer_id, {COUNTRY_SQL} AS country, segment, customer_status, detected_accent, false AS is_repeat_complainer FROM {s('customers')} c"),
+            f"SELECT customer_id, {COUNTRY_SQL} AS country, segment, customer_status, detected_accent, false AS is_repeat_complainer, first_name FROM {s('customers')} c"),
         "dispute_complaints": ({"complaints", "customers"}, f"""
             SELECT q.*, c.country, c.segment FROM {s('complaints')} q JOIN {s('customers')} c USING (customer_id)
             WHERE q.category = 'Transactions'"""),

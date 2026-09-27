@@ -92,3 +92,13 @@ def test_human_request_wins_over_ineligibility(policy, store):
 def test_can_block_card(policy, store, reason, status, confirmed, expected):
     card = store.get_card("PRD001").model_copy(update={"product_status": status})
     assert policy.can_block_card(reason, card, confirmed).rule_ids == [expected]
+
+
+# ---- v0.0.2: a human reviewer may override handoff triggers, never ineligibility -----------------------
+
+def test_human_review_clears_handoff_triggers_but_keeps_ineligibility(policy, store):
+    high = policy.evaluate_human_review(ctx(store, "TXN005"))  # 822 USD > 450: automation hands off
+    assert high.decision == "eligible" and high.rule_ids == ["R-HUMAN-REVIEW"]
+    assert high.inputs["overridden_rules"] == ["R-HO-AMOUNT"]
+    old = policy.evaluate_human_review(ctx(store, "TXN004"))  # outside the window
+    assert old.decision == "ineligible" and old.rule_ids == ["R-WINDOW"]

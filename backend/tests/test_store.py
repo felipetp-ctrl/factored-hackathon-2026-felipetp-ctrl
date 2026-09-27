@@ -47,3 +47,30 @@ def test_audit_log_is_append_only(store):
         store.conn.execute("DELETE FROM audit_events")
     with pytest.raises(sqlite3.DatabaseError):
         store.conn.execute("UPDATE audit_events SET kind='y'")
+
+
+# ---- v0.0.2 ----------------------------------------------------------------------------------------
+
+def test_first_name_is_optional_and_old_databases_are_migrated(tmp_path):
+    from dispute_ops.store import Store
+
+    path = tmp_path / "old.db"
+    conn = sqlite3.connect(path)
+    conn.execute("CREATE TABLE customers (customer_id TEXT PRIMARY KEY, country TEXT NOT NULL, segment TEXT NOT NULL, "
+                 "is_repeat_complainer INTEGER NOT NULL)")
+    conn.execute("INSERT INTO customers VALUES ('C1','Mexico','Basic',0)")
+    conn.commit()
+    conn.close()
+    s = Store(path)
+    assert s.get_customer("C1").first_name is None
+
+
+def test_seed_first_names_merchants_cards_and_cases(store):
+    assert store.get_customer("CUST001").first_name == "Lucía"
+    assert "Netflix" in store.distinct_merchants() and None not in store.distinct_merchants()
+    assert [c.product_id for c in store.list_cards("CUST001")] == ["PRD001"]
+    case = DisputeCase(case_id="DSP-9", customer_id="CUST001", transaction_id="TXN001", reason_code=ReasonCode.FRAUD_CNP,
+                       evidence={}, status="Open", created_at=NOW, policy_version="disputes_v2")
+    store.insert_dispute(case)
+    assert [c.case_id for c in store.list_disputes("CUST001")] == ["DSP-9"]
+    assert store.list_disputes("CUST002") == []

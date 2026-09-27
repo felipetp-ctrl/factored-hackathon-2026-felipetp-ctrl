@@ -28,7 +28,7 @@ def export_demo_store(gold: Path, db_path: Path, as_of: datetime, n_customers: i
               WHERE fraud_score >= 80 AND transaction_date BETWEEN {ts} - INTERVAL 30 DAY AND {ts}
     """)
     customers = con.execute(f"""
-        SELECT customer_id, country, segment, is_repeat_complainer FROM {g('customer_dim')}
+        SELECT customer_id, country, segment, is_repeat_complainer, first_name FROM {g('customer_dim')}
         WHERE customer_id IN (SELECT customer_id FROM picked)""").fetchall()
     products = con.execute(f"""
         SELECT product_id, customer_id, product_type, product_status FROM {g('card_products')}
@@ -46,7 +46,8 @@ def export_demo_store(gold: Path, db_path: Path, as_of: datetime, n_customers: i
         db_path.unlink()
     store = Store(db_path)
     with store.conn:
-        store.conn.executemany("INSERT INTO customers VALUES (?,?,?,?)", [(c, co, s, int(bool(r))) for c, co, s, r in customers])
+        store.conn.executemany(
+            "INSERT INTO customers VALUES (?,?,?,?,?)", [(c, co, s, int(bool(r)), n) for c, co, s, r, n in customers])
         store.conn.executemany("INSERT INTO products VALUES (?,?,?,?)", products)
         store.conn.executemany("INSERT INTO transactions VALUES (?,?,?,?,?,?,?,?,?,?,?)", txns)
     return {"customers": len(customers), "products": len(products), "transactions": len(txns)}
