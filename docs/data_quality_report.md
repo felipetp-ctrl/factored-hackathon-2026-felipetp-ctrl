@@ -1,4 +1,4 @@
-# Data quality report — run `20260927T002950-b3ccbc`
+# Data quality report — run `20260927T155453-60c334`
 
 As of 2026-06-17T12:00:00+00:00 · contracts dictionary-v1.0.0/contracts-v1
 
@@ -27,6 +27,6 @@ As of 2026-06-17T12:00:00+00:00 · contracts dictionary-v1.0.0/contracts-v1
 - card_transactions: 1,547,432 rows
 - customer_dim: 150,000 rows
 - dispute_complaints: 13,580 rows
-- fraud_alert_candidates: 1 rows
+- fraud_alert_candidates: 6 rows
 
-Demo store: {'customers': 306, 'products': 503, 'transactions': 2257}
+Demo store: {'customers': 323, 'products': 525, 'transactions': 2366}

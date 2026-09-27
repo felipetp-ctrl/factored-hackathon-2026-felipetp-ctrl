@@ -12,7 +12,8 @@ chat / PQR / fraud alert
   gateway ── session check · PII masking · injection signals · language
         │
   Claude Haiku 4.5 ── free text → validated structured fields (never decides, never writes to the customer)
-        │               └ rule-based NLU takes over when the model is down or over budget (same fields, US$ 0)
+        │               └ fallback when the model is down or over budget (same fields, US$ 0): rules + our trained
+        │                 intent classifier intent-v2 (TF-IDF + logistic regression, ES/PT, 0.2 ms, pure Python)
         │
   state machine ── identify transaction → reason → evidence → policy → confirm → act → verify
         │                                   │
@@ -84,7 +85,7 @@ Deploy: `render.yaml` (API, Docker) + Vercel for `frontend/` with `NEXT_PUBLIC_A
 ## Evaluate it
 
 ```bash
-make eval                                   # 44 scenarios × {proposed, naive LLM baseline}
+make eval ARGS="--scenarios ../eval/scenarios/test-v2.json --demo-db demo_data/dispute_ops.db"   # 42 scenarios × {proposed, naive LLM baseline}
 make eval ARGS="--systems proposed --only fraud --repeats 3"
 ```
 
@@ -130,9 +131,38 @@ Component evaluation on the same conversations (`test-v2`, proposed system):
 | Injection flag (rules) TPR / FPR | 100% (6/6) / 0% (0/98) | — |
 | Language rules accuracy when decided | 98.3% (5.3% undecided → the model decides) | — |
 
-The rule-based fallback NLU (v0.0.2), re-scored offline on the same stored messages without model calls: dispute
-reason 87.0% (40/46), out-of-scope recall 8/8 (one rule fixed after reading two of these messages, so not held-out),
-human request 2/2 — [`components_rescored.md`](eval/results/20260926T181317Z-test-v2/components_rescored.md).
+The fallback NLU, re-scored offline on the stored messages without model calls
+([`components_rescored.md`](eval/results/20260926T181317Z-test-v2/components_rescored.md)): with keyword rules only,
+dispute reason 87.0% (40/46); with our trained classifier intent-v2, 100% (46/46, post-hoc — see below) and 22/23 on
+the never-opened run 3 (rules: 21/23).
+
+## Machine learning
+
+Two pieces of work, both reproducible offline (`make train`, `make fraud-audit`, `make mlflow-ui`; every candidate is
+an MLflow run):
+
+**1. A trained intent/reason classifier** ([ADR-019](docs/decisions/ADR-019-learned-intent-classifier.md),
+[report](ml/results/intent-v2.md)). 9 labels (six dispute reasons, out of scope, wants a person, no reason yet), ES
+and PT. The organizer data has no usable customer text (5 distinct complaint descriptions; 42 distinct transcripts,
+one intent), so the corpus is **team-generated**: 937 messages written in-session by the coding assistant, labelled by
+construction, near-duplicates of evaluation messages removed. TF-IDF (word + character n-grams) + logistic regression,
+selected among 12 variants and a multilingual sentence-embedding model by grouped 5-fold CV; confidence threshold
+0.60 chosen on out-of-fold predictions; exported to JSON and scored in pure Python inside the fallback NLU.
+
+| Reason accuracy | intent-v1 | intent-v2 (deployed) | Keywords |
+|---|---|---|---|
+| test-v2 held-out messages (n = 46) | 34/46 — worse than keywords | 45/46 *post-hoc* | 40/46 |
+| test-v2 run 3, never opened (n = 23) | — | 23/23 | 21/23 |
+
+intent-v1 lost to the keywords on held-out data; that result is committed. Reading its errors motivated intent-v2's
+augmentation, so intent-v2's test-v2 number is post-hoc. A new scenario set, `test-v3`, was frozen before intent-v2
+was trained and is the clean check once API credit is available.
+
+**2. No fraud model, on evidence** ([ADR-020](docs/decisions/ADR-020-fraud-label-audit.md),
+[report](ml/results/fraud_label_audit.md)). On a temporal split, logistic regression and gradient boosting on
+behavioural features reach ROC-AUC 0.50 (permuted-label control 0.49): `is_fraud` is the organizer's `fraud_score`
+(≥ 40 → 100% fraud) plus uniform noise. We ship no model and instead recalibrate the proactive fraud alert from
+score ≥ 80 to ≥ 35 (100% precision on train and test, recall 16% → 52%).
 
 Small samples: zero observed unsafe outcomes in 105 + 84 conversations does not establish zero risk; the component
 baseline shows the language model's margin is on the less common reasons, not on fraud.
@@ -152,21 +182,26 @@ See [ADR-009](docs/decisions/ADR-009-evaluation-method.md) for method and limita
 | `docs/requirements_traceability.md` | every challenge requirement → evidence → how to verify |
 | `docs/problem_analysis.md` · `docs/data_quality_report.md` · `docs/operations.md` | the problem in numbers · data quality · running it |
 | `eval/results/` | evaluation reports |
+| `ml/` | intent corpus (team-generated), training and audit reports; code in `backend/src/dispute_ops/ml/` |
 
 ## Data
 
-The organizer dataset (LATAM Bank, synthetic, ~19M rows) is read from S3 and never committed. The demo and tests run
-on a small **team-generated synthetic fixture** (`backend/tests/fixtures/seed.json`) shaped after the data dictionary.
+The organizer dataset (LATAM Bank, synthetic, ~19M rows) is read from S3 and never committed. The public demo runs on
+a gold sample of it (`backend/demo_data/dispute_ops.db`); unit tests also use a small **team-generated synthetic
+fixture** (`backend/tests/fixtures/seed.json`) shaped after the data dictionary. The intent corpus (`ml/corpus/`) is
+team-generated too.
 Findings from the dataset so far: the dispute workflow is backed by the data ("Cargo no reconocido" is the only
 sub-category of 20% of complaints), while free text in complaints and transcripts is templated — see the limitations.
 
 ## Known limitations
 
 - Portuguese does not exist in the dataset; Portuguese behaviour is evaluated only through simulated customers.
-- The policy is synthetic; thresholds are placeholders to be calibrated with the data.
+- The policy is synthetic; its amount threshold is calibrated on the data's value distribution (ADR-013), not on
+  real dispute outcomes.
 - Conversation state, rate limiting, idempotency and demo workspaces live in one process's memory (a restart resets them).
 - Demo mode opens the bank-side views without a key (synthetic data only); production mode keeps the agent key.
-- The rule-based fallback NLU understands fewer phrasings (87% on dispute reasons vs 100% for Claude on test-v2);
-  when it does not understand, the customer is asked again or handed to a person, never acted on wrongly.
+- The fallback NLU understands fewer phrasings than Claude; its learned classifier was trained on team-written text
+  and evaluated on LLM-simulated customers only. A confident wrong reason reaches the confirmation summary, where the
+  customer sees the reason before confirming (ADR-019).
 - Identity is a test provider (`POST /auth/session`), standing in for the bank's real login.
 - Name detection is not part of PII masking; structured identifiers (cards, emails, phones, national ids) are.

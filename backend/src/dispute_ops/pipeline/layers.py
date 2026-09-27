@@ -15,6 +15,7 @@ from typing import Any
 
 import duckdb
 
+from dispute_ops.domain import FRAUD_ALERT_MIN_SCORE
 from dispute_ops.pipeline.contracts import CONTRACTS, ORDER, Contract
 
 
@@ -220,7 +221,7 @@ def run_gold(con: duckdb.DuckDBPyConnection, paths: Paths, as_of: datetime) -> d
         "fraud_alert_candidates": ({"transactions"}, f"""
             SELECT * FROM {s('transactions')}
             WHERE transaction_date BETWEEN {as_of_sql} - INTERVAL 48 HOUR AND {as_of_sql}
-              AND fraud_score >= 80 AND transaction_status = 'Approved'"""),
+              AND fraud_score >= {FRAUD_ALERT_MIN_SCORE} AND transaction_status = 'Approved'"""),
     }
     counts = {}
     for name, (needs, sql) in queries.items():

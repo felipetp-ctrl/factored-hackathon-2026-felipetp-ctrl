@@ -35,7 +35,7 @@ class Settings(BaseModel):
     demo_now: str = "2026-06-17T12:00:00+00:00"
     rate_limit_per_minute: int = 30
     # Production would alert within 48 h; the demo looks back 30 days because high-risk charges are rare
-    # in the dataset (250 card transactions with score >= 80 in three years).
+    # in the dataset (high-score card charges are a few dozen a month; threshold in domain.FRAUD_ALERT_MIN_SCORE).
     fraud_alert_lookback_hours: int = 48
     # Public demo: every browser gets its own copy of the data (workspace) and the bank-side views open without
     # a key, because judges have no staff login. Off by default; production keeps the agent key.

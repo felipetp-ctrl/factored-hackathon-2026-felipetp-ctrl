@@ -8,7 +8,7 @@ from decimal import Decimal
 from pydantic import BaseModel, Field
 
 from dispute_ops.auth import SessionService
-from dispute_ops.domain import Channel, ReasonCode, Transaction
+from dispute_ops.domain import FRAUD_ALERT_MIN_SCORE, Channel, ReasonCode, Transaction
 from dispute_ops.flow import DisputeFlow, FlowResult, Turn
 from dispute_ops.policy.engine import PolicyEngine
 from dispute_ops.store import Store
@@ -85,7 +85,7 @@ def run_pqr_complaint(
 
 
 def select_fraud_alerts(
-    store: Store, clock: Callable[[], datetime], *, lookback_hours: int = 48, min_score: Decimal = Decimal("80")
+    store: Store, clock: Callable[[], datetime], *, lookback_hours: int = 48, min_score: Decimal = Decimal(FRAUD_ALERT_MIN_SCORE)
 ) -> list[Transaction]:
     """Proactive channel candidates: recent approved transactions with a high fraud score and no dispute."""
     return store.list_high_fraud_score(clock() - timedelta(hours=lookback_hours), min_score)

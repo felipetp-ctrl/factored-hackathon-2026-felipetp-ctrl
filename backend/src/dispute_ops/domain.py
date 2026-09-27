@@ -18,6 +18,9 @@ class ReasonCode(StrEnum):
 
 
 FRAUD_CODES = frozenset({ReasonCode.FRAUD_CNP, ReasonCode.FRAUD_CP})
+# Proactive fraud alert: lowest organizer fraud_score with >= 95% precision on the train period of the fraud label
+# audit (100% on train and test, ~52% recall); was 80 (~16% recall). ADR-020, ml/results/fraud_label_audit.md.
+FRAUD_ALERT_MIN_SCORE = 35
 
 
 class Channel(StrEnum):

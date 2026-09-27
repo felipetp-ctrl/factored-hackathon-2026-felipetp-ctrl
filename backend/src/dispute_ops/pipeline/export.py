@@ -7,6 +7,7 @@ from pathlib import Path
 
 import duckdb
 
+from dispute_ops.domain import FRAUD_ALERT_MIN_SCORE
 from dispute_ops.store import Store
 
 
@@ -25,7 +26,7 @@ def export_demo_store(gold: Path, db_path: Path, as_of: datetime, n_customers: i
         UNION SELECT DISTINCT customer_id FROM {g('fraud_alert_candidates')}
         -- keep every customer with a recent high-risk card charge so the proactive channel has real cases
         UNION SELECT DISTINCT customer_id FROM {g('card_transactions')}
-              WHERE fraud_score >= 80 AND transaction_date BETWEEN {ts} - INTERVAL 30 DAY AND {ts}
+              WHERE fraud_score >= {FRAUD_ALERT_MIN_SCORE} AND transaction_date BETWEEN {ts} - INTERVAL 30 DAY AND {ts}
     """)
     customers = con.execute(f"""
         SELECT customer_id, country, segment, is_repeat_complainer, first_name FROM {g('customer_dim')}

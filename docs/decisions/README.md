@@ -22,3 +22,5 @@ Every significant decision in the project, with the alternatives considered and 
 | [016](ADR-016-judge-facing-demo.md) | Demo: bank app beside the bank side, guided scenarios, agent actions, demo workspaces | accepted |
 | [017](ADR-017-rule-fallback-nlu.md) | Free rule-based NLU when the model is down or over budget | accepted |
 | [018](ADR-018-conversation-fixes.md) | Conversation fixes: fixed language, polite endings, local formats, visible re-login | accepted |
+| [019](ADR-019-learned-intent-classifier.md) | Trained intent/reason classifier inside the free fallback NLU | accepted |
+| [020](ADR-020-fraud-label-audit.md) | No fraud model (labels have no behavioural signal); fraud alert threshold 80 → 35 | accepted |

@@ -52,11 +52,11 @@ Status: ✅ met · 🟡 partial (gap stated) · ⬜ not yet.
 | Quality checks | ✅ | Rejects, cast failures, domains, ranges, required nulls, duplicates, orphans |
 | Lineage | ✅ | `_source_file`, `_ingested_at`, `_batch_id`; `amount_usd_source`; run manifests |
 | Update / freshness policy | ✅ | Incremental bronze, recomputed silver; late-arrival and correction test on a labelled fixture |
-| ≥ 1 learned component evaluated against a baseline | ✅ | Claude Haiku NLU vs keyword baseline on the same messages (component report); 🟡 no model trained by us (allowed; fraud model deferred) |
-| Valid labels / relevance judgments | ✅ | Expected outcomes derived from the policy on real transactions; re-derived by a test |
-| Prevent leakage | ✅ | Test sets generated then frozen by commit before any run; no tuning on test-v1/test-v2; dev set kept separate ([ADR-009](decisions/ADR-009-evaluation-method.md)) |
-| Justify representations, metrics, thresholds, splits | ✅ | ADR-009, ADR-013 (threshold calibrated at p90 of real amounts) |
-| Model tracking | 🟡 | Model + prompt versions recorded in every report; no MLflow (no model trained) |
+| ≥ 1 learned component evaluated against a baseline | ✅ | Trained intent/reason classifier intent-v2 (TF-IDF + LR, ES/PT) vs keyword baseline and a sentence-embedding model, CV and held-out ([ADR-019](decisions/ADR-019-learned-intent-classifier.md), [report](../ml/results/intent-v2.md)); Claude Haiku NLU vs keywords (component report); fraud labels audited: no learnable signal ([ADR-020](decisions/ADR-020-fraud-label-audit.md)) |
+| Valid labels / relevance judgments | ✅ / 🟡 | Expected outcomes derived from the policy on real transactions; re-derived by a test. Intent corpus labelled by construction by its (AI) author; human review sample pending |
+| Prevent leakage | ✅ / 🟡 | Test sets frozen by commit before any run; dev set separate ([ADR-009](decisions/ADR-009-evaluation-method.md)); intent corpus de-duplicated against every evaluation message, CV grouped by source sentence. Disclosed exceptions: one fallback rule and intent-v2's augmentation were motivated by reading test-v2 errors (post-hoc, labelled in the reports); `test-v3` frozen before intent-v2 for a clean re-check |
+| Justify representations, metrics, thresholds, splits | ✅ | ADR-009, ADR-013 (threshold calibrated at p90 of real amounts), ADR-019 (TF-IDF vs embeddings, macro-F1, confidence threshold from out-of-fold accuracy), ADR-020 (temporal split, PR-AUC vs prevalence, alert threshold fixed on train and checked on test) |
+| Model tracking | ✅ | MLflow runs for every candidate (`make train`, `make fraud-audit`, `make mlflow-ui`); model version recorded on every NLU turn (`rules+intent-v2`); model + prompt versions in every evaluation report |
 
 ## 5. Measured quality and failure handling
 

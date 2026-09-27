@@ -11,6 +11,7 @@ Everything measured here is an offline measurement on a laptop or a simulation; 
 | Conversation state, rate limit, idempotency cache | In process memory | Redis (TTL = session TTL) or Postgres |
 | Operational store + audit log | SQLite (fixture or gold sample copy) | Postgres; audit table append-only via permissions + triggers, partitioned by month |
 | Language model | Claude Haiku 4.5, one structured call per customer turn | Unchanged; add prompt caching once the system prompt passes the model's minimum cacheable length |
+| Fallback NLU | Rules + trained intent classifier `intent-v2` (1.5 MB JSON, 0.2 ms, pure Python; `INTENT_MODEL=off` disables) | Retrain with `make train` on real, consented messages; version recorded on every turn (`rules+intent-v2`) |
 | Data pipeline | DuckDB batch, full dataset in ~20 s on a laptop | Same code on a scheduled job; switch silver to per-partition MERGE past ~100M rows |
 
 ## Capacity (estimates, labelled as such)
@@ -78,3 +79,6 @@ Ownership is enforced in the tool layer on every call (tested for cross-customer
 6. OpenTelemetry export and alerting as listed above.
 7. Name detection in PII masking (structured identifiers only today).
 8. Portuguese evaluation with real (not simulated) customer messages; the dataset has none.
+9. Run the frozen `test-v3` set for a clean measurement of the fallback NLU with intent-v2 (needs API credit for the
+   customer simulator); human review of a sample of the intent corpus labels.
+10. Monitor the precision of confirmed fraud alerts (threshold 35 relies on the organizer score's behaviour, ADR-020).
