@@ -59,6 +59,8 @@ class IntentModel:
         self.idf: list[float] = spec["idf"]
         self.coef: list[list[float]] = spec["coef"]  # one row per label
         self.intercept: list[float] = spec["intercept"]
+        # Out-of-fold confidence histogram from training (10 bins over [0, 1]): the drift reference.
+        self.reference_confidence: list[float] | None = spec.get("reference_confidence_hist")
 
     @classmethod
     def load(cls, path: Path = DEFAULT_PATH) -> IntentModel:
@@ -84,3 +86,34 @@ class IntentModel:
         probs = {label: e / total for label, e in zip(self.labels, exp)}
         label = max(probs, key=probs.__getitem__)
         return Prediction(label=label, probability=probs[label], probabilities=probs)
+
+
+def psi(reference: list[float], observed: list[float], eps: float = 1e-4) -> float:
+    """Population stability index between two binned distributions (same bins). > 0.2 is the usual drift alarm."""
+    r_tot, o_tot = sum(reference) or 1.0, sum(observed) or 1.0
+    out = 0.0
+    for r, o in zip(reference, observed):
+        rp, op = max(r / r_tot, eps), max(o / o_tot, eps)
+        out += (op - rp) * math.log(op / rp)
+    return out
+
+
+def confidence_histogram(probabilities: list[float], bins: int = 10) -> list[int]:
+    hist = [0] * bins
+    for p in probabilities:
+        hist[min(int(p * bins), bins - 1)] += 1
+    return hist
+
+
+def classifier_monitoring(readings: list[dict | None], reference: list[float] | None, min_turns: int = 30) -> dict:
+    """Operational view of the learned classifier: how often it is consulted, accepted, how confident, and whether
+    its confidence distribution has drifted from the one measured in training (PSI)."""
+    r = [x for x in readings if x]
+    probs = [x["probability"] for x in r]
+    hist = confidence_histogram(probs)
+    drift = psi(reference, hist) if reference and len(r) >= min_turns else None
+    return {"turns": len(r), "accepted_share": round(sum(x["accepted"] for x in r) / len(r), 3) if r else None,
+            "mean_confidence": round(sum(probs) / len(probs), 3) if probs else None,
+            "labels": {k: sum(x["label"] == k for x in r) for k in sorted({x["label"] for x in r})},
+            "confidence_histogram": hist, "psi_vs_training": None if drift is None else round(drift, 3),
+            "drift_alert": None if drift is None else drift > 0.2}

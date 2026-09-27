@@ -19,6 +19,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from dispute_ops.auth import AuthError
+from dispute_ops.language.intent_model import classifier_monitoring
+from dispute_ops.language.rule_nlu import is_rules_model
 from dispute_ops.channels import PqrComplaint, run_pqr_complaint, select_fraud_alerts
 from dispute_ops.container import Container
 from dispute_ops.conversation import Reply
@@ -362,6 +364,12 @@ def create_app(container: Container, workspace_factory: Callable[[], Container] 
             })
         return out
 
+    def _intent_reference(c: C) -> list[float] | None:
+        for nlu in (c.conversations.nlu, c.conversations.fallback):
+            if (model := getattr(nlu, "intent_model", None)) is not None:
+                return model.reference_confidence
+        return None
+
     @app.get("/agent/metrics", dependencies=[AgentOnly])
     def metrics(c: C) -> dict[str, Any]:
         replies = c.store.list_audit_by_kind("reply")
@@ -383,8 +391,9 @@ def create_app(container: Container, workspace_factory: Callable[[], Container] 
             "agent_actions": len(c.store.list_audit_by_kind("agent_action")),
             "actions_verified": sum(1 for e in actions if e.data["status"] == "verified"),
             "actions_failed": sum(1 for e in actions if e.data["status"] == "failed"),
-            "llm_calls": sum(1 for e in nlu if e.data["usage"]["model"] != "rules"),
-            "rule_nlu_turns": sum(1 for e in nlu if e.data["usage"]["model"] == "rules"),
+            "llm_calls": sum(1 for e in nlu if not is_rules_model(e.data["usage"]["model"])),
+            "rule_nlu_turns": sum(1 for e in nlu if is_rules_model(e.data["usage"]["model"])),
+            "intent_classifier": classifier_monitoring([e.data.get("classifier") for e in nlu], _intent_reference(c)),
             "llm_cost_usd": round(sum(e.data["usage"]["cost_usd"] for e in nlu), 6),
             "latency_ms_p50": _percentile(latencies, 50),
             "latency_ms_p95": _percentile(latencies, 95),

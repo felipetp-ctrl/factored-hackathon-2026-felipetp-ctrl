@@ -134,10 +134,12 @@ function line(e: TraceEvent): { kind: string; tone?: "action" | "risk" | "ai"; t
       const r = d.result;
       const fields = Object.entries(r).filter(([k, v]) => v !== null && v !== false && v !== "" &&
         !["intent", "language", "summary", "reason_confidence", "very_negative_sentiment", "regulatory_threat"].includes(k));
-      const rules = d.usage.model === "rules";
+      const rules = d.usage.model === "rules" || d.usage.model.startsWith("rules+");
+      const clf = d.classifier;
+      const learned = clf ? ` · classifier ${clf.version}: ${clf.label} p=${clf.probability.toFixed(2)} ${clf.accepted ? "(used)" : "(below threshold, rules kept)"}` : "";
       return { kind: rules ? "Understood (rules)" : "Understood (AI)", tone: "ai", text: <>
         Intent <strong>{r.intent}</strong>{fields.length > 0 && <> · {fields.map(([k, v]) => `${k}: ${v}`).join(" · ")}</>}
-        <div className="muted small">{rules ? "Rule-based fallback · US$ 0" : `${d.usage.model} · ${Math.round(d.usage.latency_ms)} ms · US$ ${d.usage.cost_usd.toFixed(4)}`}. The model only fills fields; it decides nothing.</div>
+        <div className="muted small">{rules ? `Rule-based fallback${learned} · US$ 0` : `${d.usage.model} · ${Math.round(d.usage.latency_ms)} ms · US$ ${d.usage.cost_usd.toFixed(4)}`}. The model only fills fields; it decides nothing.</div>
       </> };
     }
     case "nlu_failed": return { kind: "AI failed", tone: "risk", text: <>{d.error}{d.breaker_open ? " · circuit open" : ""}</> };

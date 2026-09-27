@@ -83,6 +83,8 @@ class LlmUsage(BaseModel):
 class NluOutcome(BaseModel):
     result: NluResult
     usage: LlmUsage
+    # Learned classifier reading inside the rule NLU (label, probability, accepted, version), for monitoring.
+    classifier: dict[str, Any] | None = None
 
 
 class NluUnavailable(Exception):

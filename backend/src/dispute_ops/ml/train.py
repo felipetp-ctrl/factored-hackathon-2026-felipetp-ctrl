@@ -148,7 +148,8 @@ def choose_threshold(conf: np.ndarray, correct: np.ndarray) -> tuple[float, list
     return max(POLICY_MIN_CONFIDENCE, min(ok) if ok else 0.95), curve
 
 
-def export(version: str, kinds: str, c: float, x: list[str], y: list[str], threshold: float, path: Path) -> dict:
+def export(version: str, kinds: str, c: float, x: list[str], y: list[str], threshold: float, path: Path,
+           reference_conf: np.ndarray | None = None) -> dict:
     vec = TfidfVectorizer(analyzer=partial(features, kinds=kinds), sublinear_tf=True, min_df=2)
     clf = LogisticRegression(C=c, max_iter=5000).fit(vec.fit_transform(x), y)
     vocab = {k: int(v) for k, v in vec.vocabulary_.items()}
@@ -159,6 +160,8 @@ def export(version: str, kinds: str, c: float, x: list[str], y: list[str], thres
         "intercept": [round(float(v), 5) for v in clf.intercept_],
         "trained_on": {"examples": len(x), "labels": dict(Counter(y))}, "C": c,
     }
+    if reference_conf is not None:  # drift reference for production monitoring (PSI over 10 bins)
+        spec["reference_confidence_hist"] = np.histogram(np.clip(reference_conf, 0, 1 - 1e-9), bins=10, range=(0, 1))[0].tolist()
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(spec, ensure_ascii=False, separators=(",", ":")))
     # Parity: the pure-Python runtime must reproduce sklearn's probabilities.
@@ -236,7 +239,7 @@ def run(version: str = "intent-v2", with_embeddings: bool = False, tracking_uri:
     learned = [r for r in results if r["name"] != "keyword-baseline" and not r["name"].startswith("e5")]
     best = max(learned, key=lambda r: (round(r["macro_f1"], 4), -r["params"]["C"]))
     threshold, curve = choose_threshold(best["conf"], best["correct"])
-    spec = export(version, best["params"]["feature_kinds"], best["params"]["C"], x, y, threshold, model_path)
+    spec = export(version, best["params"]["feature_kinds"], best["params"]["C"], x, y, threshold, model_path, best["conf"])
     model = IntentModel.load(model_path)
     started = time.perf_counter()
     for t in x:

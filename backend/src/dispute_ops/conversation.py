@@ -17,6 +17,7 @@ from dispute_ops.flow import DisputeFlow, FlowResult, State, Turn
 from dispute_ops.handoff import HandoffPackage
 from dispute_ops.language import responses
 from dispute_ops.language.breaker import CircuitBreaker
+from dispute_ops.language.rule_nlu import is_rules_model
 from dispute_ops.language.gateway import detect_injection, detect_language, redact_pii
 from dispute_ops.language.nlu import LlmUsage, NluContext, NluOutcome, NluResult, NluUnavailable
 from dispute_ops.policy.engine import PolicyEngine
@@ -219,13 +220,14 @@ class ConversationService:
             mode = "rules"
             self._audit(conv, "nlu_fallback", reason=reason)
         nlu, usage = outcome.result, outcome.usage
-        if usage.model == "rules":
+        if is_rules_model(usage.model):
             mode = "rules"
         self.budget.spent_usd += usage.cost_usd
         conv.usages.append(usage)
         if first_turn:
             self._set_language(conv, nlu.language)
-        self._audit(conv, "nlu", result=nlu.model_dump(mode="json"), usage=usage.model_dump(mode="json"))
+        self._audit(conv, "nlu", result=nlu.model_dump(mode="json"), usage=usage.model_dump(mode="json"),
+                    classifier=outcome.classifier)
         base.update(nlu=nlu, usage=usage, nlu_mode=mode)
 
         if conv.proactive_txn is not None:

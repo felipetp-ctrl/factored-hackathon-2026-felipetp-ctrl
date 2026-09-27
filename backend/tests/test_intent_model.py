@@ -135,3 +135,48 @@ def test_corpus_is_balanced_across_labels_and_languages():
 
 def test_out_of_scope_keyword_outranks_a_human_reading():
     assert read(StubModel("HUMAN", 0.9), "queria ver sobre um empréstimo pessoal").result.intent == "out_of_scope"
+
+
+# --- monitoring --------------------------------------------------------------------------------------------------
+
+def test_rules_model_names_are_recognised_with_or_without_the_classifier():
+    from dispute_ops.language.rule_nlu import is_rules_model
+    assert is_rules_model("rules") and is_rules_model("rules+intent-v2")
+    assert not is_rules_model("claude-haiku-4-5") and not is_rules_model("rulesX")
+
+
+def test_rule_nlu_reports_the_classifier_reading(model):
+    out = RuleNlu([], intent_model=model).interpret("me cobraron dos veces", NluContext(state="START"))
+    assert out.classifier["version"] == "intent-v2" and out.classifier["label"] == "DUPLICATE" and out.classifier["accepted"]
+    assert RuleNlu([]).interpret("me cobraron dos veces", NluContext(state="START")).classifier is None
+
+
+def test_bundled_model_carries_a_drift_reference(model):
+    assert model.reference_confidence and len(model.reference_confidence) == 10
+
+
+def test_psi_is_zero_for_the_same_distribution_and_alarms_on_a_shift():
+    from dispute_ops.language.intent_model import classifier_monitoring, psi
+    ref = [0, 1, 12, 68, 95, 130, 142, 221, 419, 1720]
+    assert psi(ref, ref) == pytest.approx(0.0)
+    # a sample shaped like the training reference (bin centres, proportional counts)
+    confident = [{"label": "FRAUD_CNP", "probability": (i + 0.5) / 10, "accepted": (i + 0.5) / 10 >= 0.6}
+                 for i, n in enumerate(ref) for _ in range(round(n / sum(ref) * 300))]
+    unsure = [{"label": "DISPUTE_NO_REASON", "probability": 0.35, "accepted": False}] * 40
+    assert classifier_monitoring(confident, ref)["drift_alert"] is False
+    m = classifier_monitoring(unsure, ref)
+    assert m["drift_alert"] is True and m["accepted_share"] == 0.0 and m["turns"] == 40
+    assert classifier_monitoring(unsure[:5], ref)["psi_vs_training"] is None  # too few turns to judge
+
+
+def test_rules_mode_turns_are_labelled_rules_and_not_counted_as_llm_calls():
+    from fastapi.testclient import TestClient
+
+    from dispute_ops.api import create_app
+    from dispute_ops.container import Container, Settings
+    c = Container.build(Settings(session_secret="s", agent_api_key="k", nlu_mode="rules"))
+    cid = c.conversations.start("es")
+    r = c.conversations.send(cid, c.sessions.issue("CUST001"), "me cobraron dos veces en Netflix")
+    assert r.nlu_mode == "rules" and r.usage.model == "rules+intent-v2"
+    m = TestClient(create_app(c)).get("/agent/metrics", headers={"X-Agent-Key": "k"}).json()
+    assert m["llm_calls"] == 0 and m["rule_nlu_turns"] == 1 and m["intent_classifier"]["turns"] == 1

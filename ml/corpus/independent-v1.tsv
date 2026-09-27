@@ -1,0 +1,540 @@
+FRAUD_CNP	es	No reconozco un cargo de $450 en Amazon.
+FRAUD_CNP	es	Hay un cobro que no hice en mi tarjeta.
+FRAUD_CNP	es	Me clonaron la tarjeta, aparece un cargo en una tienda que no conozco.
+FRAUD_CNP	es	Buenas tardes, tengo un cargo de $1,230.00 MXN en una página llamada "TechGadgetsMX" que jamás compré.
+FRAUD_CNP	es	No fui yo quien hizo esa compra en Netshop.
+FRAUD_CNP	es	Sigo con la tarjeta en mi poder pero me cobraron algo raro anoche.
+FRAUD_CNP	es	Vi un cargo de $89.900 COP en un sitio llamado "ElectroVentas" y no reconozco esa compra.
+FRAUD_CNP	es	Alguien usó mis datos de la tarjeta sin que yo la prestara.
+FRAUD_CNP	es	No hice esa compra en línea, tengo la tarjeta conmigo todo el tiempo.
+FRAUD_CNP	es	Me llegó una notificación de un pago en "GameZoneStore" que no reconozco para nada.
+FRAUD_CNP	es	Che, me clonaron la tarjeta, hay un cargo de $15.400 en un sitio raro.
+FRAUD_CNP	es	No autoricé esa transacción, la tarjeta nunca salió de mi billetera.
+FRAUD_CNP	es	Buen día, encontré un cargo de USD 32.50 en "StreamFlixPlus" que no reconozco, no tengo esa tarjeta prestada a nadie.
+FRAUD_CNP	es	Alguien hizo una compra con mis datos en una tienda de Miami que no conozco.
+FRAUD_CNP	es	no c q es eso de "QuickPayNet" pero no lo compre yo
+FRAUD_CNP	es	Disculpe, soy grande y no entiendo bien esto pero me sale un cobro que yo no hice en una tienda por internet.
+FRAUD_CNP	es	Cargo desconocido de $2.300 en mi estado de cuenta, la tarjeta la tengo yo.
+FRAUD_CNP	es	Esa transacción de "MegaStoreOnline" no la hice yo ni nadie de mi familia.
+FRAUD_CNP	es	tengo un cargo raro d $600 en algo llamado nightclubpay no lo reconozco
+FRAUD_CNP	es	Estoy furioso, hay un cargo de $5,000 pesos en una tienda de videojuegos que jamás visité.
+FRAUD_CNP	es	Vi un cobro en dólares de una app que no tengo instalada, no fui yo.
+FRAUD_CNP	es	me clonaron la banda magnetica, aparecio un cargo en otro pais
+FRAUD_CNP	es	No reconozco este cobro de $78.90 en "PetSupplyWorld", nunca compré ahí.
+FRAUD_CNP	es	La tarjeta física está en mi cartera pero me cobraron en una tienda online desconocida.
+FRAUD_CNP	es	Encontré tres cargos pequeños de $99 en sitios que nunca visité, parecen pruebas de un fraude.
+FRAUD_CNP	es	no hice esta compra, seguro me robaron los datos de la tarjeta
+FRAUD_CNP	es	Cobraron algo en "AppStoreDigitalXYZ" y yo no tengo esa app ni la descargué.
+FRAUD_CNP	es	Con toda seguridad no realicé esta compra, la tarjeta jamás salió de mi casa.
+FRAUD_CNP	es	Vengo a reportar un cargo de $3.450,90 en una tienda que no conozco, no fui yo quien compró.
+FRAUD_CNP	es	Hola, buenas, resulta que me aparece un pago a "CryptoFastPay" de $12.000 y yo nunca usé eso.
+FRAUD_CNP	pt	Não reconheço uma cobrança de R$ 230 na Amazon.
+FRAUD_CNP	pt	Tem uma compra que eu não fiz no meu cartão.
+FRAUD_CNP	pt	Clonaram meu cartão, apareceu uma compra numa loja que eu nunca ouvi falar.
+FRAUD_CNP	pt	Boa tarde, tem uma cobrança de R$ 1.230,00 em um site chamado "TechGadgetsBR" que eu nunca comprei.
+FRAUD_CNP	pt	Não fui eu que fiz essa compra na Netshop.
+FRAUD_CNP	pt	Continuo com o cartão comigo mas cobraram algo estranho ontem à noite.
+FRAUD_CNP	pt	Vi uma cobrança de R$ 89,90 num site chamado "ElectroVendas" e não reconheço essa compra.
+FRAUD_CNP	pt	Alguém usou os dados do meu cartão sem eu ter emprestado pra ninguém.
+FRAUD_CNP	pt	Não fiz essa compra online, o cartão está comigo o tempo todo.
+FRAUD_CNP	pt	Recebi uma notificação de pagamento na "GameZoneStore" que eu não reconheço de jeito nenhum.
+FRAUD_CNP	pt	cara, clonaram meu cartao, tem uma cobranca de R$154 num site esquisito
+FRAUD_CNP	pt	Não autorizei essa transação, o cartão nunca saiu da minha carteira.
+FRAUD_CNP	pt	Bom dia, encontrei uma cobrança de US$ 32,50 na "StreamFlixPlus" que não reconheço, não emprestei o cartão pra ninguém.
+FRAUD_CNP	pt	Alguém fez uma compra com meus dados numa loja de Miami que eu não conheço.
+FRAUD_CNP	pt	n sei o q é isso de "QuickPayNet" mas eu n comprei
+FRAUD_CNP	pt	Desculpa, já sou de idade e não entendo bem isso mas apareceu uma cobrança que eu não fiz numa loja pela internet.
+FRAUD_CNP	pt	Cobrança desconhecida de R$ 230 no meu extrato, o cartão está comigo.
+FRAUD_CNP	pt	Essa transação da "MegaStoreOnline" não fui eu nem ninguém da minha família que fez.
+FRAUD_CNP	pt	tem uma cobranca esquisita de R$60 em algo chamado nightclubpay nao reconheco
+FRAUD_CNP	pt	Estou revoltado, tem uma cobrança de R$ 500 numa loja de videogame que eu nunca visitei.
+FRAUD_CNP	pt	Vi uma cobrança em dólar de um aplicativo que eu nem tenho instalado, não fui eu.
+FRAUD_CNP	pt	clonaram a tarja do meu cartao, apareceu uma cobranca em outro pais
+FRAUD_CNP	pt	Não reconheço essa cobrança de R$ 78,90 na "PetSupplyWorld", nunca comprei lá.
+FRAUD_CNP	pt	O cartão físico está na minha carteira mas cobraram numa loja online desconhecida.
+FRAUD_CNP	pt	Encontrei três cobranças pequenas de R$ 9,90 em sites que nunca visitei, parecem testes de fraude.
+FRAUD_CNP	pt	n fiz essa compra, devem ter roubado os dados do meu cartao
+FRAUD_CNP	pt	Cobraram algo na "AppStoreDigitalXYZ" e eu não tenho esse aplicativo nem baixei.
+FRAUD_CNP	pt	Com certeza não fiz essa compra, o cartão nunca saiu de casa.
+FRAUD_CNP	pt	Venho reportar uma cobrança de R$ 3.450,90 numa loja que eu não conheço, não fui eu quem comprou.
+FRAUD_CNP	pt	Oi, boa tarde, aparece um pagamento pra "CryptoFastPay" de R$ 1.200 e eu nunca usei isso.
+FRAUD_CP	es	Me robaron la tarjeta ayer y ya hay cargos que no hice.
+FRAUD_CP	es	Perdí mi tarjeta la semana pasada y ahora aparecen compras.
+FRAUD_CP	es	Me asaltaron y se llevaron mi cartera con la tarjeta, veo movimientos.
+FRAUD_CP	es	Buenas, me robaron el bolso con la tarjeta el sábado y hoy veo un cargo de $2.500 MXN en una tienda.
+FRAUD_CP	es	Se me perdió la tarjeta en el bus y ya usaron para comprar algo.
+FRAUD_CP	es	Me sustrajeron la cartera en el metro y hicieron compras con mi tarjeta.
+FRAUD_CP	es	Ayudaaa me robaron la billetera y ya gastaron plata con mi tarjeta
+FRAUD_CP	es	Denuncié el robo de mi tarjeta y aún así hay un cargo nuevo de $800.
+FRAUD_CP	es	Extravié mi tarjeta el martes en la noche y hoy hay compras que no reconozco.
+FRAUD_CP	es	Me la robaron del auto junto con la cartera, y ya hicieron un cargo de $45.000 COP.
+FRAUD_CP	es	Che, me afanaron la billetera con la tarjeta adentro y ya la usaron.
+FRAUD_CP	es	Perdí mi tarjeta de crédito en el gimnasio y apareció un pago en una tienda de ropa.
+FRAUD_CP	es	Buenas tardes, tuve un robo en la calle y se llevaron mi cartera con la tarjeta, ya veo movimientos de $3,200.90 en el estado de cuenta.
+FRAUD_CP	es	Me robaron en la parada del colectivo, se llevaron todo, incluída la tarjeta.
+FRAUD_CP	es	perdi la tarjeta y ya hay un cargo raro de $150
+FRAUD_CP	es	Disculpe joven, me robaron la cartera con la tarjetita adentro y ahora salen compras que no hice.
+FRAUD_CP	es	Alguien me sustrajo la tarjeta del bolsillo en el mercado y ya la usó.
+FRAUD_CP	es	Estoy muy asustado, me acaban de robar y tenían mi tarjeta física, ya veo cargos.
+FRAUD_CP	es	me quitaron a la fuerza la cartera con la tarjeta ayer x la noche
+FRAUD_CP	es	Reporto que mi tarjeta fue robada durante un asalto y ya hay una compra de $1.100.
+FRAUD_CP	es	La perdí en el taxi y minutos después ya había un cargo hecho.
+FRAUD_CP	es	Me robaron la mochila con la tarjeta adentro en la universidad.
+FRAUD_CP	es	Se me cayó la cartera y alguien la encontró y ya está usando la tarjeta.
+FRAUD_CP	es	Fui víctima de un robo a mano armada, se llevaron mi tarjeta física.
+FRAUD_CP	es	perdi mi tarjeta ayer en el parque y ya tiene compras
+FRAUD_CP	es	Me robaron en la playa mientras nadaba, la tarjeta estaba en mi bolso.
+FRAUD_CP	es	Tengo la certeza de que me robaron la tarjeta anoche porque ya no la encuentro y hay cargos nuevos.
+FRAUD_CP	es	Extravié la cartera completa con documentos y tarjeta, y ya usaron la tarjeta dos veces.
+FRAUD_CP	es	Buenas, quiero reportar que me robaron la tarjeta en el transporte público y ya hicieron un cargo de $6.700 en una tienda de electrónicos.
+FRAUD_CP	es	Se llevaron mi cartera en un robo y ahora hay una compra que no reconozco.
+FRAUD_CP	pt	Roubaram meu cartão ontem e já tem cobranças que eu não fiz.
+FRAUD_CP	pt	Perdi meu cartão semana passada e agora aparecem compras.
+FRAUD_CP	pt	Fui assaltado e levaram minha carteira com o cartão, vejo movimentações.
+FRAUD_CP	pt	Boa tarde, roubaram minha bolsa com o cartão no sábado e hoje vejo uma cobrança de R$ 250 numa loja.
+FRAUD_CP	pt	Perdi o cartão no ônibus e já usaram pra comprar algo.
+FRAUD_CP	pt	Furtaram minha carteira no metrô e fizeram compras com meu cartão.
+FRAUD_CP	pt	socorroo roubaram minha carteira e ja gastaram grana no meu cartao
+FRAUD_CP	pt	Denunciei o roubo do meu cartão e mesmo assim tem uma cobrança nova de R$ 80.
+FRAUD_CP	pt	Extraviei meu cartão na terça à noite e hoje tem compras que não reconheço.
+FRAUD_CP	pt	Roubaram do carro junto com a carteira, e já fizeram uma cobrança de R$ 450.
+FRAUD_CP	pt	cara, roubaram minha carteira com o cartao dentro e ja usaram
+FRAUD_CP	pt	Perdi meu cartão de crédito na academia e apareceu um pagamento numa loja de roupa.
+FRAUD_CP	pt	Boa tarde, fui roubado na rua e levaram minha carteira com o cartão, já vejo movimentações de R$ 3.200,90 na fatura.
+FRAUD_CP	pt	Me roubaram no ponto de ônibus, levaram tudo, incluindo o cartão.
+FRAUD_CP	pt	perdi o cartao e ja tem uma cobranca esquisita de R$150
+FRAUD_CP	pt	Desculpa moço, roubaram minha carteirinha com o cartão dentro e agora saem compras que eu não fiz.
+FRAUD_CP	pt	Alguém tirou o cartão do meu bolso no mercado e já usou.
+FRAUD_CP	pt	Estou muito assustado, acabei de ser roubado e estava com meu cartão físico, já vejo cobranças.
+FRAUD_CP	pt	me tomaram a carteira a força com o cartao ontem a noite
+FRAUD_CP	pt	Reporto que meu cartão foi roubado durante um assalto e já tem uma compra de R$ 1.100.
+FRAUD_CP	pt	Perdi no táxi e minutos depois já tinha uma cobrança feita.
+FRAUD_CP	pt	Roubaram minha mochila com o cartão dentro na faculdade.
+FRAUD_CP	pt	Minha carteira caiu e alguém achou e já está usando o cartão.
+FRAUD_CP	pt	Fui vítima de assalto à mão armada, levaram meu cartão físico.
+FRAUD_CP	pt	perdi meu cartao ontem no parque e ja tem compras
+FRAUD_CP	pt	Fui roubado na praia enquanto nadava, o cartão estava na minha bolsa.
+FRAUD_CP	pt	Tenho certeza que roubaram meu cartão ontem à noite porque não acho mais ele e tem cobranças novas.
+FRAUD_CP	pt	Extraviei a carteira inteira com documentos e cartão, e já usaram o cartão duas vezes.
+FRAUD_CP	pt	Boa tarde, quero reportar que roubaram meu cartão no transporte público e já fizeram uma cobrança de R$ 670 numa loja de eletrônicos.
+FRAUD_CP	pt	Levaram minha carteira num roubo e agora tem uma compra que eu não reconheço.
+DUPLICATE	es	Me cobraron dos veces la misma compra en el supermercado.
+DUPLICATE	es	Hay un cargo duplicado de $500 en mi cuenta.
+DUPLICATE	es	Pagué una vez pero me aparecen dos cobros iguales de "SuperMax".
+DUPLICATE	es	Buenas, el jueves pagué $1,200.00 MXN en "FarmaciaCentral" y me cobraron dos veces la misma cantidad.
+DUPLICATE	es	Me duplicaron el cobro de la cena del viernes.
+DUPLICATE	es	Vi dos cargos idénticos de $75.000 COP el mismo día en la misma tienda.
+DUPLICATE	es	che, me cobraron dos veces lo mismo en la nafta
+DUPLICATE	es	Aparecen dos transacciones iguales de $45 en "CinePlex" a la misma hora.
+DUPLICATE	es	Solo compré una vez pero me salen dos cargos exactos en mi tarjeta.
+DUPLICATE	es	Me facturaron por duplicado la compra de mis lentes.
+DUPLICATE	es	Ese pago de $230 en "TiendaRopa" me lo cobraron dos veces el mismo minuto.
+DUPLICATE	es	no c pq pero me cobraron 2 veces lo mismo en el oxxo
+DUPLICATE	es	Buenas tardes, hice una sola compra en "ElectroHogar" por $3,450.90 pero el banco me cobró dos veces esa cantidad.
+DUPLICATE	es	Me duplicaron el pago del gimnasio este mes.
+DUPLICATE	es	Hay dos cargos exactamente iguales de $18.90 en mi resumen.
+DUPLICATE	es	Disculpe, soy mayor y no entiendo por qué me salen dos cobros idénticos por la misma comida.
+DUPLICATE	es	El taxi me cobró una vez pero en mi tarjeta aparece dos veces el mismo monto.
+DUPLICATE	es	Compré una entrada de cine pero me cobraron el doble, dos transacciones iguales.
+DUPLICATE	es	tengo duplicado un pago de 400 pesos en la papeleria
+DUPLICATE	es	Estoy indignado, la tienda me cobró la misma compra dos veces seguidas.
+DUPLICATE	es	Aparece un cargo repetido de $120.000 en "MueblesDelSur", solo compré una vez.
+DUPLICATE	es	me duplicaron el cobro del uber de ayer
+DUPLICATE	es	La compra de supermercado de $2.100 me salió cobrada dos veces en la misma fecha.
+DUPLICATE	es	Pagué el servicio de streaming pero me cobraron dos veces ese mes.
+DUPLICATE	es	Hay un cobro repetido idéntico en la farmacia, mismo monto y misma hora.
+DUPLICATE	es	me aparecen 2 cargos iguales de la pizzeria del sabado
+DUPLICATE	es	Buen día, realicé un solo pago en "ZapatosExpress" por $890 pero el sistema lo registró dos veces.
+DUPLICATE	es	El restaurante me cobró la cuenta y luego otra vez la misma cantidad exacta.
+DUPLICATE	es	Tengo dos movimientos idénticos de $56.30 el mismo día en la misma tienda de ropa.
+DUPLICATE	es	Me duplicaron sin querer el pago de la matrícula del curso.
+DUPLICATE	pt	Me cobraram duas vezes a mesma compra no mercado.
+DUPLICATE	pt	Tem uma cobrança duplicada de R$ 500 na minha conta.
+DUPLICATE	pt	Paguei uma vez mas aparecem duas cobranças iguais da "SuperMax".
+DUPLICATE	pt	Boa tarde, na quinta paguei R$ 120,00 na "FarmáciaCentral" e me cobraram duas vezes o mesmo valor.
+DUPLICATE	pt	Duplicaram a cobrança do jantar de sexta.
+DUPLICATE	pt	Vi duas cobranças idênticas de R$ 75,00 no mesmo dia na mesma loja.
+DUPLICATE	pt	cara, me cobraram duas vezes a mesma coisa no posto
+DUPLICATE	pt	Aparecem duas transações iguais de R$ 45 no "CinePlex" na mesma hora.
+DUPLICATE	pt	Só comprei uma vez mas saem dois cobranças exatas no meu cartão.
+DUPLICATE	pt	Faturaram em duplicidade a compra dos meus óculos.
+DUPLICATE	pt	Esse pagamento de R$ 230 na "LojaRoupa" foi cobrado duas vezes no mesmo minuto.
+DUPLICATE	pt	n sei pq mas me cobraram 2 vezes a mesma coisa no mercadinho
+DUPLICATE	pt	Boa tarde, fiz uma única compra na "EletroCasa" por R$ 345,90 mas o banco cobrou duas vezes esse valor.
+DUPLICATE	pt	Duplicaram o pagamento da academia esse mês.
+DUPLICATE	pt	Tem duas cobranças exatamente iguais de R$ 18,90 na minha fatura.
+DUPLICATE	pt	Desculpa, já sou de idade e não entendo por que aparecem duas cobranças idênticas pela mesma comida.
+DUPLICATE	pt	O táxi cobrou uma vez mas no meu cartão aparece duas vezes o mesmo valor.
+DUPLICATE	pt	Comprei um ingresso de cinema mas cobraram o dobro, duas transações iguais.
+DUPLICATE	pt	tenho duplicado um pagamento de 40 reais na papelaria
+DUPLICATE	pt	Estou indignado, a loja cobrou a mesma compra duas vezes seguidas.
+DUPLICATE	pt	Aparece uma cobrança repetida de R$ 1.200 na "MóveisDoSul", só comprei uma vez.
+DUPLICATE	pt	duplicaram a cobranca do uber de ontem
+DUPLICATE	pt	A compra do mercado de R$ 210 saiu cobrada duas vezes na mesma data.
+DUPLICATE	pt	Paguei o serviço de streaming mas cobraram duas vezes esse mês.
+DUPLICATE	pt	Tem uma cobrança repetida idêntica na farmácia, mesmo valor e mesma hora.
+DUPLICATE	pt	me aparecem 2 cobrancas iguais da pizzaria do sabado
+DUPLICATE	pt	Bom dia, fiz um único pagamento na "SapatosExpress" de R$ 89 mas o sistema registrou duas vezes.
+DUPLICATE	pt	O restaurante cobrou a conta e depois de novo o mesmo valor exato.
+DUPLICATE	pt	Tenho dois movimentos idênticos de R$ 56,30 no mesmo dia na mesma loja de roupa.
+DUPLICATE	pt	Duplicaram sem querer o pagamento da matrícula do curso.
+INCORRECT_AMOUNT	es	La cena me salió $300 pero me cobraron $450.
+INCORRECT_AMOUNT	es	Reconozco la compra pero el monto está mal.
+INCORRECT_AMOUNT	es	En el restaurante pagué $50 pero en la tarjeta aparece $80.
+INCORRECT_AMOUNT	es	Buenas, el jueves compré en "TiendaRopa" y acordamos $1,200.00 MXN pero me cobraron $1,850.00.
+INCORRECT_AMOUNT	es	Sí fui yo quien compró, pero me cobraron más de lo que marcaba la etiqueta.
+INCORRECT_AMOUNT	es	El taxi cobró $12.000 COP pero en el ticket decía $8.000.
+INCORRECT_AMOUNT	es	che, en el bar me cobraron mas de lo que consumí
+INCORRECT_AMOUNT	es	Reconozco el cargo del hotel pero el monto no coincide con lo reservado.
+INCORRECT_AMOUNT	es	Compré una laptop, el precio era $8,999 pero me cobraron $9,999.
+INCORRECT_AMOUNT	es	El mesero me cobró de más, la cuenta decía $650 y en la tarjeta salió $900.
+INCORRECT_AMOUNT	es	Sí hice la compra en "SuperMercadoUno" pero el total no cuadra con lo que pagué.
+INCORRECT_AMOUNT	es	me cobraron 500 pesos mas de lo q era en la gasolinera
+INCORRECT_AMOUNT	es	Buenas tardes, reservé el hotel por $3,450.90 pero en mi estado de cuenta aparece $4,100.00.
+INCORRECT_AMOUNT	es	La factura del taller decía $2,000 pero cobraron $2,800 en la tarjeta.
+INCORRECT_AMOUNT	es	Compré ropa por $75.90 y me cargaron $95.90, no entiendo la diferencia.
+INCORRECT_AMOUNT	es	Disculpe, soy grande, hice una compra pero me cobraron más de lo acordado con el vendedor.
+INCORRECT_AMOUNT	es	Fui yo quien pagó, pero el cajero me cobró un monto distinto al del recibo.
+INCORRECT_AMOUNT	es	En el supermercado el total en pantalla era $340 y me cobraron $410.
+INCORRECT_AMOUNT	es	si compre eso pero me clavaron con 200 pesos de mas
+INCORRECT_AMOUNT	es	Estoy molesto, la reserva del vuelo decía $5,200 y me cobraron $6,000.
+INCORRECT_AMOUNT	es	El plomero cobró de más respecto a lo que habíamos acordado por teléfono.
+INCORRECT_AMOUNT	es	si fui yo la compra pero el monto cobrado no es el correcto
+INCORRECT_AMOUNT	es	Compré el paquete turístico por $450.000 pero me facturaron $520.000.
+INCORRECT_AMOUNT	es	La suscripción anual decía $99 y me cobraron $149.
+INCORRECT_AMOUNT	es	Reconozco haber ido al spa, pero el precio cobrado es mayor al del menú.
+INCORRECT_AMOUNT	es	me cobraron de mas en el restaurante del sabado, la cuenta no coincide
+INCORRECT_AMOUNT	es	Buen día, en "ElectroHogar" el precio marcado era $1,300 y en la tarjeta salió $1,600.
+INCORRECT_AMOUNT	es	El servicio de mudanza cobró más de lo cotizado inicialmente.
+INCORRECT_AMOUNT	es	Fui yo quien reservó el cuarto de hotel pero el cargo final no coincide con la tarifa acordada.
+INCORRECT_AMOUNT	es	Compré combustible y el surtidor marcaba $600 pero me cobraron $750.
+INCORRECT_AMOUNT	pt	O jantar saiu R$ 90 mas me cobraram R$ 130.
+INCORRECT_AMOUNT	pt	Reconheço a compra mas o valor está errado.
+INCORRECT_AMOUNT	pt	No restaurante paguei R$ 50 mas no cartão aparece R$ 80.
+INCORRECT_AMOUNT	pt	Boa tarde, na quinta comprei na "LojaRoupa" e combinamos R$ 120,00 mas me cobraram R$ 185,00.
+INCORRECT_AMOUNT	pt	Sim fui eu que comprei, mas cobraram mais do que a etiqueta marcava.
+INCORRECT_AMOUNT	pt	O táxi cobrou R$ 45 mas no recibo dizia R$ 30.
+INCORRECT_AMOUNT	pt	cara, no bar me cobraram mais do que eu consumi
+INCORRECT_AMOUNT	pt	Reconheço a cobrança do hotel mas o valor não bate com a reserva.
+INCORRECT_AMOUNT	pt	Comprei um notebook, o preço era R$ 2.999 mas me cobraram R$ 3.499.
+INCORRECT_AMOUNT	pt	O garçom cobrou a mais, a conta dizia R$ 65 e no cartão saiu R$ 90.
+INCORRECT_AMOUNT	pt	Sim fiz a compra no "SupermercadoUm" mas o total não bate com o que paguei.
+INCORRECT_AMOUNT	pt	me cobraram 50 reais a mais no posto de gasolina
+INCORRECT_AMOUNT	pt	Boa tarde, reservei o hotel por R$ 345,90 mas na minha fatura aparece R$ 410,00.
+INCORRECT_AMOUNT	pt	A nota da oficina dizia R$ 200 mas cobraram R$ 280 no cartão.
+INCORRECT_AMOUNT	pt	Comprei roupa por R$ 75,90 e cobraram R$ 95,90, não entendo a diferença.
+INCORRECT_AMOUNT	pt	Desculpa, já sou de idade, fiz uma compra mas me cobraram mais do que combinei com o vendedor.
+INCORRECT_AMOUNT	pt	Fui eu quem pagou, mas o caixa cobrou um valor diferente do recibo.
+INCORRECT_AMOUNT	pt	No mercado o total na tela era R$ 34 e me cobraram R$ 41.
+INCORRECT_AMOUNT	pt	sim comprei isso mas me passaram a perna com 20 reais a mais
+INCORRECT_AMOUNT	pt	Estou irritado, a reserva do voo dizia R$ 520 e me cobraram R$ 600.
+INCORRECT_AMOUNT	pt	O encanador cobrou a mais do que combinamos por telefone.
+INCORRECT_AMOUNT	pt	sim fui eu a compra mas o valor cobrado nao ta certo
+INCORRECT_AMOUNT	pt	Comprei o pacote de viagem por R$ 4.500 mas me faturaram R$ 5.200.
+INCORRECT_AMOUNT	pt	A assinatura anual dizia R$ 99 e me cobraram R$ 149.
+INCORRECT_AMOUNT	pt	Reconheço que fui ao spa, mas o preço cobrado é maior que o do cardápio.
+INCORRECT_AMOUNT	pt	me cobraram a mais no restaurante de sabado, a conta nao bate
+INCORRECT_AMOUNT	pt	Bom dia, na "EletroCasa" o preço marcado era R$ 1.300 e no cartão saiu R$ 1.600.
+INCORRECT_AMOUNT	pt	O serviço de mudança cobrou mais do que o orçamento inicial.
+INCORRECT_AMOUNT	pt	Fui eu quem reservou o quarto de hotel mas a cobrança final não bate com a tarifa combinada.
+INCORRECT_AMOUNT	pt	Comprei combustível e a bomba marcava R$ 60 mas me cobraram R$ 75.
+NOT_RECEIVED	es	Pagué por unos zapatos y nunca llegaron.
+NOT_RECEIVED	es	Compré un boleto de avión y cancelaron el vuelo, no me devolvieron el dinero.
+NOT_RECEIVED	es	Pedí una pizza y nunca la recibí, pero ya me cobraron.
+NOT_RECEIVED	es	Buenas, compré una consola en "ElectroVentas" por $4,500 MXN hace tres semanas y nunca llegó el paquete.
+NOT_RECEIVED	es	Pagué la entrada de un concierto que cancelaron y no me han reembolsado.
+NOT_RECEIVED	es	Contraté un servicio de limpieza que nunca se presentó.
+NOT_RECEIVED	es	che, pague un curso online y nunca me dieron acceso
+NOT_RECEIVED	es	Compré ropa en una tienda en línea y el pedido nunca salió del almacén según el rastreo.
+NOT_RECEIVED	es	Reservé un hotel y cuando llegamos no tenían la reserva, nunca prestaron el servicio.
+NOT_RECEIVED	es	Pagué por un vuelo a Cartagena que se canceló y la aerolínea no me reembolsó.
+NOT_RECEIVED	es	Hice un pedido de muebles hace un mes y todavía no llega nada.
+NOT_RECEIVED	es	pague algo en una web y nunca me llego el producto
+NOT_RECEIVED	es	Buenas tardes, compré boletos para el teatro por $890 y cancelaron la función sin devolver el dinero.
+NOT_RECEIVED	es	El curso que pagué nunca me dio acceso a la plataforma.
+NOT_RECEIVED	es	Pagué por una mudanza y la empresa nunca apareció el día acordado.
+NOT_RECEIVED	es	Disculpe, soy mayor, pagué por unas medicinas a domicilio y nunca llegaron.
+NOT_RECEIVED	es	Compré una laptop hace dos semanas y el vendedor no responde ni envía el producto.
+NOT_RECEIVED	es	Contraté un fotógrafo para mi boda y nunca se presentó, ya le pagué el anticipo.
+NOT_RECEIVED	es	pague por un viaje q se cancelo y no me devuelven la plata
+NOT_RECEIVED	es	Estoy furioso, pagué la reservación del restaurante para el evento y lo cancelaron sin reembolso.
+NOT_RECEIVED	es	El servicio de streaming nunca activó mi cuenta después del pago.
+NOT_RECEIVED	es	pague la entrada al parque y no me dejaron entrar, dicen q no hay registro
+NOT_RECEIVED	es	Compré un boleto de tren y el viaje se canceló, no hay reembolso todavía.
+NOT_RECEIVED	es	Pagué por clases de yoga y la academia cerró sin avisar ni devolver nada.
+NOT_RECEIVED	es	Hice el pago de un electrodoméstico hace 10 días y aún no llega.
+NOT_RECEIVED	es	pague x un servicio de plomeria y nunca vinieron
+NOT_RECEIVED	es	Buen día, reservé un tour por $1.200.000 COP y la agencia canceló el viaje sin reembolsar.
+NOT_RECEIVED	es	El vestido que compré nunca fue enviado según la página de rastreo.
+NOT_RECEIVED	es	Pagué la inscripción a una carrera y la cancelaron sin devolver el dinero.
+NOT_RECEIVED	es	Compré entradas para un partido de fútbol que se suspendió y no me han reembolsado.
+NOT_RECEIVED	pt	Paguei por uns sapatos e nunca chegaram.
+NOT_RECEIVED	pt	Comprei uma passagem aérea e cancelaram o voo, não devolveram meu dinheiro.
+NOT_RECEIVED	pt	Pedi uma pizza e nunca recebi, mas já me cobraram.
+NOT_RECEIVED	pt	Boa tarde, comprei um console na "ElectroVendas" por R$ 900 há três semanas e o pacote nunca chegou.
+NOT_RECEIVED	pt	Paguei o ingresso de um show que cancelaram e não me reembolsaram.
+NOT_RECEIVED	pt	Contratei um serviço de limpeza que nunca apareceu.
+NOT_RECEIVED	pt	cara, paguei um curso online e nunca me deram acesso
+NOT_RECEIVED	pt	Comprei roupa numa loja online e o pedido nunca saiu do estoque segundo o rastreio.
+NOT_RECEIVED	pt	Reservei um hotel e quando chegamos não tinham a reserva, nunca prestaram o serviço.
+NOT_RECEIVED	pt	Paguei por um voo pro Rio que foi cancelado e a companhia não me reembolsou.
+NOT_RECEIVED	pt	Fiz um pedido de móveis há um mês e ainda não chegou nada.
+NOT_RECEIVED	pt	paguei algo num site e nunca chegou o produto
+NOT_RECEIVED	pt	Boa tarde, comprei ingressos pro teatro por R$ 89 e cancelaram a sessão sem devolver o dinheiro.
+NOT_RECEIVED	pt	O curso que paguei nunca me deu acesso à plataforma.
+NOT_RECEIVED	pt	Paguei por uma mudança e a empresa nunca apareceu no dia combinado.
+NOT_RECEIVED	pt	Desculpa, já sou de idade, paguei por remédios com entrega e nunca chegaram.
+NOT_RECEIVED	pt	Comprei um notebook há duas semanas e o vendedor não responde nem envia o produto.
+NOT_RECEIVED	pt	Contratei um fotógrafo pro meu casamento e ele nunca apareceu, já paguei o sinal.
+NOT_RECEIVED	pt	paguei por uma viagem que cancelaram e nao devolvem a grana
+NOT_RECEIVED	pt	Estou revoltado, paguei a reserva do restaurante pro evento e cancelaram sem reembolso.
+NOT_RECEIVED	pt	O serviço de streaming nunca ativou minha conta depois do pagamento.
+NOT_RECEIVED	pt	paguei a entrada do parque e nao me deixaram entrar, dizem que nao tem registro
+NOT_RECEIVED	pt	Comprei uma passagem de trem e a viagem foi cancelada, ainda não tem reembolso.
+NOT_RECEIVED	pt	Paguei por aulas de yoga e a academia fechou sem avisar nem devolver nada.
+NOT_RECEIVED	pt	Fiz o pagamento de um eletrodoméstico há 10 dias e ainda não chegou.
+NOT_RECEIVED	pt	paguei por um servico de encanador e nunca vieram
+NOT_RECEIVED	pt	Bom dia, reservei um passeio por R$ 1.200,00 e a agência cancelou a viagem sem reembolsar.
+NOT_RECEIVED	pt	O vestido que comprei nunca foi enviado segundo o site de rastreio.
+NOT_RECEIVED	pt	Paguei a inscrição de uma corrida e cancelaram sem devolver o dinheiro.
+NOT_RECEIVED	pt	Comprei ingressos pra um jogo de futebol que foi suspenso e não fui reembolsado.
+CANCELLED_RECURRING	es	Cancelé el gimnasio hace dos meses y me siguen cobrando.
+CANCELLED_RECURRING	es	Di de baja Netflix pero me volvieron a cobrar este mes.
+CANCELLED_RECURRING	es	Ya cancelé la suscripción de música y aún así aparece el cargo.
+CANCELLED_RECURRING	es	Buenas, cancelé la membresía del gimnasio "FitZone" en enero y en marzo me siguen cobrando $450 MXN mensuales.
+CANCELLED_RECURRING	es	Pedí la cancelación de la revista digital hace tres meses y todavía me cobran.
+CANCELLED_RECURRING	es	Cancelé el servicio de streaming de series y me llegó otro cargo este mes.
+CANCELLED_RECURRING	es	che, di de baja la app de comida y me siguen sacando plata todos los meses
+CANCELLED_RECURRING	es	Cancelé mi plan de la app de meditación pero sigue cobrando cada mes.
+CANCELLED_RECURRING	es	Solicité la baja del club de descuentos hace semanas, sigo pagando.
+CANCELLED_RECURRING	es	Cancelé la tarjeta de fidelidad del supermercado con cobro automático y aún cobran.
+CANCELLED_RECURRING	es	Ya no uso el software y cancelé, pero siguen cobrando la licencia mensual.
+CANCELLED_RECURRING	es	cancele el servicio de tv por cable hace rato y me siguen cobrando
+CANCELLED_RECURRING	es	Buenas tardes, cancelé la suscripción de "StreamPlusColombia" en febrero y en abril siguió el cobro de $35.000 COP.
+CANCELLED_RECURRING	es	Pedí que dieran de baja mi membresía del spa hace dos meses, siguen cobrando.
+CANCELLED_RECURRING	es	Cancelé la app de citas hace un mes y todavía aparece el cargo mensual.
+CANCELLED_RECURRING	es	Disculpe, ya soy mayor, pedí cancelar la revista y aun así siguen cobrando cada mes.
+CANCELLED_RECURRING	es	Cancelé el seguro de mascotas recurrente pero el cobro sigue apareciendo.
+CANCELLED_RECURRING	es	Di de baja mi cuenta premium de música hace semanas, siguen cobrando.
+CANCELLED_RECURRING	es	cancele el gym hace 3 meses y sigen cobrando 500 pesos
+CANCELLED_RECURRING	es	Estoy harto, cancelé la suscripción del curso online y siguieron cobrando dos meses más.
+CANCELLED_RECURRING	es	Pedí cancelar el servicio de streaming deportivo y hoy vi otro cargo.
+CANCELLED_RECURRING	es	cancele hace rato la suscripcion de la revista y me siguen cobrando cada mes
+CANCELLED_RECURRING	es	Cancelé el plan de nube de almacenamiento hace un mes, ayer me volvieron a cobrar.
+CANCELLED_RECURRING	es	Solicité de baja el club de vinos hace tres semanas y siguen cargando.
+CANCELLED_RECURRING	es	Cancelé la app de entrenamiento personal y me llegó otro cobro este mes.
+CANCELLED_RECURRING	es	cancele mi suscripcion del periodico hace tiempo y sigo pagando
+CANCELLED_RECURRING	es	Buen día, cancelé mi membresía de "GymPower" en diciembre y me han seguido cobrando desde entonces.
+CANCELLED_RECURRING	es	Di de baja el seguro de celular con cobro mensual, todavía me cobran.
+CANCELLED_RECURRING	es	Cancelé la suscripción del software de diseño hace dos meses, hoy vi el cargo de nuevo.
+CANCELLED_RECURRING	es	Pedí cancelar el plan de streaming familiar y aun así llegó otro cobro.
+CANCELLED_RECURRING	pt	Cancelei a academia há dois meses e continuam me cobrando.
+CANCELLED_RECURRING	pt	Cancelei a Netflix mas voltaram a cobrar esse mês.
+CANCELLED_RECURRING	pt	Já cancelei a assinatura de música e mesmo assim aparece a cobrança.
+CANCELLED_RECURRING	pt	Boa tarde, cancelei a mensalidade da academia "FitZone" em janeiro e em março continuam cobrando R$ 90 por mês.
+CANCELLED_RECURRING	pt	Pedi o cancelamento da revista digital há três meses e ainda cobram.
+CANCELLED_RECURRING	pt	Cancelei o serviço de streaming de séries e chegou outra cobrança esse mês.
+CANCELLED_RECURRING	pt	cara, cancelei o app de comida e continuam tirando dinheiro todo mes
+CANCELLED_RECURRING	pt	Cancelei meu plano do app de meditação mas continua cobrando todo mês.
+CANCELLED_RECURRING	pt	Solicitei o cancelamento do clube de descontos há semanas, continuo pagando.
+CANCELLED_RECURRING	pt	Cancelei o cartão de fidelidade do mercado com cobrança automática e ainda cobram.
+CANCELLED_RECURRING	pt	Não uso mais o software e cancelei, mas continuam cobrando a licença mensal.
+CANCELLED_RECURRING	pt	cancelei o servico de tv a cabo faz tempo e continuam cobrando
+CANCELLED_RECURRING	pt	Boa tarde, cancelei a assinatura da "StreamPlusBrasil" em fevereiro e em abril veio a cobrança de R$ 35,00 de novo.
+CANCELLED_RECURRING	pt	Pedi pra cancelar minha mensalidade do spa há dois meses, continuam cobrando.
+CANCELLED_RECURRING	pt	Cancelei o app de relacionamento há um mês e ainda aparece a cobrança mensal.
+CANCELLED_RECURRING	pt	Desculpa, já sou de idade, pedi pra cancelar a revista e mesmo assim continuam cobrando todo mês.
+CANCELLED_RECURRING	pt	Cancelei o seguro de pet recorrente mas a cobrança continua aparecendo.
+CANCELLED_RECURRING	pt	Cancelei minha conta premium de música há semanas, continuam cobrando.
+CANCELLED_RECURRING	pt	cancelei a academia ha 3 meses e continuam cobrando 50 reais
+CANCELLED_RECURRING	pt	Estou de saco cheio, cancelei a assinatura do curso online e continuaram cobrando mais dois meses.
+CANCELLED_RECURRING	pt	Pedi pra cancelar o serviço de streaming esportivo e hoje vi outra cobrança.
+CANCELLED_RECURRING	pt	cancelei faz tempo a assinatura da revista e continuam cobrando todo mes
+CANCELLED_RECURRING	pt	Cancelei o plano de nuvem de armazenamento há um mês, ontem cobraram de novo.
+CANCELLED_RECURRING	pt	Solicitei cancelar o clube de vinhos há três semanas e continuam cobrando.
+CANCELLED_RECURRING	pt	Cancelei o app de personal trainer e chegou outra cobrança esse mês.
+CANCELLED_RECURRING	pt	cancelei minha assinatura do jornal faz tempo e continuo pagando
+CANCELLED_RECURRING	pt	Bom dia, cancelei minha mensalidade da "GymPower" em dezembro e continuam me cobrando desde então.
+CANCELLED_RECURRING	pt	Cancelei o seguro de celular com cobrança mensal, ainda me cobram.
+CANCELLED_RECURRING	pt	Cancelei a assinatura do software de design há dois meses, hoje vi a cobrança de novo.
+CANCELLED_RECURRING	pt	Pedi pra cancelar o plano de streaming familiar e mesmo assim chegou outra cobrança.
+OUT_OF_SCOPE	es	¿Cuál es el límite de mi tarjeta de crédito?
+OUT_OF_SCOPE	es	Quiero saber cuál es el horario de la sucursal.
+OUT_OF_SCOPE	es	Necesito cambiar mi contraseña de la banca en línea.
+OUT_OF_SCOPE	es	Buenas, quisiera saber cómo solicitar un préstamo personal y cuáles son las tasas.
+OUT_OF_SCOPE	es	¿Cómo activo mi tarjeta nueva que llegó por correo?
+OUT_OF_SCOPE	es	Quiero saber mi saldo disponible.
+OUT_OF_SCOPE	es	che, como hago para pedir un aumento de limite en la tarjeta
+OUT_OF_SCOPE	es	¿Dónde puedo ver mi estado de cuenta de este mes?
+OUT_OF_SCOPE	es	Necesito bloquear temporalmente mi tarjeta porque no la encuentro en casa.
+OUT_OF_SCOPE	es	Quisiera información sobre los seguros que ofrece el banco.
+OUT_OF_SCOPE	es	¿Cómo hago una transferencia internacional desde la app?
+OUT_OF_SCOPE	es	no me acuerdo mi pin, como lo cambio
+OUT_OF_SCOPE	es	Buenas tardes, quiero abrir una cuenta de ahorros para mis hijos, ¿qué documentos necesito?
+OUT_OF_SCOPE	es	¿Puedo solicitar una tarjeta adicional para mi esposa?
+OUT_OF_SCOPE	es	Necesito el certificado de mi cuenta para un trámite migratorio.
+OUT_OF_SCOPE	es	Disculpe, soy mayor y no sé cómo usar la app, ¿me pueden ayudar?
+OUT_OF_SCOPE	es	Quiero saber cuánto tiempo tarda en llegar mi nueva tarjeta.
+OUT_OF_SCOPE	es	¿Cuáles son las comisiones por retiro en cajeros de otro banco?
+OUT_OF_SCOPE	es	quiero saber el interes q cobra la tarjeta
+OUT_OF_SCOPE	es	Estoy interesado en abrir una inversión a plazo fijo, ¿qué opciones tienen?
+OUT_OF_SCOPE	es	¿Cómo puedo actualizar mi número de teléfono en el sistema?
+OUT_OF_SCOPE	es	necesito el numero de cuenta para q me depositen
+OUT_OF_SCOPE	es	Quisiera saber si puedo aumentar el límite de mi tarjeta de crédito.
+OUT_OF_SCOPE	es	¿Qué documentos necesito para solicitar una hipoteca?
+OUT_OF_SCOPE	es	Necesito reportar que perdí mi contraseña de la app, no puedo entrar.
+OUT_OF_SCOPE	es	quiero cancelar mi cuenta de banco, ya no la uso
+OUT_OF_SCOPE	es	Buen día, ¿me pueden explicar cómo funciona el pago mínimo de la tarjeta?
+OUT_OF_SCOPE	es	¿Cuál es la tasa de interés de mi tarjeta de crédito?
+OUT_OF_SCOPE	es	Quiero programar una cita en sucursal para renovar mi tarjeta de débito.
+OUT_OF_SCOPE	es	¿Cómo descargo mis movimientos en PDF de los últimos seis meses?
+OUT_OF_SCOPE	pt	Qual é o limite do meu cartão de crédito?
+OUT_OF_SCOPE	pt	Quero saber o horário da agência.
+OUT_OF_SCOPE	pt	Preciso trocar minha senha do internet banking.
+OUT_OF_SCOPE	pt	Boa tarde, gostaria de saber como pedir um empréstimo pessoal e quais são as taxas.
+OUT_OF_SCOPE	pt	Como eu ativo meu cartão novo que chegou pelo correio?
+OUT_OF_SCOPE	pt	Quero saber meu saldo disponível.
+OUT_OF_SCOPE	pt	cara, como faço pra pedir um aumento de limite no cartao
+OUT_OF_SCOPE	pt	Onde posso ver minha fatura desse mês?
+OUT_OF_SCOPE	pt	Preciso bloquear temporariamente meu cartão porque não acho ele em casa.
+OUT_OF_SCOPE	pt	Gostaria de informações sobre os seguros que o banco oferece.
+OUT_OF_SCOPE	pt	Como faço uma transferência internacional pelo aplicativo?
+OUT_OF_SCOPE	pt	n lembro minha senha do cartao, como troco
+OUT_OF_SCOPE	pt	Boa tarde, quero abrir uma conta poupança pros meus filhos, quais documentos preciso?
+OUT_OF_SCOPE	pt	Posso solicitar um cartão adicional pra minha esposa?
+OUT_OF_SCOPE	pt	Preciso do extrato da minha conta pra um trâmite de imigração.
+OUT_OF_SCOPE	pt	Desculpa, já sou de idade e não sei usar o aplicativo, podem me ajudar?
+OUT_OF_SCOPE	pt	Quero saber quanto tempo demora pra chegar meu cartão novo.
+OUT_OF_SCOPE	pt	Quais são as tarifas de saque em caixas de outro banco?
+OUT_OF_SCOPE	pt	quero saber os juros que o cartao cobra
+OUT_OF_SCOPE	pt	Estou interessado em abrir um investimento de renda fixa, quais opções vocês têm?
+OUT_OF_SCOPE	pt	Como posso atualizar meu número de telefone no sistema?
+OUT_OF_SCOPE	pt	preciso do numero da conta pra me depositarem
+OUT_OF_SCOPE	pt	Gostaria de saber se posso aumentar o limite do meu cartão de crédito.
+OUT_OF_SCOPE	pt	Quais documentos preciso pra solicitar um financiamento imobiliário?
+OUT_OF_SCOPE	pt	Preciso reportar que esqueci minha senha do aplicativo, não consigo entrar.
+OUT_OF_SCOPE	pt	quero cancelar minha conta do banco, nao uso mais
+OUT_OF_SCOPE	pt	Bom dia, podem me explicar como funciona o pagamento mínimo da fatura?
+OUT_OF_SCOPE	pt	Qual é a taxa de juros do meu cartão de crédito?
+OUT_OF_SCOPE	pt	Quero agendar um horário na agência pra renovar meu cartão de débito.
+OUT_OF_SCOPE	pt	Como baixo meus extratos em PDF dos últimos seis meses?
+HUMAN	es	Quiero hablar con un asesor.
+HUMAN	es	Necesito que me comuniquen con una persona real.
+HUMAN	es	Por favor páseme con un humano.
+HUMAN	es	Buenas tardes, tengo un problema con un cargo y quisiera hablar con un ejecutivo, no con el robot.
+HUMAN	es	¿Me puede pasar con alguien del banco?
+HUMAN	es	Ya intenté con el chat automático, quiero un agente humano.
+HUMAN	es	che, pasame con alguien de verdad porfa
+HUMAN	es	Necesito hablar con un representante sobre un tema urgente.
+HUMAN	es	Quiero que me atienda una persona, no una máquina.
+HUMAN	es	Por favor conécteme con un asesor de servicio al cliente.
+HUMAN	es	Estoy cansado del bot, quiero hablar con alguien.
+HUMAN	es	pasame con un humano ya
+HUMAN	es	Buen día, tengo un cargo que no reconozco y prefiero explicarlo con un agente en vivo.
+HUMAN	es	Necesito que un ejecutivo me llame lo antes posible.
+HUMAN	es	¿Hay alguna manera de hablar con un operador humano ahora mismo?
+HUMAN	es	Disculpe, soy mayor y prefiero hablar con una persona, no sé usar bien el chat.
+HUMAN	es	Quiero escalar mi caso a un supervisor humano.
+HUMAN	es	Por favor, necesito atención personalizada de un asesor.
+HUMAN	es	quiero hablar con alguien del banco urgente
+HUMAN	es	Estoy muy molesto, comuníqueme con un humano ahora.
+HUMAN	es	Necesito asistencia de un agente real para resolver esto.
+HUMAN	es	me pasa con un asesor porfa tengo una duda
+HUMAN	es	Quisiera que me atendiera un representante en vivo, por favor.
+HUMAN	es	Buenas, ¿podría transferirme con un asesor humano?
+HUMAN	es	No quiero seguir con el chatbot, deseo hablar con una persona.
+HUMAN	es	paseme con un agente x favor
+HUMAN	es	Solicito hablar con un ejecutivo de cuenta cuanto antes.
+HUMAN	es	¿Puede un humano atenderme? El bot no me está ayudando.
+HUMAN	es	Necesito hablar personalmente con alguien del área de tarjetas.
+HUMAN	es	Por favor deme la opción de hablar con un asesor humano.
+HUMAN	pt	Quero falar com um atendente.
+HUMAN	pt	Preciso que me coloquem em contato com uma pessoa de verdade.
+HUMAN	pt	Por favor me passa pra um humano.
+HUMAN	pt	Boa tarde, tenho um problema com uma cobrança e gostaria de falar com um atendente, não com o robô.
+HUMAN	pt	Pode me passar pra alguém do banco?
+HUMAN	pt	Já tentei com o chat automático, quero um atendente humano.
+HUMAN	pt	cara, me passa pra alguem de verdade por favor
+HUMAN	pt	Preciso falar com um representante sobre um assunto urgente.
+HUMAN	pt	Quero que me atenda uma pessoa, não uma máquina.
+HUMAN	pt	Por favor me conecte com um atendente de atendimento ao cliente.
+HUMAN	pt	Estou cansado do bot, quero falar com alguém.
+HUMAN	pt	me passa pra um humano ja
+HUMAN	pt	Bom dia, tenho uma cobrança que não reconheço e prefiro explicar com um atendente ao vivo.
+HUMAN	pt	Preciso que um gerente me ligue o mais rápido possível.
+HUMAN	pt	Tem como falar com um operador humano agora mesmo?
+HUMAN	pt	Desculpa, já sou de idade e prefiro falar com uma pessoa, não sei usar bem o chat.
+HUMAN	pt	Quero escalar meu caso pra um supervisor humano.
+HUMAN	pt	Por favor, preciso de atendimento personalizado de um atendente.
+HUMAN	pt	quero falar com alguem do banco urgente
+HUMAN	pt	Estou muito irritado, me coloca em contato com um humano agora.
+HUMAN	pt	Preciso de ajuda de um atendente real pra resolver isso.
+HUMAN	pt	me passa pra um atendente por favor tenho uma duvida
+HUMAN	pt	Gostaria que um representante ao vivo me atendesse, por favor.
+HUMAN	pt	Boa tarde, poderia me transferir pra um atendente humano?
+HUMAN	pt	Não quero continuar com o chatbot, quero falar com uma pessoa.
+HUMAN	pt	me passa pra um atendente pf
+HUMAN	pt	Solicito falar com um gerente de conta o quanto antes.
+HUMAN	pt	Um humano pode me atender? O bot não está me ajudando.
+HUMAN	pt	Preciso falar pessoalmente com alguém da área de cartões.
+HUMAN	pt	Por favor me dê a opção de falar com um atendente humano.
+DISPUTE_NO_REASON	es	Quiero disputar un cargo de $300 en Amazon.
+DISPUTE_NO_REASON	es	Necesito reportar un cobro de mi tarjeta.
+DISPUTE_NO_REASON	es	Tengo un problema con una transacción del martes.
+DISPUTE_NO_REASON	es	Buenas tardes, quiero disputar el cargo de $1,250.00 MXN que aparece el 12/05/2026 en "TiendaGeneral".
+DISPUTE_NO_REASON	es	Es la compra de ayer en el supermercado, quiero que la revisen.
+DISPUTE_NO_REASON	es	Necesito hacer un reclamo sobre un cargo en mi estado de cuenta.
+DISPUTE_NO_REASON	es	che, quiero reclamar por un cobro de $5000 en el super
+DISPUTE_NO_REASON	es	Quiero abrir una disputa por la transacción de "ElectroMax" del viernes.
+DISPUTE_NO_REASON	es	Vi un cargo de $89.900 COP y quiero que lo revisen.
+DISPUTE_NO_REASON	es	Necesito ayuda con un cobro que aparece el 3 de marzo.
+DISPUTE_NO_REASON	es	Es sobre el cargo de "RestauranteDelSol" del sábado a las 8pm.
+DISPUTE_NO_REASON	es	quiero q revisen un cobro de 200 pesos
+DISPUTE_NO_REASON	es	Buen día, quiero disputar la compra de $3,450.90 hecha en "TechStoreMX" el lunes pasado a las 10am.
+DISPUTE_NO_REASON	es	Tengo una queja sobre un movimiento en mi cuenta de esta semana.
+DISPUTE_NO_REASON	es	Necesito que investiguen el cargo del 15 de abril en mi tarjeta.
+DISPUTE_NO_REASON	es	Disculpe, soy mayor, quiero que revisen un cobro que vi en mi estado de cuenta.
+DISPUTE_NO_REASON	es	Es el cargo de $560 que salió el jueves pasado.
+DISPUTE_NO_REASON	es	Quiero poner una queja formal sobre una transacción reciente.
+DISPUTE_NO_REASON	es	hay un cobro de 700 pesos q quiero q revisen
+DISPUTE_NO_REASON	es	Estoy inconforme con un cargo que aparece hoy en mi cuenta.
+DISPUTE_NO_REASON	es	Necesito abrir un caso sobre el pago hecho en "MueblesModernos" el 20 de mayo.
+DISPUTE_NO_REASON	es	es el cobro de ayer en la tienda de la esquina, quiero q lo vean
+DISPUTE_NO_REASON	es	Quiero disputar la transacción de $12.000 COP del domingo por la noche.
+DISPUTE_NO_REASON	es	Necesito que me ayuden con un cargo raro de mi cuenta.
+DISPUTE_NO_REASON	es	Es sobre el movimiento de $2.300 que vi el miércoles a mediodía.
+DISPUTE_NO_REASON	es	quiero reportar un cobro raro de esta semana
+DISPUTE_NO_REASON	es	Buenas, quiero disputar el cargo de $980 hecho en "ZapateríaLuna" el 08/06/2026.
+DISPUTE_NO_REASON	es	Tengo dudas sobre una compra que aparece hoy en mi resumen.
+DISPUTE_NO_REASON	es	Necesito abrir un reclamo por el cobro de $4,100 del viernes pasado.
+DISPUTE_NO_REASON	es	Es el cargo que aparece con fecha de ayer en la tarde, quiero disputarlo.
+DISPUTE_NO_REASON	pt	Quero contestar uma cobrança de R$ 300 na Amazon.
+DISPUTE_NO_REASON	pt	Preciso reportar uma cobrança do meu cartão.
+DISPUTE_NO_REASON	pt	Tenho um problema com uma transação de terça.
+DISPUTE_NO_REASON	pt	Boa tarde, quero contestar a cobrança de R$ 125,00 que aparece em 12/05/2026 na "LojaGeral".
+DISPUTE_NO_REASON	pt	É a compra de ontem no mercado, quero que revisem.
+DISPUTE_NO_REASON	pt	Preciso fazer uma reclamação sobre uma cobrança no meu extrato.
+DISPUTE_NO_REASON	pt	cara, quero reclamar de uma cobranca de 500 reais no mercado
+DISPUTE_NO_REASON	pt	Quero abrir uma contestação da transação da "EletroMax" de sexta.
+DISPUTE_NO_REASON	pt	Vi uma cobrança de R$ 89,90 e quero que revisem.
+DISPUTE_NO_REASON	pt	Preciso de ajuda com uma cobrança que aparece dia 3 de março.
+DISPUTE_NO_REASON	pt	É sobre a cobrança do "RestauranteDoSol" de sábado às 20h.
+DISPUTE_NO_REASON	pt	quero q revisem uma cobranca de 20 reais
+DISPUTE_NO_REASON	pt	Bom dia, quero contestar a compra de R$ 345,90 feita na "TechStoreBR" segunda passada às 10h.
+DISPUTE_NO_REASON	pt	Tenho uma reclamação sobre um movimento na minha conta essa semana.
+DISPUTE_NO_REASON	pt	Preciso que investiguem a cobrança do dia 15 de abril no meu cartão.
+DISPUTE_NO_REASON	pt	Desculpa, já sou de idade, quero que revisem uma cobrança que vi no meu extrato.
+DISPUTE_NO_REASON	pt	É a cobrança de R$ 56 que saiu na quinta passada.
+DISPUTE_NO_REASON	pt	Quero fazer uma reclamação formal sobre uma transação recente.
+DISPUTE_NO_REASON	pt	tem uma cobranca de 70 reais que quero que revisem
+DISPUTE_NO_REASON	pt	Estou insatisfeito com uma cobrança que aparece hoje na minha conta.
+DISPUTE_NO_REASON	pt	Preciso abrir um caso sobre o pagamento feito na "MóveisModernos" dia 20 de maio.
+DISPUTE_NO_REASON	pt	é a cobranca de ontem na loja da esquina, quero que vejam
+DISPUTE_NO_REASON	pt	Quero contestar a transação de R$ 120,00 de domingo à noite.
+DISPUTE_NO_REASON	pt	Preciso que me ajudem com uma cobrança estranha na minha conta.
+DISPUTE_NO_REASON	pt	É sobre o movimento de R$ 230 que vi na quarta ao meio-dia.
+DISPUTE_NO_REASON	pt	quero reportar uma cobranca estranha dessa semana
+DISPUTE_NO_REASON	pt	Boa tarde, quero contestar a cobrança de R$ 98 feita na "SapatariaLua" em 08/06/2026.
+DISPUTE_NO_REASON	pt	Tenho dúvidas sobre uma compra que aparece hoje no meu resumo.
+DISPUTE_NO_REASON	pt	Preciso abrir uma reclamação pela cobrança de R$ 410 de sexta passada.
+DISPUTE_NO_REASON	pt	É a cobrança que aparece com data de ontem à tarde, quero contestar.

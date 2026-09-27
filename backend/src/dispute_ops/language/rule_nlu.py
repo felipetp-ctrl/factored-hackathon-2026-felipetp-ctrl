@@ -19,6 +19,11 @@ from dispute_ops.language.keywords import _norm, classify_reason, is_out_of_scop
 from dispute_ops.language.nlu import LlmUsage, NluContext, NluOutcome, NluResult
 
 RULES_MODEL = "rules"
+
+
+def is_rules_model(model: str) -> bool:
+    """True for the free rule NLU, with or without the learned classifier ("rules", "rules+intent-v2")."""
+    return model == RULES_MODEL or model.startswith(RULES_MODEL + "+")
 RULES_VERSION = "rules-v1"
 # Keyword matches are right ~87% of the time on the held-out messages; 0.75 keeps them above the policy's
 # 0.6 confidence floor so a matched reason can proceed, while unmatched reasons are asked for.
@@ -170,6 +175,7 @@ class RuleNlu:
 
     def __init__(self, merchants: Iterable[str], intent_model: IntentModel | None = None) -> None:
         self.intent_model = intent_model
+        self._last: Prediction | None = None
         # Global vocabulary of merchant names (no customer data): longest names first so "Tienda General"
         # wins over a shorter overlapping name.
         self.merchants = sorted({(_norm(m), m) for m in merchants if m}, key=lambda x: -len(x[0]))
@@ -182,11 +188,15 @@ class RuleNlu:
 
     def interpret(self, text: str, ctx: NluContext) -> NluOutcome:
         started = time.perf_counter()
+        self._last: Prediction | None = None
         result = self._read(text, ctx)
         model = f"{RULES_MODEL}+{self.intent_model.version}" if self.intent_model else RULES_MODEL
         usage = LlmUsage(model=model, prompt_version=RULES_VERSION, input_tokens=0, output_tokens=0,
                          latency_ms=(time.perf_counter() - started) * 1000, cost_usd=0.0)
-        return NluOutcome(result=result, usage=usage)
+        classifier = None if self._last is None else {
+            "version": self.intent_model.version, "label": self._last.label, "probability": round(self._last.probability, 4),
+            "accepted": self._last.probability >= self.intent_model.threshold}
+        return NluOutcome(result=result, usage=usage, classifier=classifier)
 
     def _read(self, text: str, ctx: NluContext) -> NluResult:
         t = _norm(text)
@@ -269,6 +279,7 @@ class RuleNlu:
         if self.intent_model is None or ctx.state not in LEARNED_STATES:
             return None
         p = self.intent_model.predict(text)
+        self._last = p
         return p if p.probability >= self.intent_model.threshold else None
 
     @staticmethod
