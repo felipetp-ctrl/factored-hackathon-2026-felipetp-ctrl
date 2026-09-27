@@ -167,6 +167,12 @@ behavioural features reach ROC-AUC 0.50 (permuted-label control 0.49): `is_fraud
 (≥ 40 → 100% fraud) plus uniform noise. We ship no model and instead recalibrate the proactive fraud alert from
 score ≥ 80 to ≥ 35 (100% precision on train and test, recall 16% → 52%).
 
+**3. A learnability scan of the whole dataset** ([ADR-021](docs/decisions/ADR-021-learnability-scan.md),
+[report](ml/results/learnability_scan.md)). Nine outcomes, same protocol plus a permuted control and a one-column
+lookup baseline: six are pure noise; the three with signal (CSAT, first-contact resolution, campaign conversion) are
+each a function of one field, matched by a lookup table. No tabular model is trained; the finding feeds the problem
+analysis instead (CSAT 3.0 when a contact is resolved vs 2.0 when not).
+
 Small samples: zero observed unsafe outcomes in 105 + 84 conversations does not establish zero risk; the component
 baseline shows the language model's margin is on the less common reasons, not on fraud.
 Full report: [`eval/results/20260926T175451Z-test-v1/report.md`](eval/results/20260926T175451Z-test-v1/report.md).

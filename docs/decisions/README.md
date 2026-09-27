@@ -24,3 +24,4 @@ Every significant decision in the project, with the alternatives considered and 
 | [018](ADR-018-conversation-fixes.md) | Conversation fixes: fixed language, polite endings, local formats, visible re-login | accepted |
 | [019](ADR-019-learned-intent-classifier.md) | Trained intent/reason classifier inside the free fallback NLU | accepted |
 | [020](ADR-020-fraud-label-audit.md) | No fraud model (labels have no behavioural signal); fraud alert threshold 80 → 35 | accepted |
+| [021](ADR-021-learnability-scan.md) | Learnability scan: no multivariate signal in the organizer data | accepted |

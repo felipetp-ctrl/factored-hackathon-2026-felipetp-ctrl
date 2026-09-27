@@ -85,6 +85,12 @@ Assumptions, all adjustable:
 | Intake cost | ≈ US$ 13,400 | ≈ US$ 4,000 + ≈ US$ 35 of model cost |
 | Time to a registered case | median 37 h to first response | minutes for the ≈ 70 % resolved in the conversation |
 
+**Satisfaction.** In the organizer data CSAT depends on one thing: whether the contact was resolved (mean 3.0 vs 2.0 on
+1–4; 85% vs 15% satisfied), and complaint contacts are resolved at first contact only 43.6% of the time
+([learnability scan](../ml/results/learnability_scan.md), ADR-021). Every dispute the service closes in the first
+conversation moves that contact from the unresolved to the resolved group — about +1 CSAT point per contact under the
+dataset's own rule.
+
 These are **simulated, offline** figures on a synthetic bank; they illustrate the order of magnitude and the levers, not a
 measured production improvement.
 

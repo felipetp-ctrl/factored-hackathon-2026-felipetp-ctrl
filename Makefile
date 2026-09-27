@@ -1,4 +1,4 @@
-.PHONY: install test lint api eval web data train fraud-audit mlflow-ui
+.PHONY: install test lint api eval web data train fraud-audit learnability mlflow-ui
 install:
 	cd backend && uv sync
 test:
@@ -17,5 +17,7 @@ train:
 	cd backend && MLFLOW_DISABLE_AGENT_HINT=1 uv run --group ml python -m dispute_ops.ml train $(ARGS)
 fraud-audit:
 	cd backend && MLFLOW_DISABLE_AGENT_HINT=1 uv run --group ml python -m dispute_ops.ml fraud-audit
+learnability:
+	cd backend && MLFLOW_DISABLE_AGENT_HINT=1 uv run --group ml python -m dispute_ops.ml learnability
 mlflow-ui:
 	cd backend && uv run --group ml mlflow ui --backend-store-uri sqlite:///../mlruns/mlflow.db --port 5001
