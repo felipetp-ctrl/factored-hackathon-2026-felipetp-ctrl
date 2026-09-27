@@ -6,6 +6,7 @@ import json
 import logging
 import re
 import statistics
+import threading
 import time
 import uuid
 from collections import OrderedDict, defaultdict, deque
@@ -86,18 +87,21 @@ class Workspaces:
     def __init__(self, factory: Callable[[], Container], max_size: int = 40) -> None:
         self.factory, self.max_size = factory, max_size
         self.items: OrderedDict[str, Container] = OrderedDict()
+        self._lock = threading.Lock()  # parallel first requests of a tab must share one workspace
 
     def get(self, key: str) -> Container:
-        if key in self.items:
-            self.items.move_to_end(key)
-        else:
-            self.items[key] = self.factory()
-            while len(self.items) > self.max_size:
-                self.items.popitem(last=False)
-        return self.items[key]
+        with self._lock:
+            if key in self.items:
+                self.items.move_to_end(key)
+            else:
+                self.items[key] = self.factory()
+                while len(self.items) > self.max_size:
+                    self.items.popitem(last=False)
+            return self.items[key]
 
     def reset(self, key: str) -> None:
-        self.items.pop(key, None)
+        with self._lock:
+            self.items.pop(key, None)
 
 
 def _percentile(values: list[float], q: float) -> float:

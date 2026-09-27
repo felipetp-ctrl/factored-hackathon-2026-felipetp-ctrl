@@ -74,3 +74,18 @@ def test_seed_first_names_merchants_cards_and_cases(store):
     store.insert_dispute(case)
     assert [c.case_id for c in store.list_disputes("CUST001")] == ["DSP-9"]
     assert store.list_disputes("CUST002") == []
+
+
+def test_concurrent_reads_from_many_threads_are_consistent(store):
+    # The API serves requests from a thread pool over one SQLite connection; reads must never interleave.
+    from concurrent.futures import ThreadPoolExecutor
+
+    def work(_):
+        for _ in range(300):
+            assert store.get_customer("CUST001").first_name == "Lucía"
+            assert len(store.list_transactions("CUST001", NOW - timedelta(days=400))) == 7
+            store.list_cards("CUST001")
+        return True
+
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        assert all(pool.map(work, range(8)))

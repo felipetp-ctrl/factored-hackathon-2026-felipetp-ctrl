@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import threading
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
@@ -34,12 +35,69 @@ CREATE TRIGGER IF NOT EXISTS audit_no_delete BEFORE DELETE ON audit_events
 """
 
 
+class _Rows:
+    """Rows fetched while holding the lock, so no cursor is shared across threads."""
+
+    def __init__(self, rows: list[sqlite3.Row]) -> None:
+        self._rows = rows
+
+    def fetchone(self) -> sqlite3.Row | None:
+        return self._rows[0] if self._rows else None
+
+    def fetchall(self) -> list[sqlite3.Row]:
+        return self._rows
+
+    def __iter__(self):
+        return iter(self._rows)
+
+
+class _SerializedConnection:
+    """One SQLite connection used by the API's thread pool: every statement (and every `with conn:` transaction)
+    runs under a re-entrant lock and returns fully fetched rows. Concurrent use of the raw connection returned
+    corrupted reads in production (a customer lookup came back empty)."""
+
+    def __init__(self, conn: sqlite3.Connection) -> None:
+        self._conn, self._lock = conn, threading.RLock()
+
+    def execute(self, sql: str, params: tuple | list = ()) -> _Rows:
+        with self._lock:
+            return _Rows(self._conn.execute(sql, params).fetchall())
+
+    def executemany(self, sql: str, rows) -> None:
+        with self._lock:
+            self._conn.executemany(sql, rows)
+
+    def executescript(self, script: str) -> None:
+        with self._lock:
+            self._conn.executescript(script)
+
+    def commit(self) -> None:
+        with self._lock:
+            self._conn.commit()
+
+    def close(self) -> None:
+        with self._lock:
+            self._conn.close()
+
+    def __enter__(self) -> _SerializedConnection:
+        self._lock.acquire()
+        self._conn.__enter__()
+        return self
+
+    def __exit__(self, *exc) -> None:
+        try:
+            self._conn.__exit__(*exc)
+        finally:
+            self._lock.release()
+
+
 class Store:
     """SQLite operational store. Timestamps are stored as ISO-8601 UTC strings."""
 
     def __init__(self, path: str | Path = ":memory:") -> None:
-        self.conn = sqlite3.connect(str(path), check_same_thread=False)
-        self.conn.row_factory = sqlite3.Row
+        raw = sqlite3.connect(str(path), check_same_thread=False)
+        raw.row_factory = sqlite3.Row
+        self.conn = _SerializedConnection(raw)
         self.conn.executescript(SCHEMA)
         columns = {r["name"] for r in self.conn.execute("PRAGMA table_info(customers)")}
         if "first_name" not in columns:  # stores exported before v0.0.2

@@ -157,3 +157,15 @@ def test_simulated_model_outage_is_per_workspace():
     assert r["nlu_mode"] == "rules"
     assert client.get("/health", headers={"X-Demo-Workspace": "judge-y"}).json()["nlu"]["mode"] == "claude"
     assert client.post("/demo/outage", json={"on": False}, headers=ws).json()["nlu"]["mode"] == "claude"
+
+
+def test_parallel_first_requests_of_a_new_workspace_share_it():
+    from concurrent.futures import ThreadPoolExecutor
+
+    from dispute_ops.api import Workspaces
+
+    built = []
+    ws = Workspaces(lambda: built.append(object()) or built[-1])
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        got = set(map(id, pool.map(lambda _: ws.get("same-tab"), range(32))))
+    assert len(built) == 1 and len(got) == 1
