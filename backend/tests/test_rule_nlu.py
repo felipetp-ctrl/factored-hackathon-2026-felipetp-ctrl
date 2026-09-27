@@ -97,6 +97,7 @@ def test_proactive_alert_answers():
 @pytest.mark.parametrize("text,intent", [
     ("¿cuál es el saldo de mi cuenta?", "out_of_scope"),
     ("quero falar com um atendente", "human"),
+    ("na verdade queria um empréstimo pessoal", "out_of_scope"),
     ("hola", "greeting"),
     ("no, gracias, no tengo nada que disputar", "decline"),
     ("asdf", "unclear"),

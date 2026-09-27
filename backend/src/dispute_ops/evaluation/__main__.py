@@ -73,7 +73,17 @@ def main() -> None:
     p.add_argument("--out", default=str(Path(__file__).resolve().parents[4] / "eval" / "results"))
     p.add_argument("--scenarios", default=None, help="frozen scenario JSON (default: built-in dev set on the seed fixture)")
     p.add_argument("--demo-db", default=None, help="gold demo SQLite the scenarios refer to")
+    p.add_argument("--rescore", default=None,
+                   help="results folder: recompute the component report from stored messages (no model calls)")
     args = p.parse_args()
+    if args.rescore:
+        folder = Path(args.rescore)
+        stored = [ScenarioResult.model_validate_json(x) for x in (folder / "results.jsonl").read_text().splitlines() if x]
+        text = ("# Component re-scoring (offline)\n\nRecomputed from the stored customer messages of this run; "
+                "no model was called. Adds the rule-based fallback NLU (v0.0.2).\n\n" + component_markdown(component_report(stored)))
+        (folder / "components_rescored.md").write_text(text)
+        print(text)
+        return
 
     base = load_scenarios(Path(args.scenarios)) if args.scenarios else build_scenarios()
     scenarios = [s for s in base if not args.only or args.only in s.id]

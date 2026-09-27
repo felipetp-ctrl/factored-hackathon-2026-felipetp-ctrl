@@ -14,7 +14,7 @@ from datetime import date
 
 from dispute_ops.domain import ReasonCode
 from dispute_ops.language.gateway import detect_language
-from dispute_ops.language.keywords import _norm, classify_reason, is_out_of_scope, wants_human
+from dispute_ops.language.keywords import _norm, classify_reason, is_out_of_scope
 from dispute_ops.language.nlu import LlmUsage, NluContext, NluOutcome, NluResult
 
 RULES_MODEL = "rules"
@@ -56,6 +56,8 @@ _NOTHING_TO_DO = re.compile(r"nada (que|para|a) (disputar|contestar)|no necesito
 _BLOCK = re.compile(r"bloque")
 _NO_BLOCK = re.compile(
     r"(sin|sem|no|nao)\s+(quiero\s+|quero\s+|precisa\s+|necesito\s+|hace falta\s+|es necesario\s+|e necessario\s+)?(que\s+)?(me\s+)?bloque")
+# Whole words only: the baseline's substring match reads "empréstimo pessoal" (personal loan) as "pessoa".
+_HUMAN = re.compile(r"\b(humano|asesor|asesora|agente|persona real|una persona|uma pessoa|pessoa|atendente|operador|operadora)\b")
 _REGULATOR = re.compile(
     r"condusef|superintendencia|bcra|banco central|procon|defensor(ia)? del consumidor|denunci|abogad|advogad|"
     r"demanda|processar|justicia|prensa|imprensa|reclame aqui")
@@ -195,7 +197,7 @@ class RuleNlu:
             return NluResult(intent=intent, language=language, summary=_summary(language, fields), **fields)
 
         if ctx.state == "CONFIRM":
-            if wants_human(text) and not yes:
+            if _HUMAN.search(t) and not yes:
                 return done("human")
             if _BLOCK.search(t):
                 fields["wants_block_card"] = not _NO_BLOCK.search(t)
@@ -203,14 +205,14 @@ class RuleNlu:
                 return done("decline")
             return done("confirm" if yes or "confirm" in t else "unclear")
         if ctx.state == "PROACTIVE_CONFIRM":
-            if wants_human(text):
+            if _HUMAN.search(t):
                 return done("human")
             if no or re.search(r"no fui yo|nao fui eu|no (la |lo )?reconozco|nao reconheco", t):
                 fields["recognizes_merchant"] = "no"
                 return done("decline")
             return done("confirm" if yes or re.search(r"fui yo|fui eu", t) else "unclear")
 
-        if wants_human(text) and not no:
+        if _HUMAN.search(t) and not no:
             return done("human")
 
         reason = classify_reason(text)
