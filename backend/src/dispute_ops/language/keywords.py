@@ -17,7 +17,8 @@ def _norm(text: str) -> str:
 
 # Order matters: more specific patterns first.
 REASON_PATTERNS: list[tuple[ReasonCode, str]] = [
-    (ReasonCode.DUPLICATE, r"dos veces|duas vezes|duplicad|doble cobr|cobrad[oa]s? 2|repetid"),
+    # "cobrado 2 veces", not "cobrado 243,12" (test-v3 finding, post-hoc).
+    (ReasonCode.DUPLICATE, r"dos veces|duas vezes|duplicad|doble cobr|cobr\w* 2 (veces|vezes)|repetid"),
     (ReasonCode.CANCELLED_RECURRING, r"cancel\w* (la |a |mi |minha )?(suscripcion|assinatura|membresia|plano)|suscripcion|assinatura"),
     (ReasonCode.NOT_RECEIVED, r"no (me )?(llego|ha llegado|recibi)|nao (chegou|recebi)|nunca (llego|chegou)|no lleg|entrega"),
     (ReasonCode.INCORRECT_AMOUNT, r"monto (incorrecto|equivocado|distinto)|valor (errado|incorreto|diferente)|cobraron (de )?mas|cobraram (a )?mais|mas de lo que"),

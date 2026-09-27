@@ -109,3 +109,14 @@ def test_other_intents(text, intent):
 def test_regulatory_threat_and_strong_negative_sentiment():
     r = read("Esto es una vergüenza, voy a denunciar ante la CONDUSEF un cargo de 900 en Boutique Moda que no hice")
     assert r.regulatory_threat and r.very_negative_sentiment and r.intent == "dispute"
+
+
+def test_amount_starting_with_2_is_not_a_duplicate_charge():
+    from dispute_ops.language.keywords import classify_reason
+    assert classify_reason("cancelei a assinatura e fui cobrado 243,12 USD") != ReasonCode.DUPLICATE
+    assert classify_reason("me cobraron 2 veces lo mismo") == ReasonCode.DUPLICATE
+
+
+def test_merchant_name_with_a_product_word_is_not_out_of_scope():
+    out = RuleNlu(["Super Ahorro"]).interpret("me cobraron de más en Super Ahorro", NluContext(state="START")).result
+    assert out.intent != "out_of_scope" and out.merchant == "Super Ahorro"
