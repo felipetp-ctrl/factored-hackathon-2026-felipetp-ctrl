@@ -1,0 +1,401 @@
+{
+  "messages": 540,
+  "annotated": 540,
+  "kappa": 1.0,
+  "agreement": 1.0,
+  "haiku_kappa_discarded": 0.475,
+  "disagreements": [],
+  "gold": 525,
+  "gold_labels": {
+    "FRAUD_CNP": 56,
+    "FRAUD_CP": 59,
+    "DUPLICATE": 58,
+    "INCORRECT_AMOUNT": 60,
+    "NOT_RECEIVED": 59,
+    "CANCELLED_RECURRING": 60,
+    "OUT_OF_SCOPE": 58,
+    "HUMAN": 57,
+    "DISPUTE_NO_REASON": 58
+  },
+  "near_duplicates_of_training_corpus": 15,
+  "systems": {
+    "keyword baseline": {
+      "hits": 234,
+      "n": 525,
+      "ci": [
+        0.403743627821688,
+        0.4884736258890639
+      ],
+      "macro_f1": 0.48762751401110893,
+      "by_language": {
+        "es": "115/261",
+        "pt": "119/264"
+      },
+      "recall": {
+        "FRAUD_CNP": "26/56",
+        "FRAUD_CP": "40/59",
+        "DUPLICATE": "29/58",
+        "INCORRECT_AMOUNT": "10/60",
+        "NOT_RECEIVED": "8/59",
+        "CANCELLED_RECURRING": "14/60",
+        "OUT_OF_SCOPE": "13/58",
+        "HUMAN": "36/57",
+        "DISPUTE_NO_REASON": "58/58"
+      }
+    },
+    "fallback NLU, rules only": {
+      "hits": 240,
+      "n": 525,
+      "ci": [
+        0.4149947952026976,
+        0.49991356299000117
+      ],
+      "macro_f1": 0.5001690026347547,
+      "by_language": {
+        "es": "119/261",
+        "pt": "121/264"
+      },
+      "recall": {
+        "FRAUD_CNP": "31/56",
+        "FRAUD_CP": "40/59",
+        "DUPLICATE": "29/58",
+        "INCORRECT_AMOUNT": "10/60",
+        "NOT_RECEIVED": "8/59",
+        "CANCELLED_RECURRING": "14/60",
+        "OUT_OF_SCOPE": "14/58",
+        "HUMAN": "36/57",
+        "DISPUTE_NO_REASON": "58/58"
+      }
+    },
+    "fallback NLU, rules + intent-v2": {
+      "hits": 494,
+      "n": 525,
+      "ci": [
+        0.9174055457593139,
+        0.9580929021691397
+      ],
+      "macro_f1": 0.9422468884911951,
+      "by_language": {
+        "es": "243/261",
+        "pt": "251/264"
+      },
+      "recall": {
+        "FRAUD_CNP": "54/56",
+        "FRAUD_CP": "56/59",
+        "DUPLICATE": "56/58",
+        "INCORRECT_AMOUNT": "52/60",
+        "NOT_RECEIVED": "59/59",
+        "CANCELLED_RECURRING": "59/60",
+        "OUT_OF_SCOPE": "51/58",
+        "HUMAN": "53/57",
+        "DISPUTE_NO_REASON": "54/58"
+      }
+    },
+    "intent-v2 alone": {
+      "hits": 502,
+      "n": 525,
+      "ci": [
+        0.9351205050940087,
+        0.970632748810374
+      ],
+      "macro_f1": 0.9558644452394991,
+      "by_language": {
+        "es": "250/261",
+        "pt": "252/264"
+      },
+      "recall": {
+        "FRAUD_CNP": "56/56",
+        "FRAUD_CP": "57/59",
+        "DUPLICATE": "57/58",
+        "INCORRECT_AMOUNT": "56/60",
+        "NOT_RECEIVED": "59/59",
+        "CANCELLED_RECURRING": "60/60",
+        "OUT_OF_SCOPE": "56/58",
+        "HUMAN": "54/57",
+        "DISPUTE_NO_REASON": "47/58"
+      }
+    }
+  },
+  "mcnemar_learned_vs_rules": {
+    "only_first_correct": 260,
+    "only_second_correct": 6,
+    "p_value": 8.024305667392807e-69
+  },
+  "intent_v2_threshold": {
+    "accepted": 492,
+    "accepted_correct": 480
+  },
+  "cross_author": {
+    "train_mine_test_independent": 0.9561904761904761,
+    "train_independent_test_mine": 0.8548559231590181
+  },
+  "confusion_labels": [
+    "FRAUD_CNP",
+    "FRAUD_CP",
+    "DUPLICATE",
+    "INCORRECT_AMOUNT",
+    "NOT_RECEIVED",
+    "CANCELLED_RECURRING",
+    "OUT_OF_SCOPE",
+    "HUMAN",
+    "DISPUTE_NO_REASON"
+  ],
+  "confusion": [
+    [
+      54,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      2
+    ],
+    [
+      2,
+      56,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      56,
+      1,
+      0,
+      0,
+      0,
+      0,
+      1
+    ],
+    [
+      1,
+      0,
+      0,
+      52,
+      0,
+      2,
+      0,
+      0,
+      5
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      59,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      59,
+      0,
+      0,
+      1
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      51,
+      0,
+      6
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      53,
+      3
+    ],
+    [
+      3,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      54
+    ]
+  ],
+  "errors": [
+    {
+      "text": "Sigo con la tarjeta en mi poder pero me cobraron algo raro anoche.",
+      "expected": "FRAUD_CNP",
+      "predicted": "DISPUTE_NO_REASON"
+    },
+    {
+      "text": "me clonaron la banda magnetica, aparecio un cargo en otro pais",
+      "expected": "FRAUD_CNP",
+      "predicted": "DISPUTE_NO_REASON"
+    },
+    {
+      "text": "Se llevaron mi cartera en un robo y ahora hay una compra que no reconozco.",
+      "expected": "FRAUD_CP",
+      "predicted": "FRAUD_CNP"
+    },
+    {
+      "text": "Perdi meu cartão de crédito na academia e apareceu um pagamento numa loja de roupa.",
+      "expected": "FRAUD_CP",
+      "predicted": "OUT_OF_SCOPE"
+    },
+    {
+      "text": "Levaram minha carteira num roubo e agora tem uma compra que eu não reconheço.",
+      "expected": "FRAUD_CP",
+      "predicted": "FRAUD_CNP"
+    },
+    {
+      "text": "me aparecen 2 cargos iguales de la pizzeria del sabado",
+      "expected": "DUPLICATE",
+      "predicted": "DISPUTE_NO_REASON"
+    },
+    {
+      "text": "O restaurante cobrou a conta e depois de novo o mesmo valor exato.",
+      "expected": "DUPLICATE",
+      "predicted": "INCORRECT_AMOUNT"
+    },
+    {
+      "text": "Reconozco la compra pero el monto está mal.",
+      "expected": "INCORRECT_AMOUNT",
+      "predicted": "FRAUD_CNP"
+    },
+    {
+      "text": "Reconozco el cargo del hotel pero el monto no coincide con lo reservado.",
+      "expected": "INCORRECT_AMOUNT",
+      "predicted": "DISPUTE_NO_REASON"
+    },
+    {
+      "text": "Sí hice la compra en \"SuperMercadoUno\" pero el total no cuadra con lo que pagué.",
+      "expected": "INCORRECT_AMOUNT",
+      "predicted": "DISPUTE_NO_REASON"
+    },
+    {
+      "text": "Buenas tardes, reservé el hotel por $3,450.90 pero en mi estado de cuenta aparece $4,100.00.",
+      "expected": "INCORRECT_AMOUNT",
+      "predicted": "DISPUTE_NO_REASON"
+    },
+    {
+      "text": "La suscripción anual decía $99 y me cobraron $149.",
+      "expected": "INCORRECT_AMOUNT",
+      "predicted": "CANCELLED_RECURRING"
+    },
+    {
+      "text": "Fui yo quien reservó el cuarto de hotel pero el cargo final no coincide con la tarifa acordada.",
+      "expected": "INCORRECT_AMOUNT",
+      "predicted": "DISPUTE_NO_REASON"
+    },
+    {
+      "text": "Boa tarde, reservei o hotel por R$ 345,90 mas na minha fatura aparece R$ 410,00.",
+      "expected": "INCORRECT_AMOUNT",
+      "predicted": "DISPUTE_NO_REASON"
+    },
+    {
+      "text": "A assinatura anual dizia R$ 99 e me cobraram R$ 149.",
+      "expected": "INCORRECT_AMOUNT",
+      "predicted": "CANCELLED_RECURRING"
+    },
+    {
+      "text": "Solicité la baja del club de descuentos hace semanas, sigo pagando.",
+      "expected": "CANCELLED_RECURRING",
+      "predicted": "DISPUTE_NO_REASON"
+    },
+    {
+      "text": "¿Dónde puedo ver mi estado de cuenta de este mes?",
+      "expected": "OUT_OF_SCOPE",
+      "predicted": "DISPUTE_NO_REASON"
+    },
+    {
+      "text": "Necesito bloquear temporalmente mi tarjeta porque no la encuentro en casa.",
+      "expected": "OUT_OF_SCOPE",
+      "predicted": "DISPUTE_NO_REASON"
+    },
+    {
+      "text": "Disculpe, soy mayor y no sé cómo usar la app, ¿me pueden ayudar?",
+      "expected": "OUT_OF_SCOPE",
+      "predicted": "DISPUTE_NO_REASON"
+    },
+    {
+      "text": "quiero cancelar mi cuenta de banco, ya no la uso",
+      "expected": "OUT_OF_SCOPE",
+      "predicted": "CANCELLED_RECURRING"
+    },
+    {
+      "text": "Preciso bloquear temporariamente meu cartão porque não acho ele em casa.",
+      "expected": "OUT_OF_SCOPE",
+      "predicted": "DISPUTE_NO_REASON"
+    },
+    {
+      "text": "Desculpa, já sou de idade e não sei usar o aplicativo, podem me ajudar?",
+      "expected": "OUT_OF_SCOPE",
+      "predicted": "DISPUTE_NO_REASON"
+    },
+    {
+      "text": "quero cancelar minha conta do banco, nao uso mais",
+      "expected": "OUT_OF_SCOPE",
+      "predicted": "DISPUTE_NO_REASON"
+    },
+    {
+      "text": "No quiero seguir con el chatbot, deseo hablar con una persona.",
+      "expected": "HUMAN",
+      "predicted": "DISPUTE_NO_REASON"
+    },
+    {
+      "text": "Solicito hablar con un ejecutivo de cuenta cuanto antes.",
+      "expected": "HUMAN",
+      "predicted": "OUT_OF_SCOPE"
+    },
+    {
+      "text": "Não quero continuar com o chatbot, quero falar com uma pessoa.",
+      "expected": "HUMAN",
+      "predicted": "DISPUTE_NO_REASON"
+    },
+    {
+      "text": "Solicito falar com um gerente de conta o quanto antes.",
+      "expected": "HUMAN",
+      "predicted": "DISPUTE_NO_REASON"
+    },
+    {
+      "text": "Tengo dudas sobre una compra que aparece hoy en mi resumen.",
+      "expected": "DISPUTE_NO_REASON",
+      "predicted": "FRAUD_CNP"
+    },
+    {
+      "text": "É a cobrança de R$ 56 que saiu na quinta passada.",
+      "expected": "DISPUTE_NO_REASON",
+      "predicted": "INCORRECT_AMOUNT"
+    },
+    {
+      "text": "Preciso que me ajudem com uma cobrança estranha na minha conta.",
+      "expected": "DISPUTE_NO_REASON",
+      "predicted": "FRAUD_CNP"
+    },
+    {
+      "text": "quero reportar uma cobranca estranha dessa semana",
+      "expected": "DISPUTE_NO_REASON",
+      "predicted": "FRAUD_CNP"
+    }
+  ]
+}

@@ -256,6 +256,18 @@ def run(version: str = "intent-v2", with_embeddings: bool = False, tracking_uri:
                             **{"heldout_" + re.sub(r"\W+", "_", k).strip("_") + "_acc": v["model_hits"] / v["n"]
                                for k, v in held.items() if "reason" in k}})
         mlflow.log_artifact(str(model_path))
+        # Model registry: one version per training run, tagged with what it was selected and validated on.
+        from mlflow.tracking import MlflowClient
+        client, run = MlflowClient(), mlflow.active_run()
+        try:
+            client.create_registered_model("intent-classifier", description="ES/PT dispute intent/reason classifier "
+                                           "(TF-IDF + logistic regression) used inside the free fallback NLU. ADR-019.")
+        except mlflow.exceptions.MlflowException:
+            pass  # already registered
+        client.create_model_version("intent-classifier", source=f"{run.info.artifact_uri}/{model_path.name}",
+                                    run_id=run.info.run_id, tags={"version": version, "threshold": str(threshold),
+                                    "selected": best["name"], "cv_macro_f1": f"{best['macro_f1']:.4f}",
+                                    **{re.sub(r"[^A-Za-z0-9_ -]", "", k): f"{v['model_hits']}/{v['n']}" for k, v in held.items() if "reason" in k}})
 
     summary = {"version": version, "augmentation_per_sentence": VERSIONS[version],
                "corpus": {"examples": len(raw), "used": len(base), "training_examples": len(x), "dropped_near_duplicates": [

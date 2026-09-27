@@ -14,16 +14,11 @@ import random
 from collections import Counter
 from functools import partial
 
-import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import cohen_kappa_score, confusion_matrix, f1_score
 
 from dispute_ops.language.intent_model import LABELS, IntentModel, features
 from dispute_ops.language.nlu import NluContext
 from dispute_ops.language.rule_nlu import RuleNlu
 from dispute_ops.ml.corpus import REPO, Example, drop_near_duplicates, load_corpus
-from dispute_ops.ml.train import keyword_label, wilson
 
 CORPUS_DIR = REPO / "ml" / "corpus"
 INDEPENDENT = CORPUS_DIR / "independent-v1.tsv"
@@ -81,12 +76,18 @@ def mcnemar(a: list[bool], b: list[bool]) -> dict:
 
 
 def _fit(x, y):
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.linear_model import LogisticRegression
     vec = TfidfVectorizer(analyzer=partial(features, kinds="wbc"), sublinear_tf=True, min_df=2)
     return vec, LogisticRegression(C=30.0, max_iter=5000).fit(vec.fit_transform(x), y)
 
 
 def evaluate() -> str:
     import mlflow
+    import numpy as np
+    from sklearn.metrics import cohen_kappa_score, confusion_matrix, f1_score
+
+    from dispute_ops.ml.train import keyword_label, wilson
 
     items = load_independent()
     a2 = _annotator2()
@@ -95,7 +96,15 @@ def evaluate() -> str:
     blind = [a2[i] for i in ids]
     kappa = cohen_kappa_score(intended, blind)
     agree = [i for i in ids if items[i].label == a2[i]]
-    gold = [items[i] for i in agree]
+    mine = load_corpus()
+    # Gold = both annotators agree AND not a near-duplicate of the training corpus.
+    gold, overlap_dropped = drop_near_duplicates([items[i] for i in agree], [e.text for e in mine])
+    haiku = CORPUS_DIR / "independent-v1.annotator-haiku-discarded.tsv"
+    haiku_kappa = None
+    if haiku.exists():
+        h = {int(ln.split("\t")[0]): ln.split("\t")[1].strip() for ln in haiku.read_text().splitlines() if ln.strip()}
+        hk = [i for i in ids if i in h]
+        haiku_kappa = cohen_kappa_score([items[i].label for i in hk], [h[i] for i in hk])
 
     model = IntentModel.load()
     rules, learned = RuleNlu([]), RuleNlu([], intent_model=model)
@@ -121,8 +130,6 @@ def evaluate() -> str:
     acc_at_t = [(p, e) for p, e in accepted if p.probability >= model.threshold]
 
     # Cross-author generalisation: train on one author, test on the other (same model configuration).
-    mine = load_corpus()
-    overlap_kept, overlap_dropped = drop_near_duplicates(gold, [e.text for e in mine])
     vec, clf = _fit([e.text for e in mine], [e.label for e in mine])
     mine_to_ind = float(np.mean(clf.predict(vec.transform([e.text for e in gold])) == np.array([e.label for e in gold])))
     vec2, clf2 = _fit([e.text for e in gold], [e.label for e in gold])
@@ -134,6 +141,7 @@ def evaluate() -> str:
               if not o]
     summary = {
         "messages": len(items), "annotated": len(ids), "kappa": kappa, "agreement": len(agree) / len(ids),
+        "haiku_kappa_discarded": haiku_kappa,
         "disagreements": [{"text": items[i].text, "writer": items[i].label, "annotator2": a2[i]} for i in ids if items[i].label != a2[i]],
         "gold": len(gold), "gold_labels": dict(Counter(e.label for e in gold)),
         "near_duplicates_of_training_corpus": len(overlap_dropped),
@@ -170,8 +178,12 @@ def markdown(s: dict) -> str:
         "no labels shown). Opening messages only; each is read as a first customer turn. Offline, no API calls.", "",
         "## Label quality", "",
         f"- {s['messages']} messages; Cohen's κ between writer and blind annotator = **{s['kappa']:.3f}** "
-        f"(raw agreement {s['agreement']:.1%}). The {s['gold']} messages both agree on are the gold set below.",
-        f"- Near-duplicates of the training corpus (char 3-gram Jaccard ≥ 0.6): {s['near_duplicates_of_training_corpus']}.",
+        f"(raw agreement {s['agreement']:.1%}). Both are Sonnet instances and the writer was told to rewrite ambiguous "
+        "messages, so this shows the set is unambiguous under the definitions, not that the labels are human-validated.",
+        f"- A first blind annotation by Claude Haiku was discarded: κ = {s['haiku_kappa_discarded']:.3f}, it labelled most "
+        "messages with an explicit reason as 'no reason' (file kept: `independent-v1.annotator-haiku-discarded.tsv`).",
+        f"- {s['near_duplicates_of_training_corpus']} messages that are near-duplicates of the training corpus (char 3-gram "
+        f"Jaccard ≥ 0.6) are excluded; gold set = {s['gold']} messages.",
         f"- Gold labels: `{s['gold_labels']}`", "",
         "## Systems on the same gold messages", "",
         "| System | Accuracy (95% CI) | Macro-F1 | es | pt |", "|---|---|---|---|---|",
