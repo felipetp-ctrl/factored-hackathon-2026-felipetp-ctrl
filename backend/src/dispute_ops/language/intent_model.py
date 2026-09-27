@@ -17,7 +17,8 @@ from pathlib import Path
 
 from dispute_ops.language.keywords import _norm
 
-DEFAULT_PATH = Path(__file__).parent / "models" / "intent-v1.json"
+MODELS_DIR = Path(__file__).parent / "models"
+DEFAULT_PATH = MODELS_DIR / "intent-v2.json"
 REASON_LABELS = ("FRAUD_CNP", "FRAUD_CP", "DUPLICATE", "INCORRECT_AMOUNT", "NOT_RECEIVED", "CANCELLED_RECURRING")
 LABELS = (*REASON_LABELS, "OUT_OF_SCOPE", "HUMAN", "DISPUTE_NO_REASON")
 

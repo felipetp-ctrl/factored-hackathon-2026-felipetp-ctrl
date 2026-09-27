@@ -44,6 +44,9 @@ class Settings(BaseModel):
     # auto = Claude with the free rule-based NLU as fallback (rules only when no API key); claude; rules.
     nlu_mode: str = "auto"
     llm_budget_usd: float | None = 20.0
+    # Learned intent/reason classifier inside the rule-based NLU (ADR-019): a model JSON path, "" for the
+    # bundled intent-v2, or "off" for keyword rules only.
+    intent_model: str = ""
 
     @classmethod
     def from_env(cls) -> Settings:
@@ -62,6 +65,7 @@ class Settings(BaseModel):
             scenarios_path=env.get("SCENARIOS_PATH", ""),
             nlu_mode=env.get("NLU_MODE", "auto"),
             llm_budget_usd=float(env["LLM_BUDGET_USD"]) if env.get("LLM_BUDGET_USD") else 20.0,
+            intent_model=env.get("INTENT_MODEL", ""),
         )
 
     def resolved_scenarios_path(self) -> Path:
@@ -130,9 +134,11 @@ class Container:
 
 
 def _select_nlu(settings: Settings, store: Store) -> tuple[Nlu, Nlu | None]:
+    from dispute_ops.language.intent_model import DEFAULT_PATH, IntentModel
     from dispute_ops.language.rule_nlu import RuleNlu
 
-    rules = RuleNlu(store.distinct_merchants())
+    model = None if settings.intent_model == "off" else IntentModel.load(Path(settings.intent_model or DEFAULT_PATH))
+    rules = RuleNlu(store.distinct_merchants(), intent_model=model)
     mode = settings.nlu_mode
     if mode == "auto" and not os.environ.get("ANTHROPIC_API_KEY"):
         mode = "rules"

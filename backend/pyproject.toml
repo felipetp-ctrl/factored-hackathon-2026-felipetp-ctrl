@@ -21,6 +21,9 @@ ml = [
     "mlflow>=3.16.1",
     "scikit-learn>=1.9.1",
 ]
+ml-embeddings = [
+    "sentence-transformers>=6.1.0",
+]
 
 [build-system]
 requires = ["hatchling"]

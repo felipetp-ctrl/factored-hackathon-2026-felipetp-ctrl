@@ -20,6 +20,9 @@ REPO = Path(__file__).resolve().parents[4]
 CORPUS = REPO / "ml" / "corpus" / "intent-v1.tsv"
 EVAL_RESULTS = REPO / "eval" / "results"
 TEST_V2 = EVAL_RESULTS / "20260926T181317Z-test-v2" / "results.jsonl"
+# Run 3 of test-v2 (proposed system), cut short by exhausted API credit: messages never opened during the
+# intent-v1 error analysis, so they are the unseen check for intent-v2.
+TEST_V2_RUN3 = EVAL_RESULTS / "20260926T181317Z-test-v2" / "results_aborted_credit.jsonl"
 TEST_V1 = EVAL_RESULTS / "20260926T175451Z-test-v1" / "results.jsonl"
 TEST_V1_SCENARIOS = REPO / "eval" / "scenarios" / "test-v1.json"
 NEAR_DUPLICATE = 0.6  # char 3-gram Jaccard
@@ -88,10 +91,12 @@ def heldout_reason_v2(path: Path = TEST_V2) -> list[Example]:
     committed to a reason (or the whole conversation if it never did), labelled with the expected reason."""
     out = []
     for r in _rows(path):
-        if r["system"] != "proposed" or r.get("error") or not r.get("expected_reason_code") or r["category"] == "adversarial":
+        if r["system"] != "proposed" or not r.get("expected_reason_code") or r["category"] == "adversarial":
             continue
         msgs = _customer(r)
-        k = next((i for i, t in enumerate(r["nlu_turns"]) if t.get("reason_code")), len(msgs) - 1)
+        if not msgs or (r.get("error") and path == TEST_V2):
+            continue
+        k = next((i for i, t in enumerate(r.get("nlu_turns") or []) if t.get("reason_code")), len(msgs) - 1)
         out.append(Example(" ".join(msgs[: k + 1]), r["expected_reason_code"], r["language"], f"test-v2:{r['scenario_id']}"))
     return out
 

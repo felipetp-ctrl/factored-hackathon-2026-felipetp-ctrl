@@ -22,6 +22,22 @@ from dispute_ops.evaluation.systems import (
 )
 from dispute_ops.language.nlu import NLU_MODEL, PROMPT_VERSION
 
+RESCORE_NOTES = """## Leakage notes
+
+- **Rule NLU, out-of-scope.** The first re-scoring gave the rule NLU 75.0% (6/8) out-of-scope recall on the complete
+  runs: it read "empréstimo pessoal" (personal loan) as a request for a person ("pessoa"). That rule was fixed after
+  looking at these two test-v2 messages, so the rule NLU's out-of-scope figure is no longer a held-out measurement.
+  Its dispute-reason accuracy is the keyword baseline's and was not tuned on this set.
+- **intent-v2 on the complete runs is post-hoc.** intent-v1 (no augmentation) scored 34/46 on these reason messages;
+  reading its errors motivated intent-v2's compositional augmentation (ADR-019), so the complete-run numbers for
+  intent-v2 are optimistic. The run-3 messages were never opened, and `test-v3` was frozen before intent-v2 was trained.
+- **One run-3 message was then opened.** The first run-3 re-scoring gave the fallback with intent-v2 2/3 out-of-scope
+  recall: the classifier read "empréstimo pessoal" as a request for a person. The integration now lets an explicit
+  out-of-scope keyword outrank the classifier's "human" reading (the classifier had already been weaker than the
+  keywords at scope on the complete runs: 5/8 vs 6/8 standalone). The run-3 out-of-scope figure is therefore post-hoc
+  too; its reason accuracy is not affected (the model and the threshold did not change).
+"""
+
 SYSTEMS = {"proposed": ProposedSystem, "naive_llm": NaiveLlmSystem, "naive_sonnet": StrongLlmSystem}
 
 
@@ -78,9 +94,16 @@ def main() -> None:
     args = p.parse_args()
     if args.rescore:
         folder = Path(args.rescore)
-        stored = [ScenarioResult.model_validate_json(x) for x in (folder / "results.jsonl").read_text().splitlines() if x]
-        text = ("# Component re-scoring (offline)\n\nRecomputed from the stored customer messages of this run; "
-                "no model was called. Adds the rule-based fallback NLU (v0.0.2).\n\n" + component_markdown(component_report(stored)))
+        sections = []
+        for name, title in (("results.jsonl", "Complete runs"), ("results_aborted_credit.jsonl", "Run 3, cut by exhausted credit")):
+            if not (folder / name).exists():
+                continue
+            stored = [ScenarioResult.model_validate_json(x) for x in (folder / name).read_text().splitlines() if x]
+            sections.append(f"# {title} (`{name}`)\n\n" + component_markdown(component_report(stored)))
+        text = "\n".join(["# Component re-scoring (offline)\n",
+                          "Recomputed from the stored customer messages of this run; no model was called. Adds the "
+                          "rule-based fallback NLU (v0.0.2) and the fallback NLU with the learned intent classifier "
+                          "intent-v2 (ADR-019).\n", *sections, RESCORE_NOTES])
         (folder / "components_rescored.md").write_text(text)
         print(text)
         return

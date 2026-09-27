@@ -10,6 +10,7 @@ Selection protocol (no evaluation message is used before the final scoring):
 from __future__ import annotations
 
 import json
+import re
 import math
 import time
 from collections import Counter
@@ -22,13 +23,17 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, confusion_matrix, f1_score
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import StratifiedGroupKFold
 
-from dispute_ops.language.intent_model import DEFAULT_PATH, LABELS, IntentModel, features
+from dispute_ops.language.intent_model import LABELS, MODELS_DIR, IntentModel, features
 from dispute_ops.language.keywords import classify_reason, is_out_of_scope, wants_human
 from dispute_ops.ml import corpus as C
+from dispute_ops.ml.augment import augment
 
-VERSION = "intent-v1"
+VERSIONS = {  # version -> compositional augmentation per corpus sentence (0 = none)
+    "intent-v1": 0,
+    "intent-v2": 2,
+}
 SEED = 42
 TARGET_ACCEPTED_ACCURACY = 0.95
 POLICY_MIN_CONFIDENCE = 0.6  # policy R-HO-LOWCONF hands off below this
@@ -122,10 +127,11 @@ def candidates(with_embeddings: bool) -> list[Candidate]:
     return out
 
 
-def out_of_fold(cand: Candidate, x: list[str], y: list[str]) -> tuple[list[str], np.ndarray, float]:
+def out_of_fold(cand: Candidate, x: list[str], y: list[str], groups: list[int]) -> tuple[list[str], np.ndarray, float]:
+    """Folds keep every variant of a corpus sentence together (no augmented twin on both sides)."""
     pred, conf = [""] * len(x), np.zeros(len(x))
     started = time.perf_counter()
-    for tr, te in StratifiedKFold(5, shuffle=True, random_state=SEED).split(x, y):
+    for tr, te in StratifiedGroupKFold(5, shuffle=True, random_state=SEED).split(x, y, groups):
         p, c = cand.fit_predict([x[i] for i in tr], [y[i] for i in tr], [x[i] for i in te])
         for i, pi, ci in zip(te, p, c):
             pred[i], conf[i] = pi, ci
@@ -142,12 +148,12 @@ def choose_threshold(conf: np.ndarray, correct: np.ndarray) -> tuple[float, list
     return max(POLICY_MIN_CONFIDENCE, min(ok) if ok else 0.95), curve
 
 
-def export(kinds: str, c: float, x: list[str], y: list[str], threshold: float, path: Path) -> dict:
+def export(version: str, kinds: str, c: float, x: list[str], y: list[str], threshold: float, path: Path) -> dict:
     vec = TfidfVectorizer(analyzer=partial(features, kinds=kinds), sublinear_tf=True, min_df=2)
     clf = LogisticRegression(C=c, max_iter=5000).fit(vec.fit_transform(x), y)
     vocab = {k: int(v) for k, v in vec.vocabulary_.items()}
     spec = {
-        "version": VERSION, "feature_kinds": kinds, "threshold": threshold, "labels": list(clf.classes_),
+        "version": version, "feature_kinds": kinds, "threshold": threshold, "labels": list(clf.classes_),
         "vocabulary": vocab, "idf": [round(float(v), 6) for v in vec.idf_],
         "coef": [[round(float(v), 5) for v in row] for row in clf.coef_],
         "intercept": [round(float(v), 5) for v in clf.intercept_],
@@ -166,7 +172,8 @@ def export(kinds: str, c: float, x: list[str], y: list[str], threshold: float, p
 
 def score_heldout(model: IntentModel) -> dict:
     out: dict = {}
-    for name, items in (("test-v2 reason", C.heldout_reason_v2()), ("test-v1 reason", C.heldout_reason_v1())):
+    for name, items in (("test-v2 reason", C.heldout_reason_v2()), ("test-v1 reason", C.heldout_reason_v1()),
+                        ("test-v2 run 3 reason (unseen)", C.heldout_reason_v2(C.TEST_V2_RUN3))):
         preds = [model.predict(e.text) for e in items]
         hits = sum(p.label == e.label for p, e in zip(preds, items))
         accepted = [(p, e) for p, e in zip(preds, items) if p.probability >= model.threshold]
@@ -198,36 +205,39 @@ def _fmt_ci(k: int, n: int) -> str:
     return f"{k}/{n} = {k / n:.1%} (95% CI {lo:.0%}–{hi:.0%})"
 
 
-def run(with_embeddings: bool = False, tracking_uri: str | None = None) -> dict:
+def run(version: str = "intent-v2", with_embeddings: bool = False, tracking_uri: str | None = None) -> dict:
     import mlflow
 
     mlflow.set_tracking_uri(tracking_uri or f"sqlite:///{C.REPO / 'mlruns' / 'mlflow.db'}")
     (C.REPO / "mlruns").mkdir(exist_ok=True)
-    mlflow.set_experiment(VERSION)
+    mlflow.set_experiment("intent-classifier")
+    model_path = MODELS_DIR / f"{version}.json"
 
     raw = C.load_corpus()
-    data, dropped = C.drop_near_duplicates(raw, C.eval_messages())
+    base, dropped = C.drop_near_duplicates(raw, C.eval_messages())
+    data, groups = augment(base, VERSIONS[version]) if VERSIONS[version] else (base, list(range(len(base))))
     x, y = [e.text for e in data], [e.label for e in data]
     results = []
     for cand in candidates(with_embeddings):
-        pred, conf, secs = out_of_fold(cand, x, y)
+        pred, conf, secs = out_of_fold(cand, x, y, groups)
         correct = np.array([p == t for p, t in zip(pred, y)])
         row = {"name": cand.name, "params": cand.params, "accuracy": accuracy_score(y, pred),
                "macro_f1": f1_score(y, pred, average="macro"), "ece": ece(conf, correct), "cv_seconds": secs,
                "per_class_recall": {lab: float(np.mean([p == lab for p, t in zip(pred, y) if t == lab])) for lab in LABELS},
                "pred": pred, "conf": conf, "correct": correct}
         results.append(row)
-        with mlflow.start_run(run_name=cand.name):
-            mlflow.log_params({"candidate": cand.name, **cand.params, "corpus_examples": len(x),
-                               "corpus_dropped_near_duplicates": len(dropped), "cv": "5-fold stratified", "seed": SEED})
+        with mlflow.start_run(run_name=f"{version} {cand.name}"):
+            mlflow.log_params({"version": version, "candidate": cand.name, **cand.params, "corpus_examples": len(x),
+                               "augmentation_per_sentence": VERSIONS[version],
+                               "corpus_dropped_near_duplicates": len(dropped), "cv": "5-fold stratified group", "seed": SEED})
             mlflow.log_metrics({"cv_accuracy": row["accuracy"], "cv_macro_f1": row["macro_f1"], "cv_ece": row["ece"],
                                 **{f"cv_recall_{k}": v for k, v in row["per_class_recall"].items()}})
 
     learned = [r for r in results if r["name"] != "keyword-baseline" and not r["name"].startswith("e5")]
     best = max(learned, key=lambda r: (round(r["macro_f1"], 4), -r["params"]["C"]))
     threshold, curve = choose_threshold(best["conf"], best["correct"])
-    spec = export(best["params"]["feature_kinds"], best["params"]["C"], x, y, threshold, DEFAULT_PATH)
-    model = IntentModel.load(DEFAULT_PATH)
+    spec = export(version, best["params"]["feature_kinds"], best["params"]["C"], x, y, threshold, model_path)
+    model = IntentModel.load(model_path)
     started = time.perf_counter()
     for t in x:
         model.predict(t)
@@ -235,27 +245,28 @@ def run(with_embeddings: bool = False, tracking_uri: str | None = None) -> dict:
     held = score_heldout(model)
     cm = confusion_matrix(y, best["pred"], labels=list(LABELS))
 
-    with mlflow.start_run(run_name=f"{VERSION} (selected: {best['name']})"):
-        mlflow.log_params({**best["params"], "selected_from": len(learned), "threshold": threshold})
+    with mlflow.start_run(run_name=f"{version} (selected: {best['name']})"):
+        mlflow.log_params({"version": version, **best["params"], "selected_from": len(learned), "threshold": threshold})
         mlflow.log_metrics({"cv_macro_f1": best["macro_f1"], "cv_accuracy": best["accuracy"], "cv_ece": best["ece"],
-                            "runtime_latency_ms": latency_ms, "artifact_kb": DEFAULT_PATH.stat().st_size / 1024,
+                            "runtime_latency_ms": latency_ms, "artifact_kb": model_path.stat().st_size / 1024,
                             "vocabulary": len(spec["vocabulary"]), "parity_max_abs_diff": spec["parity_max_abs_diff"],
-                            **{f"heldout_{k.replace(' ', '_')}_acc": v["model_hits"] / v["n"]
+                            **{"heldout_" + re.sub(r"\W+", "_", k).strip("_") + "_acc": v["model_hits"] / v["n"]
                                for k, v in held.items() if "reason" in k}})
-        mlflow.log_artifact(str(DEFAULT_PATH))
+        mlflow.log_artifact(str(model_path))
 
-    summary = {"version": VERSION, "corpus": {"examples": len(raw), "used": len(x), "dropped_near_duplicates": [
+    summary = {"version": version, "augmentation_per_sentence": VERSIONS[version],
+               "corpus": {"examples": len(raw), "used": len(base), "training_examples": len(x), "dropped_near_duplicates": [
         {"corpus": d[0].text, "eval_message": d[1], "jaccard": round(d[2], 3)} for d in dropped], "labels": C.describe(data)},
         "candidates": [{k: v for k, v in r.items() if k not in ("pred", "conf", "correct")} for r in results],
         "selected": best["name"], "threshold": threshold, "threshold_curve": curve,
         "oof_accepted": {"coverage": float((best["conf"] >= threshold).mean()),
                          "accuracy": float(best["correct"][best["conf"] >= threshold].mean())},
         "confusion_labels": list(LABELS), "confusion": cm.tolist(), "heldout": held,
-        "runtime": {"latency_ms_per_message": latency_ms, "artifact_kb": DEFAULT_PATH.stat().st_size / 1024,
+        "runtime": {"latency_ms_per_message": latency_ms, "artifact_kb": model_path.stat().st_size / 1024,
                     "vocabulary": len(spec["vocabulary"]), "parity_max_abs_diff": spec["parity_max_abs_diff"]}}
     RESULTS.mkdir(parents=True, exist_ok=True)
-    (RESULTS / f"{VERSION}.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False, default=float))
-    (RESULTS / f"{VERSION}.md").write_text(markdown(summary))
+    (RESULTS / f"{version}.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False, default=float))
+    (RESULTS / f"{version}.md").write_text(markdown(summary))
     return summary
 
 
@@ -268,12 +279,17 @@ def markdown(s: dict) -> str:
         "the scenario ground truth. No evaluation message was used for fitting, model selection or the threshold.", "",
         "## Data", "",
         f"- Corpus: {s['corpus']['examples']} messages (ES/PT), {s['corpus']['used']} used after dropping "
-        f"{len(s['corpus']['dropped_near_duplicates'])} near-duplicate(s) of evaluation messages (char 3-gram Jaccard ≥ 0.6).",
+        f"{len(s['corpus']['dropped_near_duplicates'])} near-duplicate(s) of evaluation messages (char 3-gram Jaccard ≥ 0.6); "
+        f"{s['corpus']['training_examples']} training examples after compositional augmentation "
+        f"({s['augmentation_per_sentence']} per sentence).",
         f"- Labels: `{s['corpus']['labels']}`", "",
-        "## Model selection — 5-fold stratified cross-validation on the corpus", "",
+        "## Model selection — 5-fold stratified cross-validation on the corpus, grouped by source sentence", "",
         "| Candidate | Accuracy | Macro-F1 | ECE | CV time (s) |", "|---|---|---|---|---|",
         *[f"| {r['name']}{' **(selected)**' if r['name'] == s['selected'] else ''} | {r['accuracy']:.3f} | "
           f"{r['macro_f1']:.3f} | {r['ece']:.3f} | {r['cv_seconds']:.1f} |" for r in cands], "",
+        "Only TF-IDF + logistic regression candidates are eligible for deployment: they export to a JSON the API "
+        "scores in pure Python. The sentence-embedding candidate (when run with `--embeddings`) needs PyTorch and a "
+        "470 MB encoder, which the free API instance (512 MB RAM) cannot hold; it is trained for comparison only.", "",
         "Per-class out-of-fold recall of the selected model:", "",
         "| " + " | ".join(s["confusion_labels"]) + " |", "|" + "---|" * len(s["confusion_labels"]),
         "| " + " | ".join(f"{next(r for r in s['candidates'] if r['name'] == s['selected'])['per_class_recall'][lab]:.2f}"
@@ -284,8 +300,13 @@ def markdown(s: dict) -> str:
         f"corpus messages at {s['oof_accepted']['accuracy']:.1%} accuracy). Below it the rule NLU's reading stands.", "",
         "| Threshold | Coverage | Accuracy on accepted |", "|---|---|---|",
         *[f"| {c['threshold']:.2f} | {c['coverage']:.1%} | {c['accepted_accuracy']:.1%} |" for c in s["threshold_curve"]], "",
-        "## Held-out evaluation (scored once, after selection)", "",
-        "| Set | n | Labels | intent-v1 | Keyword baseline | intent-v1 accepted at threshold | By language (intent-v1) |",
+        "## Held-out evaluation (scored after selection)", "",
+        *([] if s["version"] == "intent-v1" else [
+            "> **Post-hoc caveat.** The test-v2 and test-v1 messages were read during the intent-v1 error analysis that "
+            "motivated this version's augmentation, so their numbers are optimistic. `test-v2 run 3 (unseen)` holds "
+            "messages from the credit-aborted third run that were never opened; `test-v3` (frozen before this version "
+            "was trained) is the clean held-out set once it is run.", ""]),
+        f"| Set | n | Labels | {s['version']} | Keyword baseline | {s['version']} accepted at threshold | By language ({s['version']}) |",
         "|---|---|---|---|---|---|---|",
     ]
     for name, h in s["heldout"].items():
@@ -296,7 +317,7 @@ def markdown(s: dict) -> str:
     lines += ["", "| Out-of-scope detection, test-v2 first messages | Recall | False positives |", "|---|---|---|"]
     lines += [f"| {k.split('(')[1][:-1]} | {v['recall']} | {v['false_positives']} |"
               for k, v in s["heldout"].items() if "out-of-scope" in k]
-    lines += ["", "### Held-out errors (intent-v1)", "", "| Set | Message | Expected | Predicted | p |", "|---|---|---|---|---|"]
+    lines += ["", f"### Held-out errors ({s['version']})", "", "| Set | Message | Expected | Predicted | p |", "|---|---|---|---|---|"]
     for name, h in s["heldout"].items():
         for e in h.get("errors", []):
             lines.append(f"| {name} | {e['text'].replace('|', '/')} | {e['expected']} | {e['predicted']} | {e['p']} |")

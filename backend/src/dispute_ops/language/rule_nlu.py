@@ -14,6 +14,7 @@ from datetime import date
 
 from dispute_ops.domain import ReasonCode
 from dispute_ops.language.gateway import detect_language
+from dispute_ops.language.intent_model import REASON_LABELS, IntentModel, Prediction
 from dispute_ops.language.keywords import _norm, classify_reason, is_out_of_scope
 from dispute_ops.language.nlu import LlmUsage, NluContext, NluOutcome, NluResult
 
@@ -22,6 +23,9 @@ RULES_VERSION = "rules-v1"
 # Keyword matches are right ~87% of the time on the held-out messages; 0.75 keeps them above the policy's
 # 0.6 confidence floor so a matched reason can proceed, while unmatched reasons are asked for.
 RULE_CONFIDENCE = 0.75
+# States where the customer states what they want (or answers "why?"): the learned classifier reads these.
+# Elsewhere the service asked a yes/no or evidence question and the rules read the answer.
+LEARNED_STATES = ("START", "IDENTIFY_TXN", "CLASSIFY")
 
 _MONTHS = (
     "enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre|"
@@ -164,7 +168,8 @@ def pick_candidate(text: str, candidates: list[dict[str, str]]) -> str | None:
 class RuleNlu:
     mode = "rules"
 
-    def __init__(self, merchants: Iterable[str]) -> None:
+    def __init__(self, merchants: Iterable[str], intent_model: IntentModel | None = None) -> None:
+        self.intent_model = intent_model
         # Global vocabulary of merchant names (no customer data): longest names first so "Tienda General"
         # wins over a shorter overlapping name.
         self.merchants = sorted({(_norm(m), m) for m in merchants if m}, key=lambda x: -len(x[0]))
@@ -178,7 +183,8 @@ class RuleNlu:
     def interpret(self, text: str, ctx: NluContext) -> NluOutcome:
         started = time.perf_counter()
         result = self._read(text, ctx)
-        usage = LlmUsage(model=RULES_MODEL, prompt_version=RULES_VERSION, input_tokens=0, output_tokens=0,
+        model = f"{RULES_MODEL}+{self.intent_model.version}" if self.intent_model else RULES_MODEL
+        usage = LlmUsage(model=model, prompt_version=RULES_VERSION, input_tokens=0, output_tokens=0,
                          latency_ms=(time.perf_counter() - started) * 1000, cost_usd=0.0)
         return NluOutcome(result=result, usage=usage)
 
@@ -212,12 +218,22 @@ class RuleNlu:
                 return done("decline")
             return done("confirm" if yes or re.search(r"fui yo|fui eu", t) else "unclear")
 
-        if _HUMAN.search(t) and not no:
+        learned = self._learned(text, ctx)
+        # Routing precedence: an explicit out-of-scope product word outranks the classifier's "human" reading
+        # (the classifier is weaker than the keywords at scope; e.g. "empréstimo pessoal" is not "pessoa").
+        learned_human = learned is not None and learned.label == "HUMAN" and not is_out_of_scope(text)
+        if (_HUMAN.search(t) or learned_human) and not no:
             return done("human")
 
-        reason = classify_reason(text)
+        # A confident classifier reading replaces the keyword rules for the reason (it is more accurate on held-out
+        # messages, ADR-019); its probability becomes the reason confidence the policy checks (≥ 0.6).
+        if learned:
+            reason = ReasonCode(learned.label) if learned.label in REASON_LABELS else None
+            confidence = learned.probability
+        else:
+            reason, confidence = classify_reason(text), RULE_CONFIDENCE
         if reason is not None:
-            fields.update(reason_code=reason, reason_confidence=RULE_CONFIDENCE)
+            fields.update(reason_code=reason, reason_confidence=confidence)
         fields["merchant"] = self._merchant(t)
         fields["amount"] = parse_amount(text)
         ids = _TXN_ID.findall(text)
@@ -232,7 +248,8 @@ class RuleNlu:
             reason = ReasonCode.FRAUD_CNP
             fields.update(reason_code=reason, reason_confidence=RULE_CONFIDENCE)
             answered = answered or "reason_code" in ctx.ask_for
-        if is_out_of_scope(text) and not answered and fields["transaction_id"] is None:
+        learned_oos = learned is not None and learned.label == "OUT_OF_SCOPE"
+        if (is_out_of_scope(text) or learned_oos) and not answered and fields["transaction_id"] is None:
             return done("out_of_scope")
         if ctx.ask_for and (answered or picked):
             return done("provide_info")
@@ -244,6 +261,13 @@ class RuleNlu:
         if _GREETING.search(t):
             return done("greeting")
         return done("unclear")
+
+    def _learned(self, text: str, ctx: NluContext) -> Prediction | None:
+        """The classifier's reading when it is confident and the turn is one it was trained for."""
+        if self.intent_model is None or ctx.state not in LEARNED_STATES:
+            return None
+        p = self.intent_model.predict(text)
+        return p if p.probability >= self.intent_model.threshold else None
 
     @staticmethod
     def _evidence(text: str, t: str, ctx: NluContext, fields: dict, yes: bool, no: bool) -> bool:

@@ -9,15 +9,19 @@ from typing import Any
 from dispute_ops.evaluation.keyword_baseline import classify_reason, is_out_of_scope, wants_human
 from dispute_ops.evaluation.runner import ScenarioResult
 from dispute_ops.language.gateway import detect_injection, detect_language
+from dispute_ops.language.intent_model import IntentModel
 from dispute_ops.language.nlu import NluContext
 from dispute_ops.language.rule_nlu import RuleNlu
 
-_RULES = RuleNlu([])  # fallback NLU; the merchant vocabulary does not affect these metrics
+# Fallback NLU, keyword rules only and with the learned classifier (ADR-019); the merchant vocabulary does not
+# affect these metrics.
+_RULES = RuleNlu([])
+_LEARNED = RuleNlu([], intent_model=IntentModel.load())
 
 
-def _rule_intents(msgs: list[str]) -> list:
+def _rule_intents(msgs: list[str], nlu: RuleNlu = _RULES) -> list:
     """Fallback NLU read of each message; the first as an opening, later ones as answers to the reason question."""
-    return [_RULES.interpret(m, NluContext(state="START" if i == 0 else "CLASSIFY")).result for i, m in enumerate(msgs)]
+    return [nlu.interpret(m, NluContext(state="START" if i == 0 else "CLASSIFY")).result for i, m in enumerate(msgs)]
 
 
 def _rate(hits: int, n: int) -> dict[str, Any]:
@@ -33,7 +37,7 @@ def component_report(results: list[ScenarioResult]) -> dict[str, Any]:
     out: dict[str, Any] = {}
 
     # 1. Dispute reason: first reason the NLU commits to vs. keyword baseline on the customer's messages so far.
-    nlu_hits = kw_hits = rule_hits = n = 0
+    nlu_hits = kw_hits = rule_hits = learned_hits = n = 0
     confusion: dict[str, Counter] = defaultdict(Counter)
     for r in rs:
         if not r.expected_reason_code or r.category == "adversarial":
@@ -47,12 +51,15 @@ def component_report(results: list[ScenarioResult]) -> dict[str, Any]:
         kw_hits += (kw_pred.value if kw_pred else None) == r.expected_reason_code
         rule_pred = next((x.reason_code.value for x in _rule_intents(msgs[: k + 1]) if x.reason_code), None)
         rule_hits += rule_pred == r.expected_reason_code
+        learned_pred = next((x.reason_code.value for x in _rule_intents(msgs[: k + 1], _LEARNED) if x.reason_code), None)
+        learned_hits += learned_pred == r.expected_reason_code
         confusion[r.expected_reason_code][nlu_pred or "none"] += 1
     out["reason_code_accuracy"] = {"nlu_claude_haiku": _rate(nlu_hits, n), "keyword_baseline": _rate(kw_hits, n),
-                                   "rule_nlu_fallback": _rate(rule_hits, n), "nlu_confusion": {k: dict(v) for k, v in confusion.items()}}
+                                   "rule_nlu_fallback": _rate(rule_hits, n),
+                                   "rule_nlu_learned": _rate(learned_hits, n), "nlu_confusion": {k: dict(v) for k, v in confusion.items()}}
 
     # 2. Out-of-scope detection on the first customer message.
-    tp = fp = fn = tn = ktp = kfp = kfn = ktn = rtp = rfp = rfn = rtn = 0
+    tp = fp = fn = tn = ktp = kfp = kfn = ktn = rtp = rfp = rfn = rtn = ltp = lfp = lfn = ltn = 0
     for r in rs:
         if not r.nlu_turns:
             continue
@@ -61,12 +68,15 @@ def component_report(results: list[ScenarioResult]) -> dict[str, Any]:
         kpred = is_out_of_scope(_customer_msgs(r)[0])
         rpred = _rule_intents(_customer_msgs(r)[:1])[0].intent == "out_of_scope"
         rtp += truth and rpred; rfp += (not truth) and rpred; rfn += truth and not rpred; rtn += (not truth) and not rpred
+        lpred = _rule_intents(_customer_msgs(r)[:1], _LEARNED)[0].intent == "out_of_scope"
+        ltp += truth and lpred; lfp += (not truth) and lpred; lfn += truth and not lpred; ltn += (not truth) and not lpred
         tp += truth and pred; fp += (not truth) and pred; fn += truth and not pred; tn += (not truth) and not pred
         ktp += truth and kpred; kfp += (not truth) and kpred; kfn += truth and not kpred; ktn += (not truth) and not kpred
     out["out_of_scope_detection"] = {
         "nlu": {"recall": _rate(tp, tp + fn), "false_positive_rate": _rate(fp, fp + tn)},
         "keyword_baseline": {"recall": _rate(ktp, ktp + kfn), "false_positive_rate": _rate(kfp, kfp + ktn)},
         "rule_nlu_fallback": {"recall": _rate(rtp, rtp + rfn), "false_positive_rate": _rate(rfp, rfp + rtn)},
+        "rule_nlu_learned": {"recall": _rate(ltp, ltp + lfn), "false_positive_rate": _rate(lfp, lfp + ltn)},
     }
 
     # 3. Explicit human request.
@@ -75,6 +85,8 @@ def component_report(results: list[ScenarioResult]) -> dict[str, Any]:
         "nlu": _rate(sum(any(t.get("intent") == "human" for t in r.nlu_turns) for r in hr), len(hr)),
         "keyword_baseline": _rate(sum(any(wants_human(m) for m in _customer_msgs(r)) for r in hr), len(hr)),
         "rule_nlu_fallback": _rate(sum(any(x.intent == "human" for x in _rule_intents(_customer_msgs(r))) for r in hr), len(hr)),
+        "rule_nlu_learned": _rate(sum(any(x.intent == "human" for x in _rule_intents(_customer_msgs(r), _LEARNED))
+                                      for r in hr), len(hr)),
     }
 
     # 4. Transaction identification (NLU extraction + deterministic search) where a transaction is expected.
@@ -104,11 +116,12 @@ def component_markdown(rep: dict[str, Any]) -> str:
     rc, oos, hr = rep["reason_code_accuracy"], rep["out_of_scope_detection"], rep["human_request_detection"]
     lines = [
         "## Component evaluation (proposed system)", "",
-        "| Component | Claude Haiku NLU | Keyword baseline | Rule NLU (fallback) |", "|---|---|---|---|",
-        f"| Dispute reason accuracy | {f(rc['nlu_claude_haiku'])} | {f(rc['keyword_baseline'])} | {f(rc['rule_nlu_fallback'])} |",
-        f"| Out-of-scope recall | {f(oos['nlu']['recall'])} | {f(oos['keyword_baseline']['recall'])} | {f(oos['rule_nlu_fallback']['recall'])} |",
-        f"| Out-of-scope false-positive rate | {f(oos['nlu']['false_positive_rate'])} | {f(oos['keyword_baseline']['false_positive_rate'])} | {f(oos['rule_nlu_fallback']['false_positive_rate'])} |",
-        f"| Human-request detection | {f(hr['nlu'])} | {f(hr['keyword_baseline'])} | {f(hr['rule_nlu_fallback'])} |",
+        "| Component | Claude Haiku NLU | Keyword baseline | Rule NLU (fallback, rules only) | Rule NLU + intent-v2 (fallback) |",
+        "|---|---|---|---|---|",
+        f"| Dispute reason accuracy | {f(rc['nlu_claude_haiku'])} | {f(rc['keyword_baseline'])} | {f(rc['rule_nlu_fallback'])} | {f(rc['rule_nlu_learned'])} |",
+        f"| Out-of-scope recall | {f(oos['nlu']['recall'])} | {f(oos['keyword_baseline']['recall'])} | {f(oos['rule_nlu_fallback']['recall'])} | {f(oos['rule_nlu_learned']['recall'])} |",
+        f"| Out-of-scope false-positive rate | {f(oos['nlu']['false_positive_rate'])} | {f(oos['keyword_baseline']['false_positive_rate'])} | {f(oos['rule_nlu_fallback']['false_positive_rate'])} | {f(oos['rule_nlu_learned']['false_positive_rate'])} |",
+        f"| Human-request detection | {f(hr['nlu'])} | {f(hr['keyword_baseline'])} | {f(hr['rule_nlu_fallback'])} | {f(hr['rule_nlu_learned'])} |",
         "", "| Component | Result |", "|---|---|",
         f"| Transaction identification (NLU + search) | {f(rep['transaction_identification'])} |",
         f"| Injection flag true-positive rate (rules) | {f(rep['injection_flag']['true_positive_rate'])} |",
