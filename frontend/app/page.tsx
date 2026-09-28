@@ -1,7 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BankConsole, type BankTab } from "@/components/BankConsole";
-import { Workflow } from "@/components/Workflow";
 import { type AppTab, CustomerApp, type Msg } from "@/components/CustomerApp";
 import {
   api, ApiError, type Alert, type Case, type CaseRow, type DemoCustomer, type Health, type Lang, type Me, type PqrResult, type QueueItem, type Reply,
@@ -10,10 +9,16 @@ import {
 import { FLAG } from "@/lib/format";
 import { T } from "@/lib/i18n";
 
+const TOUR_SUB: Record<string, string> = {
+  written_complaints: "Six letters, no typing", fraud_alert: "The bank asks first", normal: "Dispute a purchase in the app",
+  ambiguous: "Several similar charges", out_of_scope: "A question it should not answer", human: "A case above the limit",
+  attack: "Someone else's charge and an injection",
+};
+
 const PQR_SCENARIO: Scenario = {
   id: "written_complaints", label: "Written complaints", customer_id: "", language: "es",
-  try: "Open Written complaints on the bank side and process the inbox: six letters by email, web form, branch and app, in Spanish and Portuguese.",
-  expected: "Six cases appear on the Cases board, labelled Letter. Two are resolved with no person; four go to With a person with the reason: a charge that cannot be pinned down, an amount above the limit, a missing answer, a regulator threat. Click one to trace its steps.",
+  try: "Press “Process 6 letters”, then “See the cases”.",
+  expected: "Two letters are resolved with no person. Four need a person, each with its reason: the charge cannot be pinned down, the amount is above the limit, an answer is missing, or the customer mentions a regulator. Click a case to see its path.",
 };
 
 export default function Demo() {
@@ -38,12 +43,13 @@ export default function Demo() {
   const [busy, setBusy] = useState(false);
   const lastSent = useRef<string>("");
 
-  const [bankTab, setBankTab] = useState<BankTab>("complaints");
+  const [bankTab, setBankTab] = useState<BankTab>("cases");
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [board, setBoard] = useState<CaseRow[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [mobile, setMobile] = useState<"client" | "bank">("bank");
   const [pqr, setPqr] = useState<Record<string, PqrResult>>({});
+  const [menu, setMenu] = useState<"tour" | "more" | null>(null);
 
   const fail = (e: unknown) => {
     if (e instanceof TypeError) setError("The API is waking up or unreachable. On the free plan the first request can take about a minute; try again shortly.");
@@ -73,7 +79,7 @@ export default function Demo() {
 
   const chooseScenario = (s: Scenario) => {
     setScenario(s);
-    if (s.id === PQR_SCENARIO.id) { setBankTab("complaints"); setMobile("bank"); return; }
+    if (s.id === PQR_SCENARIO.id) { setBankTab("letters"); setMobile("bank"); return; }
     setBankTab("cases"); setSelected(null);
     openCustomer(s.customer_id, s.language);
   };
@@ -83,8 +89,8 @@ export default function Demo() {
       try {
         const [sc, cs] = await Promise.all([api.scenarios(), api.customers()]);
         setScenarios(sc); setCustomers(cs); refreshHealth(); refreshBank();
-        setScenario(PQR_SCENARIO);
-        if (sc[0]) await openCustomer(sc[0].customer_id, sc[0].language);
+        const first = sc.find((x) => x.id === "normal") ?? sc[0];
+        if (first) await openCustomer(first.customer_id, first.language);
         else if (cs[0]) await openCustomer(cs[0].customer_id, "es");
       } catch (e) { fail(e); }
     })();
@@ -168,73 +174,74 @@ export default function Demo() {
   const outage = health?.nlu.reason === "simulated_outage";
   const nluLabel = health ? (health.nlu.mode === "claude" ? "AI: Claude" : "AI: rules fallback") : "AI: …";
 
-  const selectedCase = board.find((c) => c.trace_id === selected) ?? null;
   const allScenarios = scenarios.length ? [PQR_SCENARIO, ...scenarios] : [];
+  const tour = (id: string) => { const s = allScenarios.find((x) => x.id === id); if (s) { chooseScenario(s); setMenu(null); } };
+  const aiDown = health?.nlu.mode === "rules" && health.nlu.fallback !== false;
 
   return (
     <div className="demo">
-      <header className="guide">
-        <div className="guide-row">
-          <div className="brand"><span className="brand-mark" aria-hidden />LATAM Bank <span className="brand-sub">card dispute operations · live demo</span></div>
-          <div className="guide-tools">
-            <span className={`pill ${health?.nlu.mode === "rules" ? "pill-warn" : "pill-ok"}`} title={health?.nlu.reason ?? "Claude Haiku 4.5 reads text; rules decide"}>{nluLabel}</span>
-            <button className="btn btn-ghost" onClick={toggleOutage} disabled={busy || !health?.demo_mode} aria-pressed={outage}>{outage ? "Restore AI" : "Simulate AI outage"}</button>
-            <button className="btn btn-ghost" onClick={expireSession} disabled={busy || !token}>Expire session</button>
-            <button className="btn btn-ghost" onClick={resetDemo} disabled={busy}>Reset demo</button>
+      <header className="top">
+        <div className="brand"><span className="brand-mark" aria-hidden />LATAM Bank <span className="brand-sub">Card disputes</span></div>
+        <div className="top-tools">
+          {(outage || aiDown) && <span className="pill pill-warn" title="Customers' words are read by the free rule-based reader">AI off, rules reading</span>}
+          <div className="pop">
+            <button className="btn btn-ghost" aria-expanded={menu === "tour"} onClick={() => setMenu(menu === "tour" ? null : "tour")}>Guided tour</button>
+            {menu === "tour" && (
+              <ol className="menu menu-tour">
+                {allScenarios.map((s) => (
+                  <li key={s.id}><button onClick={() => tour(s.id)} aria-current={scenario?.id === s.id}>
+                    <strong>{s.label}</strong><span>{TOUR_SUB[s.id] ?? ""}</span></button></li>
+                ))}
+              </ol>
+            )}
           </div>
-        </div>
-        <p className="pitch">An operations system for disputed card charges, not a chatbot. Cases arrive three ways and follow one path:
-          <strong> AI only reads</strong> what customers write, <strong>written rules decide</strong>, the customer confirms, bank tools act, and
-          <strong> every action is read back</strong> before anyone is told it happened. Cases that need judgement go to a person with the facts already gathered.</p>
-        <div className="guide-row">
-          <nav className="scenarios" aria-label="Guided scenarios">
-            <span className="guide-label">Try</span>
-            {allScenarios.map((s, i) => (
-              <button key={s.id} className="scenario" aria-pressed={scenario?.id === s.id} onClick={() => chooseScenario(s)} disabled={busy}>
-                <span className="scenario-n">{i + 1}</span>{s.label}
-              </button>
+          <div className="seg" role="group" aria-label="Language">
+            {(["es", "pt"] as Lang[]).map((l) => (
+              <button key={l} aria-pressed={lang === l} onClick={() => { setLang(l); resetChat(); }} disabled={busy}>{l.toUpperCase()}</button>
             ))}
-          </nav>
-          <div className="guide-free">
-            <label className="field-inline">Customer
-              <select id="customer" value={customerId ?? ""} onChange={(e) => { setScenario(null); openCustomer(e.target.value, lang); }} disabled={busy}>
-                {customers.map((c) => <option key={c.customer_id} value={c.customer_id}>{c.first_name ?? c.customer_id} · {FLAG[c.country] ?? c.country} · {c.segment}</option>)}
-              </select>
-            </label>
-            <div className="seg" role="group" aria-label="Language">
-              {(["es", "pt"] as Lang[]).map((l) => (
-                <button key={l} aria-pressed={lang === l} onClick={() => { setLang(l); resetChat(); }} disabled={busy}>{l === "es" ? "Español" : "Português"}</button>
-              ))}
-            </div>
+          </div>
+          <div className="pop">
+            <button className="btn btn-ghost icon" aria-label="Demo controls" aria-expanded={menu === "more"} onClick={() => setMenu(menu === "more" ? null : "more")}>⋯</button>
+            {menu === "more" && (
+              <div className="menu menu-more">
+                <label className="field">Customer
+                  <select id="customer" value={customerId ?? ""} onChange={(e) => { setScenario(null); openCustomer(e.target.value, lang); setMenu(null); }} disabled={busy}>
+                    {customers.map((c) => <option key={c.customer_id} value={c.customer_id}>{c.first_name ?? c.customer_id}, {c.country}, {c.segment}</option>)}
+                  </select>
+                </label>
+                <button onClick={() => { toggleOutage(); setMenu(null); }} disabled={busy || !health?.demo_mode}>{outage ? "Bring the AI back" : "Simulate an AI outage"}</button>
+                <button onClick={() => { expireSession(); setMenu(null); }} disabled={busy || !token}>Expire the customer&apos;s session</button>
+                <button onClick={() => { resetDemo(); setMenu(null); }} disabled={busy}>Reset the demo</button>
+              </div>
+            )}
           </div>
         </div>
-        {scenario && (
-          <div className="hint">
-            <p><span className="hint-k">Do</span>{scenario.try}</p>
-            <p><span className="hint-k">Expect</span>{scenario.expected}</p>
-          </div>
-        )}
-        {error && <p className="banner-error" role="alert">{error}</p>}
       </header>
+      {scenario && (
+        <div className="tourbar" role="status">
+          <span className="tour-k">{scenario.label}</span>
+          <p>{scenario.try}</p>
+          <details><summary>What should happen?</summary><p>{scenario.expected}</p></details>
+          <button className="icon-btn" aria-label="End tour" onClick={() => setScenario(null)}>×</button>
+        </div>
+      )}
+      {error && <p className="banner-error" role="alert">{error}</p>}
 
       <div className="mobile-switch" role="group" aria-label="Side">
-        <button aria-pressed={mobile === "bank"} onClick={() => setMobile("bank")}>Bank{queue.some((q) => q.status === "new") && " •"}</button>
+        <button aria-pressed={mobile === "bank"} onClick={() => setMobile("bank")}>Bank</button>
         <button aria-pressed={mobile === "client"} onClick={() => setMobile("client")}>Customer app</button>
       </div>
 
-      <main className="ops-layout">
-        <section className="side side-bank" data-hidden-mobile={mobile !== "bank"} aria-label="Bank side">
-          <p className="side-label">The bank · every case, from every channel</p>
-          <Workflow cases={board} selected={selectedCase} />
+      <main className="ops-layout" onClick={() => menu && setMenu(null)}>
+        <section className="side side-bank" data-hidden-mobile={mobile !== "bank"} aria-label="Bank">
           <BankConsole
             tab={bankTab} onTab={setBankTab} cases={board} queue={queue} selected={selected} onSelect={setSelected}
             onQueueChanged={async () => { refreshBank(); if (token) await refreshCustomer(token); }}
-            nlu={health?.nlu ?? null} pqr={pqr} onPqr={setPqr}
+            nlu={health?.nlu ?? null} pqr={pqr} onPqr={setPqr} onTour={tour}
             onOpenCustomer={(id) => { setScenario(null); setMobile("client"); openCustomer(id, lang); }}
           />
         </section>
         <section className="side side-client" data-hidden-mobile={mobile !== "client"} aria-label="Customer app">
-          <p className="side-label">One channel · the customer&apos;s app</p>
           <CustomerApp
             lang={lang} me={me} txns={txns} cases={cases} alerts={alerts} tab={appTab} onTab={setAppTab}
             msgs={msgs} reply={reply} busy={busy}

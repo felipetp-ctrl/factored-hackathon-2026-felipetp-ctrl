@@ -68,7 +68,6 @@ function Home(p: Props) {
           </div>
         </div>
       ))}
-      <button className="btn app-ask" onClick={() => p.onTab("chat")}>{t.form.title}</button>
       <h3 className="app-section">{t.recent}</h3>
       <ul className="txns">
         {p.txns.map((x) => {
@@ -125,7 +124,6 @@ function Dispute(p: Props) {
           <li data-state={stepState(!!tx, asked.has("transaction"))}>
             <span className="form-k">{f.charge}</span>
             <span className="form-v">{tx ? <>{tx.merchant || t.noMerchant} · {money(tx.amount, tx.currency, p.lang)} {tx.currency} · {tx.date.slice(8, 10)}/{tx.date.slice(5, 7)}</> : f.notYet}</span>
-            {tx && <span className="src src-bank">{f.fromBank}</span>}
           </li>
           <li data-state={stepState(!!draft?.reason_code, asked.has("reason_code"))}>
             <span className="form-k">{f.reason}</span>

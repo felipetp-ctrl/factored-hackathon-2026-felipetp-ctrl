@@ -27,3 +27,16 @@ and Spanish/Portuguese interaction, so the free-text channel stays, but it must 
 - Same backend flow, templates and evaluation: this changes presentation and adds read-only views, not behaviour.
 - The board lives in the demo workspace's memory like the rest of the demo state (restart resets it).
 - Tests: `tests/test_case_board.py` (all three channels, stages and outcomes).
+
+## Revision (same day): less on screen, more on demand
+The first version showed everything at once (a pitch paragraph, a seven-step diagram with counters, four board columns,
+case details under the board, a long scenario hint). The user found it overloaded. Now:
+- a one-line top bar (brand, *Guided tour* menu, language, a *⋯* menu with the demo controls); the AI status appears only
+  when the AI is off; a scenario's instruction shows in a thin bar only while a tour is running, with *What should
+  happen?* folded;
+- the five-step path is explained once, in the empty state, with three ways to start; afterwards it appears only inside
+  a case, in a side drawer opened by clicking the card;
+- cards show who, what and where it came from; the "Closed" column appears only when it has cases; the agent's panel
+  shows the request, checked facts and what is still to ask, with rules, risk signals and the audit trail folded;
+- written complaints and fraud alerts are one-line lists that expand on click; results show four live numbers and the
+  hard-set table, with the chatbot comparison folded.
