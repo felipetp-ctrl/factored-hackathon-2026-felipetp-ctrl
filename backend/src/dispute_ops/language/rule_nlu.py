@@ -82,9 +82,11 @@ _NEGATED_BLOCK = re.compile(r"\b(no|nao|sin|sem|nunca|jamas|ni)\b[^.!?;]*\bbloqu
 _HUMAN = re.compile(r"\b(humano|asesor|asesora|agente|persona real|una persona|uma pessoa|pessoa|atendente|operador|operadora)\b")
 _REGULATOR = re.compile(
     r"condusef|superintendencia|bcra|banco central|procon|defensor(ia)? del consumidor|denunci|abogad|advogad|"
-    r"demanda|processar|justicia|prensa|imprensa|reclame aqui")
+    r"demanda|processar|justicia|prensa|imprensa|reclame aqui|regulador|ouvidoria|consumidor\.gov|"
+    r"superintendencia financiera|defensa del consumidor|profeco")
 _NEGATIVE = re.compile(r"verguenza|vergonha|estafa|ladron|ladroe|inutil|basura|absurdo|pesimo|pessimo|indignad|furios|harto|lixo")
 
+_CARD_GONE = re.compile(r"\b(robad|robaron|roubad|roubaram|furtad|perdi|perdid|extravi|extraviad|clonaron el bolso|asaltaron|assaltad)")
 _WRONG_ONE = re.compile(
     r"\b(la otra|el otro|a outra|o outro|otra compra|outra compra|no es esa|no es ese|nao e essa|nao e esse|esa no\b|"
     r"essa nao|ese no\b|esse nao|no era esa|nao era essa|me equivoque|me confundi|me enganei|errei|equivocad|ninguna de|"
@@ -93,6 +95,25 @@ _WRONG_ONE = re.compile(
 
 _EXPLICIT_DECLINE = re.compile(
     r"^\W*(no|nao)\W*$|cancel|no confirm|nao confirm|no quiero|nao quero|desist|deja(lo)? asi|deixa (pra la|assim)|mejor no|melhor nao")
+# A refusal that starts with a polite "yes"-like word ("Pode deixar, não precisa abrir", "Prefiro não abrir nada agora"):
+# at the summary these must read as no, never as a confirmation (channels-v1 dev: a dispute was opened on
+# "Pode deixar, não precisa abrir disputa, era mesmo uma compra minha").
+_REFUSAL = re.compile(
+    r"(?:\b(prefiero|prefiro) (no|nao)\b|\b(no|nao) (abra|abras|abran|abrir)\b|"
+    r"\b(no|nao) (precisa|necesito|hace falta|quiero|quero|es necesario|e necessario)( de)? "
+    r"(abrir|nada|disputa|contest|reclam|isso|eso|seguir)|"
+    r"\b(ahora|agora|todavia|ainda) (no|nao)\b|\bantes (quiero|quero|voy|vou)\b|\b(mas|mais) tarde\b|"
+    r"\bera (mesmo |si |sim )?(uma |una )?(compra )?(minha|mia|meu|mio)\b)"
+    r"(?![^.!?;]*bloque)")  # "sim, mas prefiro não bloquear" is a yes without a block
+# Answers to "did you make this purchase?" that are neither yes nor no.
+_UNSURE = re.compile(r"\b(no se|nao sei|no estoy segur|nao tenho certeza|no recuerdo|nao lembro|no me acuerdo|"
+                     r"dejame (pensar|ver|revisar)|deixa eu (pensar|ver)|tengo que (revisar|ver)|preciso (ver|verificar))\b")
+_NOT_ME = re.compile(r"no fui yo|nao fui eu|no (la |lo )?(reconozco|hice|compre)|nao (a |o )?(reconheco|fiz|comprei)|"
+                     r"no (es|era) mia|nao (e|era) minha|nunca (la |a )?(hice|fiz|compre|comprei)")
+_RECOGNISED = re.compile(
+    r"\bfui (yo|eu)\b|\b(yo )?(la|lo) (hice|compre)\b|\beu (fiz|comprei)\b|\bcomprei\b|\bcompre\b|"
+    r"\b(deve|debe|debio) (ser|ter sido|haber sido)\b|\bfoi aquilo\b|\bfue eso\b|\bera (mesmo |si )?(minha|mia|meu|mio)\b|"
+    r"\b(presente|regalo)\b|\b(ja|agora) lembrei\b|\bya me acorde\b|\bsi,? (la )?reconozco\b|\bsim,? (reconheco|fui)\b")
 
 
 def _today(ctx: NluContext) -> date | None:
@@ -397,6 +418,8 @@ class RuleNlu:
                 # ("no la bloqueen", "no quiero que la bloqueen" were read as yes; hard-v1 test, fixed post-hoc).
                 fields["wants_block_card"] = not (_NO_BLOCK.search(t) or _NEGATED_BLOCK.search(t))
             # "No conozco ese comercio" at the summary restates the problem; it is not a "no" to the summary.
+            if _NOTHING_TO_DO.search(t) or _REFUSAL.search(t):
+                return done("decline")
             restates = any(neg.search(t) or pos.search(t) for neg, pos in _EVIDENCE_RULES.values())
             if no and not yes and restates and not _EXPLICIT_DECLINE.search(t):
                 return done("unclear")
@@ -406,10 +429,18 @@ class RuleNlu:
         if ctx.state == "PROACTIVE_CONFIRM":
             if _HUMAN.search(t):
                 return done("human")
-            if no or re.search(r"no fui yo|nao fui eu|no (la |lo )?reconozco|nao reconheco", t):
+            # Order matters: "no fui yo" contains "fui yo"; "no sé" starts with "no" but is not a no.
+            if _NOT_ME.search(t):
                 fields["recognizes_merchant"] = "no"
                 return done("decline")
-            return done("confirm" if yes or re.search(r"fui yo|fui eu", t) else "unclear")
+            if _UNSURE.search(t):
+                return done("unclear")
+            if _RECOGNISED.search(t) or _NOTHING_TO_DO.search(t):
+                return done("confirm")
+            if no:
+                fields["recognizes_merchant"] = "no"
+                return done("decline")
+            return done("confirm" if yes else "unclear")
 
         learned = self._learned(text, ctx)
         # Routing precedence: an explicit out-of-scope product word outranks the classifier's "human" reading
@@ -444,6 +475,11 @@ class RuleNlu:
             fields["amount"] = None  # the pick already identifies the charge
 
         answered = self._evidence(text, t, ctx, fields, yes, no)
+        if (fields["reason_code"] == ReasonCode.FRAUD_CNP and fields["card_in_possession"] == "no"
+                and _CARD_GONE.search(t)):
+            # "Me robaron la tarjeta y aparece un cargo" is a lost/stolen card, not card-not-present fraud (channels-v1 dev).
+            fields.update(reason_code=ReasonCode.FRAUD_CP, reason_confidence=max(fields["reason_confidence"], RULE_CONFIDENCE))
+            reason = ReasonCode.FRAUD_CP
         if reason is None and fields["recognizes_merchant"] == "no" and ctx.state in ("START", "IDENTIFY_TXN", "CLASSIFY"):
             # "No la reconozco" answers the reason question even without the baseline's exact wording.
             reason = ReasonCode.FRAUD_CNP

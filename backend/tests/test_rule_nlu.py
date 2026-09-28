@@ -120,3 +120,33 @@ def test_amount_starting_with_2_is_not_a_duplicate_charge():
 def test_merchant_name_with_a_product_word_is_not_out_of_scope():
     out = RuleNlu(["Super Ahorro"]).interpret("me cobraron de más en Super Ahorro", NluContext(state="START")).result
     assert out.intent != "out_of_scope" and out.merchant == "Super Ahorro"
+
+
+# channels-v1 dev findings: refusals that start with a polite word, unsure answers to a fraud alert, indirect recognition.
+import pytest as _pytest  # noqa: E402
+
+from dispute_ops.language.nlu import NluContext as _Ctx  # noqa: E402
+from dispute_ops.language.rule_nlu import RuleNlu as _Rules  # noqa: E402
+
+
+@_pytest.mark.parametrize("state,text,intent", [
+    ("CONFIRM", "Pode deixar, não precisa abrir disputa, era mesmo uma compra minha.", "decline"),
+    ("CONFIRM", "Prefiro não abrir nada agora, quero perguntar para um familiar antes.", "decline"),
+    ("CONFIRM", "Sim, confirmo, mas prefiro não bloquear", "confirm"),
+    ("PROACTIVE_CONFIRM", "Ah, deve ser aquele presente que comprei para minha mãe naquele dia.", "confirm"),
+    ("PROACTIVE_CONFIRM", "não sei", "unclear"),
+    ("PROACTIVE_CONFIRM", "no sé, déjame revisar", "unclear"),
+    ("PROACTIVE_CONFIRM", "No fui yo", "decline"),
+])
+def test_channels_v1_readings(state, text, intent):
+    assert _Rules([]).interpret(text, _Ctx(state=state)).result.intent == intent
+
+
+def test_stolen_card_letter_is_a_lost_or_stolen_card_dispute():
+    r = _Rules([]).interpret("Me robaron la tarjeta y ya no la tengo; aparece un cargo que yo no hice.", _Ctx(state="START")).result
+    assert (r.reason_code.value, r.card_in_possession) == ("FRAUD_CP", "no")
+
+
+def test_pt_regulator_wording():
+    r = _Rules([]).interpret("Se não resolverem, vou registrar uma reclamação no órgão regulador bancário.", _Ctx(state="START")).result
+    assert r.regulatory_threat

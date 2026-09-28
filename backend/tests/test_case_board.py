@@ -66,3 +66,20 @@ def test_board_shows_every_channel_with_its_stages():
     alert_row = by[alert["conversation_id"]]
     assert alert_row["channel"] == "proactive" and alert_row["reason_code"] == "FRAUD_CNP"
     assert alert_row["outcome"] == "resolved" and "block_card" in alert_row["stages"]["act"]["detail"]
+
+
+def test_unclear_answers_are_bounded_and_open_nothing():
+    client = make_client()
+    ha = auth(client, "CLI-LP2BQNTMC2F5")
+    txn = client.get("/me/alerts", headers=ha).json()[0]["transaction_id"]
+    cid = client.post(f"/alerts/{txn}/start", json={"language": "pt"}, headers=ha).json()["conversation_id"]
+    for _ in range(3):
+        last = client.post(f"/conversations/{cid}/messages", json={"text": "não sei"}, headers=ha).json()
+    assert last["action"] == "handoff" and last["handoff"]["reason_for_handoff"] == ["clarification_exhausted"]
+    assert last["handoff"]["transaction_id"] == txn and last["case_id"] is None
+
+    h = auth(client, "CLI-G5M17CH817NF")
+    cid = client.post("/conversations", json={"language": "es", "transaction_id": "TRX-RVW0G88DKH9RGHZDREDW"}, headers=h).json()["conversation_id"]
+    for text in ("no la reconozco", "sí, la tengo", "mmm", "hmm", "eh"):
+        last = client.post(f"/conversations/{cid}/messages", json={"text": text}, headers=h).json()
+    assert last["action"] == "handoff" and last["case_id"] is None

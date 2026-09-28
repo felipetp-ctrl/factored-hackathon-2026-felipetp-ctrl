@@ -75,6 +75,7 @@ class Conversation:
     usages: list[LlmUsage] = field(default_factory=list)
     customer_turns: int = 0
     out_of_scope_streak: int = 0
+    proactive_unclear: int = 0
 
 
 def _draft(flow: DisputeFlow) -> dict[str, Any]:
@@ -303,6 +304,14 @@ class ConversationService:
                 summary=nlu.summary or "Customer did not recognise a transaction flagged by the fraud alert",
             )
             return self._reply(conv, conv.flow.handle(turn), started, **base)
+        conv.proactive_unclear += 1
+        if conv.proactive_unclear > 2:
+            # Unsure three times: a person calls, with the flagged charge attached; nothing is opened or blocked.
+            conv.proactive_txn = None
+            flow = conv.flow
+            flow.txn, flow.customer_id = txn, txn.customer_id
+            flow.summary = "Customer could not say whether they made a charge flagged by the fraud alert"
+            return self._reply(conv, flow.escalate(["clarification_exhausted"]), started, **base)
         return self._text_reply(conv, "proactive", started, override=responses.proactive_prompt(txn, conv.language), **base)
 
     def _reply(

@@ -348,6 +348,11 @@ class DisputeFlow:
 
     def _on_confirm(self, turn: Turn) -> FlowResult:
         if turn.confirm is None:
+            # Bounded like every other question: two unclear answers to the summary go to a person, nothing opened
+            # (channels-v1 dev: an unread refusal repeated the summary until the customer gave up).
+            self.attempts["confirm"] = self.attempts.get("confirm", 0) + 1
+            if self.attempts["confirm"] > MAX_CLARIFY:
+                return self._handoff(["clarification_exhausted"], open_questions=["confirmation"])
             return FlowResult(
                 state=State.CONFIRM, action="confirm", policy=self.last_policy,
                 offer_block_card=self._offer_block(turn.token),
