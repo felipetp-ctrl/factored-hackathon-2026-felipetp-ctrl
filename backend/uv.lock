@@ -723,6 +723,7 @@ dev = [
     { name = "pytest" },
 ]
 ml = [
+    { name = "matplotlib" },
     { name = "mlflow" },
     { name = "scikit-learn" },
 ]
@@ -747,6 +748,7 @@ dev = [
     { name = "pytest", specifier = ">=8.2" },
 ]
 ml = [
+    { name = "matplotlib", specifier = ">=3.9" },
     { name = "mlflow", specifier = ">=3.16.1" },
     { name = "scikit-learn", specifier = ">=1.9.1" },
 ]

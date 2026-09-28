@@ -402,6 +402,15 @@ function Operations({ nlu }: { nlu: NluStatus | null }) {
             <tr><th>Correct outcome, free reader</th><td>16 of 36</td><td><strong>30 of 36</strong></td></tr>
           </tbody>
         </table>
+        <p className="muted small">Written complaints and fraud-alert answers, held out, no AI calls:</p>
+        <table className="eval-table">
+          <thead><tr><th /><th>Keyword rules</th><th>This system</th></tr></thead>
+          <tbody>
+            <tr><th>Letters handled correctly</th><td>19 of 24</td><td><strong>23 of 24</strong></td></tr>
+            <tr><th>Alert answers handled correctly</th><td>17 of 18</td><td><strong>17 of 18</strong></td></tr>
+            <tr><th>Unsafe outcomes</th><td>0</td><td><strong>0</strong></td></tr>
+          </tbody>
+        </table>
         <details className="more">
           <summary>Compared with a plain AI chatbot</summary>
           <table className="eval-table">

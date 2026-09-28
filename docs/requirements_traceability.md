@@ -7,7 +7,7 @@ Status: ✅ met · 🟡 partial (gap stated) · ⬜ not yet.
 
 | Requirement | Status | Evidence | How to verify |
 |---|---|---|---|
-| Working prototype of one coherent workflow | ✅ | Card-charge dispute intake end to end ([ADR-001](decisions/ADR-001-workflow.md)); judge-facing demo with guided scenarios ([ADR-016](decisions/ADR-016-judge-facing-demo.md)) | Live web app, scenarios 1–5 · `tests/test_demo_scenarios.py` |
+| Working prototype of one coherent workflow | ✅ | Card-charge disputes end to end, one case engine for three channels: app, written complaints, fraud alerts ([ADR-001](decisions/ADR-001-workflow.md), [ADR-023](decisions/ADR-023-case-system-framing.md)); bank-first demo with a case board and seven guided scenarios ([ADR-024](decisions/ADR-024-bank-first-no-chat.md)) | Live web app → Guided tour · `tests/test_demo_scenarios.py`, `tests/test_case_board.py` |
 | Normal resolution path | ✅ | Identify → reason → evidence → policy → confirm → act → verify | Web: "No reconozco un cargo de …" · `tests/test_flow.py::test_normal_path_*` |
 | Ambiguous or unsupported request | ✅ | Candidate lists, bounded clarification, out-of-scope abstention | `test_ambiguous_merchant_asks_with_candidates`, `test_out_of_scope_abstains_*`; test-v2 `same-merchant-*`, `oos-*` |
 | Case requiring human intervention | ✅ | Structured handoff on 11 triggers | Agent view; `test_high_amount_hands_off_with_verified_facts`; test-v2 `human_required` 16/16 |
@@ -20,11 +20,11 @@ Status: ✅ met · 🟡 partial (gap stated) · ⬜ not yet.
 | Requirement | Status | Evidence |
 |---|---|---|
 | Contact reasons | ✅ | Call-center reasons, FCR and handle time; complaint categories ([problem_analysis §1–2](problem_analysis.md)) |
-| Demand patterns | ✅ | 377 disputes/month, flat 2023–2026; channel mix |
-| Data quality | ✅ | [data_quality_report.md](data_quality_report.md) + defects found: USD amounts missing for Mexico, foreign product references, orphan branches, no duplicates |
-| Operational constraints | ✅ | 69.5% backlog, 37 h first response, 20% SLA breaches, intake gaps; PQR backtest (84% not matchable) |
+| Demand patterns | ✅ | 377 disputes/month, flat 2023–2026 (figure in problem_analysis); channel mix |
+| Data quality | ✅ | [data_quality_report.md](data_quality_report.md) + defects found: USD amounts missing for Mexico, foreign product references, orphan branches, no duplicates (verified by id and by full content, [ADR-012 addendum](decisions/ADR-012-data-pipeline.md)); tables left out and why (same ADR) |
+| Operational constraints | ✅ | 69.5% backlog, 37 h first response, 20% SLA breaches, intake gaps; PQR backtest (84% not matchable, figure) |
 | Prioritise the workflow with this evidence | ✅ | [ADR-001](decisions/ADR-001-workflow.md), problem_analysis |
-| Intended customer and business outcomes | ✅ | problem_analysis §3–4 (projection labelled as such) |
+| Intended customer and business outcomes | ✅ | problem_analysis §3–4: projection labelled as such, now at the conservative hard-v1 automation share (63%), with a cost-versus-automation figure |
 
 ## 2. A functioning AI system
 
@@ -62,7 +62,7 @@ Status: ✅ met · 🟡 partial (gap stated) · ⬜ not yet.
 
 | Requirement | Status | Evidence |
 |---|---|---|
-| Held-out evaluation | ✅ | `eval/scenarios/test-v1.json`, `test-v2.json` (frozen) |
+| Held-out evaluation | ✅ | App: `test-v1`, `test-v2`, `test-v3`, `hard-v1` (blind, vague memory); written complaints and fraud alerts: `channels-v1` ([ADR-025](decisions/ADR-025-channels-evaluation.md)); all frozen by commit before running ([overview](evaluation.md)) |
 | Incorrect or missing data | ✅ | Vague customers, missing evidence, reversed / out-of-window transactions |
 | Expired sessions | ✅ | `expired-session-*`; unit tests for expired, forged, swapped sessions |
 | Unauthorized access attempts | ✅ | `cross-customer-*` → `suspicious_access` ([ADR-014](decisions/ADR-014-suspicious-access.md)) |
@@ -80,7 +80,7 @@ Status: ✅ met · 🟡 partial (gap stated) · ⬜ not yet.
 | Safe fallback | ✅ | Model down, circuit open or spend cap reached → rule-based NLU with the same guards ([ADR-017](decisions/ADR-017-rule-fallback-nlu.md)); no fallback → handoff with reference | Web: "Simulate AI outage" · `test_model_failure_uses_the_rule_fallback_*` |
 | Reproducible setup | ✅ | `uv`, `pnpm`, Makefile, Docker image verified, CI workflow |
 | Capacity, monitoring, access control, retention, remaining work | ✅ | [operations.md](operations.md) |
-| Explanations from sources, policy rules and execution records | ✅ | `rule_ids`, `policy_version`, `inputs` on every decision; decision inspector in the web app |
+| Explanations from sources, policy rules and execution records | ✅ | `rule_ids`, `policy_version`, `inputs` on every decision; in the web app, each case's path, outcome and audit trail (case drawer); the customer's *Why?* link |
 
 ## Data and execution boundaries
 
@@ -98,7 +98,7 @@ Status: ✅ met · 🟡 partial (gap stated) · ⬜ not yet.
 | Requirement | Status | Evidence |
 |---|---|---|
 | Baseline and proposed on the same held-out workload | ✅ | Same scenarios, same simulator, same data copy per conversation |
-| Number and mix of cases, label quality, model/prompt versions, repeated runs | ✅ / 🟡 | Report headers; by-run tables. test-v2 has 2 of 3 runs (credit ran out) |
+| Number and mix of cases, label quality, model/prompt versions, repeated runs | ✅ / 🟡 | Report headers; by-run tables. test-v1 3 runs, test-v2 2 runs; hard-v1 one run (needs API credit for repeats); channels-v1 is deterministic (repeats identical) |
 | Include failures | ✅ | "Failures" table in every report; invalid runs kept and labelled |
 | LLM judge validated against humans | n/a | No LLM judge: outcomes are judged deterministically. 🟡 Simulator fidelity still needs a human review sample |
 | Safe automated resolution + share attempted | ✅ | Headline metrics |
@@ -106,7 +106,7 @@ Status: ✅ met · 🟡 partial (gap stated) · ⬜ not yet.
 | Escalation quality (missed and unnecessary) | ✅ | Headline metrics |
 | Unsafe outcomes with counts and denominators | ✅ | Headline metrics + reasons |
 | p50/p95 latency, cost per attempted case and per resolution, assumptions | ✅ | Headline metrics + "cost assumptions" |
-| By language and customer segment, disparities investigated | ✅ | By-language / country / segment tables; ADR-013 fixed a country disparity in the policy |
+| By language and customer segment, disparities investigated | ✅ | By-language / country / segment tables; ADR-013 fixed a country disparity in the policy; hard-v1's Argentina gap traced to case mix ([analysis](analysis/hard-v1-disparity.md)) |
 | Offline / simulated / projected labelled separately | ✅ | Report banners; problem_analysis §4 |
 
 ## Submission (kickoff)

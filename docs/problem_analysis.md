@@ -21,6 +21,8 @@ Business figures in the last section are **projections from stated assumptions**
 | Compensation paid | 995 cases, mean 255 (local currency) |
 | Repeat complainers among disputers | 14.7 % |
 
+![Unrecognised-charge complaints per month](figures/disputes_per_month.png)
+
 ## 2. The intake is where the process breaks
 
 Transaction complaints reach the back office **without the information needed to act on them**:
@@ -57,6 +59,9 @@ affected product when it belongs to the customer and by the claimed amount (±1%
 Two more data defects surfaced: **every** `affected_product_id` (9,001 of 9,001) belongs to a *different* customer than the
 complainant, so the rule ignores foreign product references (in production this would be a security alert), and the claimed
 amount never matches a transaction. **Conclusion: a written complaint cannot identify the disputed charge in 84 % of cases.**
+
+![Written complaints matched to charges](figures/written_complaint_match.png)
+
 The conversation is what closes that gap — it asks the customer which charge, from their own history. The PQR channel is kept
 as triage: it resolves the matchable cases and hands the rest to an agent with the candidate shortlist attached.
 
@@ -75,15 +80,17 @@ as triage: it resolves the matchable cases and hands the rest to an agent with t
 Assumptions, all adjustable:
 - Human cost of a dispute intake = one complaint contact (7.2 min, measured) + 15 min of back-office reconstruction
   (assumed), at a loaded agent cost of US$ 8 per hour (assumed for a LATAM contact center) → **≈ US$ 3.0 per dispute**.
-- Share of disputes the service resolves safely without a person = the held-out **offline** result (≈ 70 % on `test-v1`);
-  the real share would need a pilot.
+- Share of disputes the service resolves safely without a person = the **offline** result on the hardest held-out set
+  (63 %, `hard-v1`, free reader; the easier `test-v1` gave 70 %); the real share would need a pilot.
 - Model cost per safely resolved dispute ≈ US$ 0.011 (measured in the evaluation, list prices).
 
-| Per year, at the dataset's volume (≈ 4,530 disputes) | Human only | With the service (projected) |
+| Per year, at the dataset's volume (≈ 4,530 disputes) | Human only | With the service (projected, 63 %) |
 |---|---|---|
-| Disputes handled end to end by a person | 4,530 | ≈ 1,360 |
-| Intake cost | ≈ US$ 13,400 | ≈ US$ 4,000 + ≈ US$ 35 of model cost |
-| Time to a registered case | median 37 h to first response | minutes for the ≈ 70 % resolved in the conversation |
+| Disputes handled end to end by a person | 4,530 | ≈ 1,680 |
+| Intake cost | ≈ US$ 13,600 | ≈ US$ 5,000 + ≈ US$ 30 of model cost |
+| Time to a registered case | median 37 h to first response | minutes for the cases resolved in the conversation |
+
+![Projected intake cost by automation share](figures/cost_projection.png)
 
 **Satisfaction.** In the organizer data CSAT depends on one thing: whether the contact was resolved (mean 3.0 vs 2.0 on
 1–4; 85% vs 15% satisfied), and complaint contacts are resolved at first contact only 43.6% of the time

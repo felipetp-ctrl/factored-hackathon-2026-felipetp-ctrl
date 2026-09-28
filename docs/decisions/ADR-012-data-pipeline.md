@@ -20,3 +20,21 @@ About 19M rows of daily-partitioned CSV with intentional duplicates, nulls, late
 - Update correctness is tested with a **clearly labelled synthetic fixture** (`tests/fixtures/raw_mini`): a late file for an earlier day, a corrected re-delivery and a new column. A real earlier version of the dataset (`data_backup_20260831/`) is also available to validate this with organizer data.
 - Findings on the full data: 99.99% of customers point to a non-existent registration branch (a generator defect, hence "essential FK" rather than "required column" decides quarantine); no duplicates were found in any table despite the dictionary's ~2%.
 - Spanish domain values that diverge from the dictionary are reported, not silently fixed in silver; business normalisation happens in gold.
+
+## Addendum (2026-09-28): the missing duplicates, verified twice
+The dictionary promises ~2% duplicates; the pipeline removes none. To rule out a weak check, the raw CSVs were queried
+directly (DuckDB over `data/raw/transactions/**/*.csv`, 4,425,008 rows): 4,425,008 distinct `transaction_id`, and 0
+duplicate rows on every column except the id and the partition columns (`process_date`, `year`, `month`, `day`) — so
+there are no re-delivered copies under new ids either. Complaints: 67,095 rows, 67,095 distinct ids. The delivered
+data also has fewer rows than documented (transactions 4.43M vs 5M, call-center 686k vs 800k, complaints 67k vs 80k).
+We report this rather than inventing duplicates; the dedup logic is exercised by the synthetic fixture instead.
+
+## Tables not in the pipeline, and why
+| Table | Rows | Why not ingested |
+|---|---|---|
+| `call_transcripts` | 200k | 42 distinct customer texts and one intent value: no usable language signal (ADR-019). Read once for that audit. |
+| `satisfaction_surveys` | 250k | Read for the learnability scan and the CSAT finding (ADR-021); not needed at run time. |
+| `digital_events` | 10M | Login and app events could feed an account-takeover signal (`ip_country_mismatch` exists in the policy), but the demo's test identity provider replaces them; ingesting 3.5 GB was not worth it for the workflow. |
+| `service_agents` | 1.2k | Agent routing and staffing are out of scope; the handoff goes to one queue. |
+| `marketing_campaigns`, `campaign_sends` | 200 · 2M | Commercial data unrelated to disputes; campaign conversion was checked in the learnability scan only. |
+
