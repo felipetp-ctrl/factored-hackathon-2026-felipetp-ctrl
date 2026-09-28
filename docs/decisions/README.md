@@ -27,3 +27,4 @@ Every significant decision in the project, with the alternatives considered and 
 | [021](ADR-021-learnability-scan.md) | Learnability scan: no multivariate signal in the organizer data | accepted |
 | [022](ADR-022-hard-set-and-fuzzy-references.md) | hard-v1: a held-out set built to break the system; fuzzy references, confirmed case frozen | accepted |
 | [023](ADR-023-case-system-framing.md) | Show a case system, not a chat: written-complaint tab; PQR regulator-threat fix | accepted |
+| [024](ADR-024-bank-first-no-chat.md) | Bank first, no chat window: case board, workflow diagram, guided dispute form | accepted |

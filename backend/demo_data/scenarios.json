@@ -1,5 +1,13 @@
 [
  {
+  "id": "fraud_alert",
+  "label": "Fraud alert",
+  "customer_id": "CLI-LP2BQNTMC2F5",
+  "language": "pt",
+  "try": "The bank writes first: the app shows an alert for a Centro Comercial charge (139.850,60 ARS ≈ US$ 400, fraud score 89). Tap “Não fui eu”, answer whether the card is with you, then confirm and choose whether to block the card.",
+  "expected": "A case opens from the alert on the bank's board (channel: alert), moves through every stage, and is resolved without a person. The card is blocked only if you choose it."
+ },
+ {
   "id": "normal",
   "label": "Normal",
   "customer_id": "CLI-G5M17CH817NF",

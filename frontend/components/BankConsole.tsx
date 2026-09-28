@@ -1,9 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
-import { api, type NluStatus, type PqrLetter, type PqrResult, type QueueItem, type Reply, type TraceEvent } from "@/lib/api";
-import { dayTime } from "@/lib/format";
+import { api, type Alert, type CaseRow, type NluStatus, type PqrLetter, type PqrResult, type QueueItem, type TraceEvent } from "@/lib/api";
+import { dayTime, FLAG, money } from "@/lib/format";
+import { humanize, STAGES } from "@/components/Workflow";
 
-export type BankTab = "queue" | "complaints" | "decisions" | "operations";
+export type BankTab = "cases" | "complaints" | "alerts" | "operations";
 
 const REASONS = ["FRAUD_CNP", "FRAUD_CP", "DUPLICATE", "INCORRECT_AMOUNT", "NOT_RECEIVED", "CANCELLED_RECURRING"];
 const REASON_EN: Record<string, string> = {
@@ -96,24 +97,128 @@ function Package({ item, onDone }: { item: QueueItem; onDone: () => void }) {
   );
 }
 
-function Queue({ items, selected, onSelect, onChanged }: { items: QueueItem[]; selected: string | null; onSelect: (r: string) => void; onChanged: () => void }) {
-  const current = items.find((i) => i.case_ref === selected) ?? items[0];
-  if (!items.length) return (
-    <p className="empty">No cases need a person yet. Run the <strong>Needs a person</strong> or <strong>Attack</strong> scenario and the handoff lands here with its package.</p>
-  );
+const CHANNEL_EN: Record<string, string> = { chat: "App", pqr: "Letter", proactive: "Alert" };
+const COLUMNS: { id: string; label: string; match: CaseRow["outcome"][]; tone: string }[] = [
+  { id: "in_progress", label: "In progress", match: ["in_progress"], tone: "active" },
+  { id: "resolved", label: "Resolved automatically", match: ["resolved"], tone: "ok" },
+  { id: "person", label: "With a person", match: ["person", "person_done"], tone: "person" },
+  { id: "closed", label: "Closed, no action", match: ["closed"], tone: "muted" },
+];
+
+function CaseCard({ c, on, onSelect }: { c: CaseRow; on: boolean; onSelect: () => void }) {
+  const t = c.transaction;
   return (
-    <div className="queue-layout">
-      <ul className="queue">
-        {items.map((i) => (
-          <li key={i.case_ref}>
-            <button aria-current={current?.case_ref === i.case_ref} onClick={() => onSelect(i.case_ref)}>
-              <span className="queue-top"><span className="mono">{i.case_ref.slice(0, 20)}</span><span className={`status status-${i.status}`}>{i.status}</span></span>
-              <span className="queue-why">{i.reason_for_handoff.map((r) => HANDOFF_EN[r] ?? r).join(" · ")}</span>
-            </button>
+    <button className="card" aria-pressed={on} onClick={onSelect}>
+      <span className="card-top">
+        <span className={`chan chan-${c.channel}`}>{CHANNEL_EN[c.channel]}</span>
+        <span className="muted small">{c.language.toUpperCase()} · {dayTime(c.updated_at)}</span>
+      </span>
+      <strong className="card-name">{c.customer_name ?? "Unknown customer"} {c.country && <span className="muted small">{FLAG[c.country] ?? c.country}</span>}</strong>
+      <span className="card-txn">{t ? <>{t.merchant ?? "No merchant name"} · {money(t.amount, t.currency, "es")} {t.currency}</> : <span className="muted">charge not identified</span>}</span>
+      <span className="card-reason">{c.reason_code ? REASON_EN[c.reason_code] ?? c.reason_code : <span className="muted">reason not known</span>}</span>
+      <span className="card-bar" aria-label="Steps reached">
+        {STAGES.map((s) => <i key={s.id} data-status={c.stages[s.id].status} title={`${s.label}: ${c.stages[s.id].status}`} />)}
+      </span>
+      {(c.outcome === "person" || c.outcome === "person_done" || c.outcome === "closed") && c.outcome_detail &&
+        <span className="card-why">{c.outcome_detail.split(", ").map((r) => HANDOFF_EN[r] ?? humanize(r)).join(" · ")}</span>}
+    </button>
+  );
+}
+
+function CaseDetail({ c, queue, onChanged }: { c: CaseRow; queue: QueueItem[]; onChanged: () => void }) {
+  const [events, setEvents] = useState<TraceEvent[]>([]);
+  useEffect(() => { api.trace(c.trace_id).then(setEvents).catch(() => setEvents([])); }, [c.trace_id, c.updated_at]);
+  const pkg = c.case_ref ? queue.find((q) => q.case_ref === c.case_ref) : undefined;
+  const lines = events.map(line).filter(Boolean) as NonNullable<ReturnType<typeof line>>[];
+  return (
+    <article className="detail">
+      <header className="detail-head">
+        <div>
+          <span className={`chan chan-${c.channel}`}>{CHANNEL_EN[c.channel]}</span>
+          <h3>{c.customer_name ?? "Unknown customer"} · {c.transaction ? `${c.transaction.merchant ?? "no merchant"} ${money(c.transaction.amount, c.transaction.currency, "es")} ${c.transaction.currency}` : "charge not identified yet"}</h3>
+          <p className="muted small mono">{c.trace_id}{c.case_id && <> · case {c.case_id}</>}</p>
+        </div>
+      </header>
+      <ol className="detail-steps">
+        {STAGES.map((s) => (
+          <li key={s.id} data-status={c.stages[s.id].status}>
+            <span className={`wf-who wf-who-${s.whoTone}`}>{s.who}</span>
+            <strong>{s.label}</strong>
+            <span>{c.stages[s.id].detail || { done: "done", active: "in progress", stopped: "stopped here", pending: "not reached" }[c.stages[s.id].status]}</span>
           </li>
         ))}
+      </ol>
+      {pkg && <Package item={pkg} onDone={onChanged} />}
+      <details className="detail-trail" open={!pkg}>
+        <summary>Audit trail · {lines.length} records</summary>
+        {lines.length === 0 ? <p className="empty">No records yet.</p>
+          : <ul className="trail">{lines.map((l, i) => <li key={i}><span className="kind" data-tone={l.tone}>{l.kind}</span><div>{l.text}</div></li>)}</ul>}
+        <p className="muted small">Built from the append-only audit log: what was read, which rule decided, what was done and how it was checked. There is no model reasoning in it.</p>
+      </details>
+    </article>
+  );
+}
+
+function CaseBoard({ cases, queue, selected, onSelect, onChanged }: {
+  cases: CaseRow[]; queue: QueueItem[]; selected: string | null; onSelect: (id: string) => void; onChanged: () => void;
+}) {
+  const current = cases.find((c) => c.trace_id === selected) ?? null;
+  if (!cases.length) return (
+    <div className="empty board-empty">
+      <p><strong>No cases yet.</strong> Start one of three ways:</p>
+      <ul>
+        <li><strong>Written complaints</strong> tab: process six letters. No typing needed.</li>
+        <li><strong>Fraud alert</strong> scenario: the customer answers the bank&apos;s alert in the app.</li>
+        <li>On the phone, tap <strong>“No reconozco”</strong> on a purchase.</li>
       </ul>
-      {current && <Package item={current} onDone={onChanged} />}
+    </div>
+  );
+  return (
+    <div className="board-wrap">
+      <div className="board">
+        {COLUMNS.map((col) => {
+          const items = cases.filter((c) => col.match.includes(c.outcome));
+          return (
+            <section key={col.id} className={`col col-${col.tone}`} aria-label={col.label}>
+              <h4>{col.label} <span className="col-n">{items.length}</span></h4>
+              {items.map((c) => <CaseCard key={c.trace_id} c={c} on={c.trace_id === selected} onSelect={() => onSelect(c.trace_id)} />)}
+            </section>
+          );
+        })}
+      </div>
+      {current ? <CaseDetail c={current} queue={queue} onChanged={onChanged} />
+        : <p className="muted small">Click a case to see its steps, the handoff package and the audit trail.</p>}
+    </div>
+  );
+}
+
+// ---- Fraud alerts --------------------------------------------------------------------------------------
+function Alerts({ onOpenCustomer }: { onOpenCustomer: (id: string) => void }) {
+  const [items, setItems] = useState<(Alert & { customer_id: string })[] | null>(null);
+  useEffect(() => { api.fraudAlerts().then(setItems).catch(() => setItems([])); }, []);
+  return (
+    <div className="pqr">
+      <div>
+        <h3>Fraud alerts</h3>
+        <p className="muted small">The bank writes first. Recent charges with a fraud score of 35 or more and no dispute get a question in the customer&apos;s app: “Do you recognise this purchase?”
+          A “no” opens the same case flow as any other channel. The threshold was lowered from 80 to 35 after a label audit (ADR-020): the score is the dataset&apos;s only fraud signal.</p>
+      </div>
+      {items === null ? <p className="muted">Loading…</p> : items.length === 0 ? <p className="empty">No alerts in the look-back window.</p> : (
+        <table className="eval-table alerts-table">
+          <thead><tr><th>Customer</th><th>Charge</th><th>Score</th><th>When</th><th /></tr></thead>
+          <tbody>
+            {items.map((a) => (
+              <tr key={a.transaction_id}>
+                <td className="mono">{a.customer_id}</td>
+                <td>{a.merchant_name ?? "No merchant name"} · {money(a.amount, a.currency, "es")} {a.currency} <span className="muted">≈ US$ {Number(a.amount_usd).toFixed(0)}</span></td>
+                <td><span className="score" style={{ ["--s" as string]: `${Math.min(100, Number(a.fraud_score))}%` }}>{Number(a.fraud_score).toFixed(0)}</span></td>
+                <td className="muted">{dayTime(a.transaction_date)}</td>
+                <td><button className="btn btn-small" onClick={() => onOpenCustomer(a.customer_id)}>Open their phone</button></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }
@@ -164,30 +269,6 @@ function line(e: TraceEvent): { kind: string; tone?: "action" | "risk" | "ai"; t
   }
 }
 
-const STEPS = ["Charge", "Reason", "Evidence", "Policy", "Confirm", "Verified"];
-const PROGRESS: Record<string, number> = { START: 0, IDENTIFY_TXN: 0, CLASSIFY: 1, COLLECT_EVIDENCE: 2, CONFIRM: 4, DONE: 6 };
-const TERMINAL: Record<string, string> = { INELIGIBLE: "Not eligible", HANDOFF: "To a person", CANCELLED: "No action" };
-
-function Decisions({ events, reply }: { events: TraceEvent[]; reply: Reply | null }) {
-  const state = reply?.state ?? "START";
-  const reached = PROGRESS[state] ?? 0;
-  const lines = events.map(line).filter(Boolean) as NonNullable<ReturnType<typeof line>>[];
-  return (
-    <div>
-      <ol className="steps" aria-label="Case progress">
-        {STEPS.map((s, i) => {
-          const last = i === STEPS.length - 1;
-          const st = TERMINAL[state] && last ? "end" : state === "DONE" ? (last ? "end" : "done") : i < reached ? "done" : i === reached ? "current" : "todo";
-          return <li key={s} data-state={st}>{TERMINAL[state] && last ? TERMINAL[state] : s}</li>;
-        })}
-      </ol>
-      {lines.length === 0
-        ? <p className="empty">Each message shows up here: what was understood, which versioned rule decided, and which actions were confirmed by reading them back. The model interprets; rules decide; templates speak.</p>
-        : <ul className="trail">{lines.map((l, i) => <li key={i}><span className="kind" data-tone={l.tone}>{l.kind}</span><div>{l.text}</div></li>)}</ul>}
-    </div>
-  );
-}
-
 // ---- Written complaints (PQR) ---------------------------------------------------------------------------
 const VIA_EN: Record<string, string> = { email: "Email", web: "Web form", branch: "Branch", app: "App form" };
 
@@ -233,7 +314,7 @@ function Complaints({ results, setResults, onProcessed }: {
         </div>
         <button className="btn btn-primary" onClick={run} disabled={busy || processed || letters.length === 0}>{busy ? "Processing…" : processed ? "Processed" : `Process ${letters.length} complaints`}</button>
       </div>
-      {processed && <p className="pkg-done">{opened} of {letters.length} opened without a person; {letters.length - opened} sent to the <strong>Queue</strong> with the data found and what is still missing.</p>}
+      {processed && <p className="pkg-done">{opened} of {letters.length} opened without a person; {letters.length - opened} sent to a person with the data found and what is still missing. See them on the <strong>Cases</strong> tab.</p>}
       {error && <p className="error" role="alert">{error}</p>}
       <p className="pqr-real small"><strong>Why this matters.</strong> We ran the same charge matcher on all 13,580 real dispute complaints in the dataset: only <strong>15.8%</strong> point to exactly one charge, 63.5% fit several and 20.7% fit none. A letter alone rarely identifies the charge, so most go to a person with a shortlist, and the chat is where the bank can ask.</p>
       <ul className="pqr-list">
@@ -320,23 +401,27 @@ function Operations({ nlu }: { nlu: NluStatus | null }) {
 
 // ---- Console -------------------------------------------------------------------------------------------
 export function BankConsole(props: {
-  tab: BankTab; onTab: (t: BankTab) => void; queue: QueueItem[]; selected: string | null; onSelect: (r: string) => void;
-  onQueueChanged: () => void; events: TraceEvent[]; reply: Reply | null; nlu: NluStatus | null;
-  pqr: Record<string, PqrResult>; onPqr: (r: Record<string, PqrResult>) => void;
+  tab: BankTab; onTab: (t: BankTab) => void; cases: CaseRow[]; queue: QueueItem[]; selected: string | null;
+  onSelect: (id: string) => void; onQueueChanged: () => void; nlu: NluStatus | null;
+  pqr: Record<string, PqrResult>; onPqr: (r: Record<string, PqrResult>) => void; onOpenCustomer: (id: string) => void;
 }) {
-  const fresh = props.queue.filter((q) => q.status === "new").length;
+  const waiting = props.queue.filter((q) => q.status === "new").length;
+  const tabs: [BankTab, string][] = [["cases", "Cases"], ["complaints", "Written complaints"], ["alerts", "Fraud alerts"], ["operations", "Operations"]];
   return (
     <div className="console">
       <nav className="console-tabs" role="tablist">
-        <button role="tab" aria-selected={props.tab === "queue"} onClick={() => props.onTab("queue")}>Queue{fresh > 0 && <span className="badge badge-hot">{fresh}</span>}</button>
-        <button role="tab" aria-selected={props.tab === "complaints"} onClick={() => props.onTab("complaints")}>Written complaints</button>
-        <button role="tab" aria-selected={props.tab === "decisions"} onClick={() => props.onTab("decisions")}>Decisions</button>
-        <button role="tab" aria-selected={props.tab === "operations"} onClick={() => props.onTab("operations")}>Operations</button>
+        {tabs.map(([id, label]) => (
+          <button key={id} role="tab" aria-selected={props.tab === id} onClick={() => props.onTab(id)}>
+            {label}
+            {id === "cases" && props.cases.length > 0 && <span className="badge">{props.cases.length}</span>}
+            {id === "cases" && waiting > 0 && <span className="badge badge-hot" title="waiting for a person">{waiting}</span>}
+          </button>
+        ))}
       </nav>
       <div className="console-body">
-        {props.tab === "queue" && <Queue items={props.queue} selected={props.selected} onSelect={props.onSelect} onChanged={props.onQueueChanged} />}
+        {props.tab === "cases" && <CaseBoard cases={props.cases} queue={props.queue} selected={props.selected} onSelect={props.onSelect} onChanged={props.onQueueChanged} />}
         {props.tab === "complaints" && <Complaints results={props.pqr} setResults={props.onPqr} onProcessed={props.onQueueChanged} />}
-        {props.tab === "decisions" && <Decisions events={props.events} reply={props.reply} />}
+        {props.tab === "alerts" && <Alerts onOpenCustomer={props.onOpenCustomer} />}
         {props.tab === "operations" && <Operations nlu={props.nlu} />}
       </div>
     </div>

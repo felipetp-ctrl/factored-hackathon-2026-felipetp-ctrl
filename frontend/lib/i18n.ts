@@ -3,7 +3,15 @@ import type { Lang, Reply } from "./api";
 export const T = {
   es: {
     hello: (name: string) => `Hola, ${name}`,
-    tabs: { home: "Inicio", chat: "Asistente", cases: "Mis disputas" },
+    tabs: { home: "Inicio", chat: "Disputar", cases: "Mis disputas" },
+    form: {
+      title: "Disputa de un cargo", yourCase: "Su caso", charge: "Compra", reason: "Qué pasó", details: "Detalles", result: "Resultado",
+      fromBank: "registro del banco", fromText: "leído de lo que escribió", missing: "falta", notYet: "—",
+      now: "Ahora", write: "Escriba con sus palabras…", history: "Ver lo escrito", start: "Toque “No reconozco” en una compra en Inicio, o describa el problema:",
+      yes: "sí", no: "no", done: "Disputa abierta y confirmada", person: "Con un especialista", closed: "Sin disputa",
+      evidence: { card_in_possession: "Tarjeta con usted", recognizes_merchant: "Reconoce el comercio", duplicate_transaction_id: "El otro cargo",
+        expected_amount: "Monto correcto", expected_delivery_date: "Fecha de entrega", contacted_merchant: "Habló con el comercio", cancellation_date: "Fecha de cancelación" } as Record<string, string>,
+    },
     card: "Tarjeta", active: "Activa", blocked: "Bloqueada",
     recent: "Compras recientes", noMerchant: "Comercio sin nombre", dispute: "No reconozco",
     inDispute: "En disputa", reversed: "Revertida", pending: "Pendiente",
@@ -27,7 +35,15 @@ export const T = {
   },
   pt: {
     hello: (name: string) => `Olá, ${name}`,
-    tabs: { home: "Início", chat: "Assistente", cases: "Minhas contestações" },
+    tabs: { home: "Início", chat: "Contestar", cases: "Minhas contestações" },
+    form: {
+      title: "Contestação de uma cobrança", yourCase: "Seu caso", charge: "Compra", reason: "O que aconteceu", details: "Detalhes", result: "Resultado",
+      fromBank: "registro do banco", fromText: "lido do que você escreveu", missing: "falta", notYet: "—",
+      now: "Agora", write: "Escreva com suas palavras…", history: "Ver o que foi escrito", start: "Toque em “Não reconheço” numa compra no Início, ou descreva o problema:",
+      yes: "sim", no: "não", done: "Contestação aberta e confirmada", person: "Com um especialista", closed: "Sem contestação",
+      evidence: { card_in_possession: "Cartão com você", recognizes_merchant: "Reconhece a loja", duplicate_transaction_id: "A outra cobrança",
+        expected_amount: "Valor correto", expected_delivery_date: "Data de entrega", contacted_merchant: "Falou com a loja", cancellation_date: "Data do cancelamento" } as Record<string, string>,
+    },
     card: "Cartão", active: "Ativo", blocked: "Bloqueado",
     recent: "Compras recentes", noMerchant: "Loja sem nome", dispute: "Não reconheço",
     inDispute: "Em contestação", reversed: "Estornada", pending: "Pendente",

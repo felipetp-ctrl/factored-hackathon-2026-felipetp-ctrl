@@ -59,6 +59,8 @@ class Reply(BaseModel):
     usage: LlmUsage | None = None
     nlu_mode: str = "none"  # "claude" | "rules" | "none" (no interpretation needed this turn)
     latency_ms: float = 0.0
+    # The case as it stands after this turn (charge from bank records, reason and evidence read so far).
+    draft: dict[str, Any] = Field(default_factory=dict)
 
 
 @dataclass
@@ -73,6 +75,15 @@ class Conversation:
     usages: list[LlmUsage] = field(default_factory=list)
     customer_turns: int = 0
     out_of_scope_streak: int = 0
+
+
+def _draft(flow: DisputeFlow) -> dict[str, Any]:
+    return {
+        "transaction": _candidate(flow.txn) if flow.txn else None,
+        "reason_code": flow.reason_code.value if flow.reason_code else None,
+        "evidence": dict(flow.evidence),
+        "channel": flow.channel.value,
+    }
 
 
 def _candidate(t: Transaction) -> dict[str, str]:
@@ -313,7 +324,8 @@ class ConversationService:
             ask_for=result.ask_for, candidates=conv.candidates, offer_block_card=result.offer_block_card,
             case_id=result.case.case_id if result.case else None,
             card_status=result.card.product_status if result.card else None,
-            handoff=result.handoff, policy=result.policy, latency_ms=(time.perf_counter() - started) * 1000, **extra,
+            handoff=result.handoff, policy=result.policy, latency_ms=(time.perf_counter() - started) * 1000,
+            draft=_draft(flow), **extra,
         )
         self._audit(conv, "reply", action=reply.action, state=reply.state, text=text, latency_ms=reply.latency_ms)
         return reply
@@ -323,7 +335,8 @@ class ConversationService:
         conv.history.append(f"bank: {text}")
         reply = Reply(
             conversation_id=conv.id, text=text, language=conv.language, state=conv.flow.state, action=key,
-            candidates=conv.candidates, ask_for=conv.last_ask, latency_ms=(time.perf_counter() - started) * 1000, **extra,
+            candidates=conv.candidates, ask_for=conv.last_ask, latency_ms=(time.perf_counter() - started) * 1000,
+            draft=_draft(conv.flow), **extra,
         )
         self._audit(conv, "reply", action=key, state=reply.state, text=text, latency_ms=reply.latency_ms)
         return reply

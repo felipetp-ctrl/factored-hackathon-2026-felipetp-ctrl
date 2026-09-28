@@ -28,18 +28,22 @@ chat / PQR / fraud alert
 - API: **https://latam-bank-dispute-ops-api.onrender.com** (OpenAPI docs at `/docs`; free plan — the first request after
   idle time can take about a minute while the service wakes up)
 
-The page shows **what the customer sees** (a bank app in Spanish or Portuguese) next to **what the bank sees**
-(handoff queue, decision trail, operations). Pick one of the six guided scenarios in the top bar — each says what to
-do and what should happen — or any customer of the dataset sample:
+The page opens on **the bank**: a diagram of how every case moves (three ways in → Understand, the only AI step →
+Decide by written policy → customer confirms → bank tools act → every action read back → resolved, to a person or
+closed) and a **case board** with every case from every channel. Click a case to trace its path, see the handoff package
+and the audit trail. The customer's app is one channel on the side, with a guided dispute form instead of a chat window
+([ADR-024](docs/decisions/ADR-024-bank-first-no-chat.md)). Pick one of the seven guided scenarios in the top bar — each
+says what to do and what should happen — or any customer of the dataset sample:
 
 | # | Scenario | What to look for |
 |---|---|---|
-| 1 | Normal | "No reconozco" on a purchase → two questions → confirmation → case read back → appears under *Mis disputas* |
-| 2 | Ambiguous | Several charges at the same merchant → the assistant lists them and asks; it never picks for the customer |
-| 3 | Out of scope | Balance question → declined without touching any case → polite close |
-| 4 | Needs a person | Above US$ 450 → handoff lands in the bank **Queue** with verified facts → open it as the agent → the customer sees it |
-| 5 | Attack | Prompt injection + another customer's transaction id → same answer as "not found" → handed off as suspicious access |
-| 6 | Written complaints | Bank side → *Written complaints* → process six letters (email, web, branch, app; ES/PT) → 2 disputes open with no person, 4 land in the Queue with what is still missing ([ADR-023](docs/decisions/ADR-023-case-system-framing.md)) |
+| 1 | Written complaints | *Written complaints* tab → process six letters (email, web, branch, app; ES/PT) → 2 resolved with no person, 4 go to a person with what is still missing ([ADR-023](docs/decisions/ADR-023-case-system-framing.md)) |
+| 2 | Fraud alert | The bank asks first → "Não fui eu" → card in hand? → confirm and block → the case walks every step on the board |
+| 3 | Normal | "No reconozco" on a purchase → two questions → confirmation → case read back → appears under *Mis disputas* |
+| 4 | Ambiguous | Several charges at the same merchant → the app lists them and asks; it never picks for the customer |
+| 5 | Out of scope | Balance question → declined without touching any case → polite close |
+| 6 | Needs a person | Above US$ 450 → the case lands in *With a person* with verified facts → act on it as the agent → the customer sees it |
+| 7 | Attack | Prompt injection + another customer's transaction id → same answer as "not found" → handed off as suspicious access |
 
 Every bank message has a **Why?** link with the rule that decided it. The top bar can expire the session or
 **simulate an AI outage** (the rule-based fallback takes over). Each browser tab gets its own copy of the data;
@@ -66,7 +70,7 @@ Requirements: Python 3.12+ with [uv](https://docs.astral.sh/uv/), Node 22 + pnpm
 ```bash
 cp .env.example .env            # set ANTHROPIC_API_KEY and AGENT_API_KEY
 make install                    # backend dependencies
-make test                       # 329 offline tests (no API calls)
+make test                       # 330 offline tests (no API calls)
 make api                        # http://localhost:8000  (OpenAPI docs at /docs)
 make web                        # http://localhost:3000  (in another terminal)
 ```

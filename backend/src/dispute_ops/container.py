@@ -6,7 +6,7 @@ import os
 import secrets
 import time
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -99,6 +99,8 @@ class Container:
     failures: FailureInjector
     tools: BankingTools
     conversations: ConversationService
+    # flows run outside a conversation (written complaints), kept so the bank's case board can show them
+    async_flows: list = field(default_factory=list)
 
     @classmethod
     def build(

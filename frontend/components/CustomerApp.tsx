@@ -68,7 +68,7 @@ function Home(p: Props) {
           </div>
         </div>
       ))}
-      <button className="btn app-ask" onClick={() => p.onTab("chat")}>{t.askAssistant}</button>
+      <button className="btn app-ask" onClick={() => p.onTab("chat")}>{t.form.title}</button>
       <h3 className="app-section">{t.recent}</h3>
       <ul className="txns">
         {p.txns.map((x) => {
@@ -95,50 +95,92 @@ function Home(p: Props) {
   );
 }
 
-function Chat(p: Props) {
+function Dispute(p: Props) {
   const t = T[p.lang];
+  const f = t.form;
   const [text, setText] = useState("");
-  const thread = useRef<HTMLDivElement>(null);
-  useEffect(() => { thread.current?.scrollTo({ top: thread.current.scrollHeight, behavior: "smooth" }); }, [p.msgs, p.busy]);
+  const [showHistory, setShowHistory] = useState(false);
+  const top = useRef<HTMLDivElement>(null);
+  useEffect(() => { top.current?.scrollTo({ top: 0, behavior: "smooth" }); }, [p.reply]);
   const quick = quickReplies(p.reply, p.lang);
-  const ended = p.reply ? ["done", "handoff", "ineligible", "cancelled"].includes(p.reply.action) || p.reply.state === "CANCELLED" : false;
-  const pickable = p.reply?.action === "ask" && p.reply.candidates.length > 0;
+  const r = p.reply;
+  const ended = r ? ["done", "handoff", "ineligible", "cancelled"].includes(r.action) || r.state === "CANCELLED" : false;
+  const pickable = r?.action === "ask" && r.candidates.length > 0;
   const submit = (value: string) => { if (value.trim()) { p.onSend(value.trim()); setText(""); } };
+  const lastBank = [...p.msgs].reverse().find((m) => m.role === "bank");
+  const draft = r?.draft;
+  const tx = draft?.transaction;
+  const asked = new Set(r?.ask_for ?? []);
+  const evidence = Object.entries(draft?.evidence ?? {});
+  const result = !r ? null : r.action === "done" ? f.done : r.action === "handoff" ? f.person : ended ? f.closed : null;
+  const yn = (v: string) => (v === "yes" ? f.yes : v === "no" ? f.no : v);
+  const stepState = (ok: boolean, isAsked: boolean) => (ok ? "ok" : isAsked ? "ask" : "todo");
   return (
-    <div className="chat">
-      <div className="thread" ref={thread} aria-live="polite">
-        {p.msgs.length === 0 && <p className="msg-system">{t.startHint}</p>}
-        {p.msgs.map((m, i) => (
-          <div key={i} className={`msg msg-${m.role}`}>
-            <div className="msg-text">{m.text}</div>
-            {m.role === "bank" && m.reply && <Why reply={m.reply} lang={p.lang} />}
-          </div>
-        ))}
-        {pickable && p.reply!.candidates.map((c, i) => (
-          <button key={c.transaction_id} className="candidate" onClick={() => submit(`${p.lang === "es" ? "Es la compra" : "É a compra"} ${c.transaction_id}`)} disabled={p.busy}>
-            <span className="candidate-n">{i + 1}</span>
-            <span>{c.merchant || t.noMerchant}<small>{c.date.slice(8, 10)}/{c.date.slice(5, 7)}/{c.date.slice(0, 4)} {c.date.slice(11)}</small></span>
-            <strong>{money(c.amount, c.currency, p.lang)} {c.currency}</strong>
-          </button>
-        ))}
-        {p.reply?.action === "reauth" && (
-          <div className="msg-system reauth">
-            {t.reauth} <button className="btn btn-small" onClick={p.onReauth} disabled={p.busy}>{t.reauthBtn}</button>
-          </div>
-        )}
-        {p.busy && <div className="typing" aria-label="…"><i /><i /><i /></div>}
-        {ended && (
-          <div className="msg-system">{t.ended} · <button className="link-btn" onClick={p.onNewChat}>{t.newChat}</button></div>
-        )}
-      </div>
-      {quick.length > 0 && (
-        <div className="quick">{quick.map((q) => <button key={q} className="chip-btn" onClick={() => submit(q)} disabled={p.busy}>{q}</button>)}</div>
+    <div className="dispute app-scroll" ref={top}>
+      <h3 className="dispute-title">{f.title}</h3>
+      {p.msgs.length === 0 ? (
+        <p className="dispute-start">{f.start}</p>
+      ) : (
+        <ol className="form" aria-label={f.yourCase}>
+          <li data-state={stepState(!!tx, asked.has("transaction"))}>
+            <span className="form-k">{f.charge}</span>
+            <span className="form-v">{tx ? <>{tx.merchant || t.noMerchant} · {money(tx.amount, tx.currency, p.lang)} {tx.currency} · {tx.date.slice(8, 10)}/{tx.date.slice(5, 7)}</> : f.notYet}</span>
+            {tx && <span className="src src-bank">{f.fromBank}</span>}
+          </li>
+          <li data-state={stepState(!!draft?.reason_code, asked.has("reason_code"))}>
+            <span className="form-k">{f.reason}</span>
+            <span className="form-v">{draft?.reason_code ? t.reason[draft.reason_code] ?? draft.reason_code : f.notYet}</span>
+            {draft?.reason_code && <span className="src src-ai">{f.fromText}</span>}
+          </li>
+          <li data-state={evidence.length && ![...asked].some((a) => a in f.evidence) ? "ok" : [...asked].some((a) => a in f.evidence) ? "ask" : "todo"}>
+            <span className="form-k">{f.details}</span>
+            <span className="form-v">
+              {evidence.map(([k, v]) => <span key={k} className="ev">{f.evidence[k] ?? k}: <strong>{yn(v)}</strong></span>)}
+              {[...asked].filter((a) => a in f.evidence).map((a) => <span key={a} className="ev ev-missing">{f.evidence[a]}: {f.missing}</span>)}
+              {!evidence.length && ![...asked].some((a) => a in f.evidence) && f.notYet}
+            </span>
+          </li>
+          <li data-state={r?.action === "done" ? "ok" : r?.action === "handoff" ? "person" : ended ? "todo" : r?.action === "confirm" ? "ask" : "todo"}>
+            <span className="form-k">{f.result}</span>
+            <span className="form-v">{result ?? f.notYet}{r?.case_id && <> · <span className="mono">{r.case_id}</span></>}{r?.card_status === "Blocked" && <> · {t.blocked}</>}</span>
+          </li>
+        </ol>
       )}
-      <form className="composer" onSubmit={(e) => { e.preventDefault(); submit(text); }}>
-        <input id="chat-input" aria-label={t.placeholder} value={text} onChange={(e) => setText(e.target.value)}
-               placeholder={t.placeholder} disabled={p.busy || ended} />
-        <button className="btn btn-primary" disabled={p.busy || ended || !text.trim()}>{t.send}</button>
-      </form>
+
+      {lastBank && (
+        <div className={`prompt ${ended ? "prompt-end" : ""}`} aria-live="polite">
+          <span className="prompt-k">{f.now}</span>
+          <p className="msg-text">{lastBank.text}</p>
+          {lastBank.reply && <Why reply={lastBank.reply} lang={p.lang} />}
+        </div>
+      )}
+      {pickable && r!.candidates.map((c, i) => (
+        <button key={c.transaction_id} className="candidate" onClick={() => submit(`${p.lang === "es" ? "Es la compra" : "É a compra"} ${c.transaction_id}`)} disabled={p.busy}>
+          <span className="candidate-n">{i + 1}</span>
+          <span>{c.merchant || t.noMerchant}<small>{c.date.slice(8, 10)}/{c.date.slice(5, 7)}/{c.date.slice(0, 4)} {c.date.slice(11)}</small></span>
+          <strong>{money(c.amount, c.currency, p.lang)} {c.currency}</strong>
+        </button>
+      ))}
+      {r?.action === "reauth" && (
+        <div className="reauth">{t.reauth} <button className="btn btn-small" onClick={p.onReauth} disabled={p.busy}>{t.reauthBtn}</button></div>
+      )}
+      {quick.length > 0 && <div className="quick">{quick.map((q) => <button key={q} className="chip-btn" onClick={() => submit(q)} disabled={p.busy}>{q}</button>)}</div>}
+      {!ended ? (
+        <form className="composer" onSubmit={(e) => { e.preventDefault(); submit(text); }}>
+          <textarea id="dispute-input" aria-label={f.write} value={text} rows={2} onChange={(e) => setText(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(text); } }}
+                    placeholder={f.write} disabled={p.busy} />
+          <button className="btn btn-primary" disabled={p.busy || !text.trim()}>{p.busy ? "…" : t.send}</button>
+        </form>
+      ) : (
+        <p className="dispute-end">{t.ended} · <button className="link-btn" onClick={p.onNewChat}>{t.newChat}</button></p>
+      )}
+      {p.msgs.some((m) => m.role === "customer") && (
+        <div className="history">
+          <button className="why-toggle" aria-expanded={showHistory} onClick={() => setShowHistory(!showHistory)}>{f.history}</button>
+          {showHistory && <ul>{p.msgs.map((m, i) => <li key={i} data-role={m.role}>{m.text}</li>)}</ul>}
+        </div>
+      )}
     </div>
   );
 }
@@ -167,7 +209,7 @@ export function CustomerApp(p: Props) {
       <div className="phone-top"><span className="phone-brand">LATAM Bank</span><span className="phone-lang">{p.lang.toUpperCase()}</span></div>
       <div className="phone-body">
         {p.tab === "home" && <Home {...p} />}
-        {p.tab === "chat" && <Chat {...p} />}
+        {p.tab === "chat" && <Dispute {...p} />}
         {p.tab === "cases" && <Cases {...p} />}
       </div>
       <nav className="phone-nav" aria-label="App">

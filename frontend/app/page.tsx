@@ -1,10 +1,11 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BankConsole, type BankTab } from "@/components/BankConsole";
+import { Workflow } from "@/components/Workflow";
 import { type AppTab, CustomerApp, type Msg } from "@/components/CustomerApp";
 import {
-  api, ApiError, type Alert, type Case, type DemoCustomer, type Health, type Lang, type Me, type PqrResult, type QueueItem, type Reply,
-  type Scenario, type TraceEvent, type Txn,
+  api, ApiError, type Alert, type Case, type CaseRow, type DemoCustomer, type Health, type Lang, type Me, type PqrResult, type QueueItem, type Reply,
+  type Scenario, type Txn,
 } from "@/lib/api";
 import { FLAG } from "@/lib/format";
 import { T } from "@/lib/i18n";
@@ -12,7 +13,7 @@ import { T } from "@/lib/i18n";
 const PQR_SCENARIO: Scenario = {
   id: "written_complaints", label: "Written complaints", customer_id: "", language: "es",
   try: "Open Written complaints on the bank side and process the inbox: six letters by email, web form, branch and app, in Spanish and Portuguese.",
-  expected: "Two disputes open with no person involved. The other four go to the Queue with the reason: a charge that cannot be pinned down, an amount above the limit, a missing answer, or a regulator threat.",
+  expected: "Six cases appear on the Cases board, labelled Letter. Two are resolved with no person; four go to With a person with the reason: a charge that cannot be pinned down, an amount above the limit, a missing answer, a regulator threat. Click one to trace its steps.",
 };
 
 export default function Demo() {
@@ -37,11 +38,11 @@ export default function Demo() {
   const [busy, setBusy] = useState(false);
   const lastSent = useRef<string>("");
 
-  const [bankTab, setBankTab] = useState<BankTab>("decisions");
+  const [bankTab, setBankTab] = useState<BankTab>("complaints");
   const [queue, setQueue] = useState<QueueItem[]>([]);
+  const [board, setBoard] = useState<CaseRow[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
-  const [events, setEvents] = useState<TraceEvent[]>([]);
-  const [mobile, setMobile] = useState<"client" | "bank">("client");
+  const [mobile, setMobile] = useState<"client" | "bank">("bank");
   const [pqr, setPqr] = useState<Record<string, PqrResult>>({});
 
   const fail = (e: unknown) => {
@@ -51,22 +52,21 @@ export default function Demo() {
 
   const refreshHealth = useCallback(() => api.health().then(setHealth).catch(() => undefined), []);
   const refreshQueue = useCallback(() => api.handoffs().then(setQueue).catch(() => undefined), []);
-  const refreshTrail = useCallback((id: string | null) => {
-    if (id) api.trace(id).then(setEvents).catch(() => undefined); else setEvents([]);
-  }, []);
+  const refreshBoard = useCallback(() => api.board().then(setBoard).catch(() => undefined), []);
+  const refreshBank = useCallback(() => { refreshQueue(); refreshBoard(); }, [refreshQueue, refreshBoard]);
   const refreshCustomer = useCallback(async (tok: string) => {
     const [m, t, c, a] = await Promise.all([api.me(tok), api.transactions(tok), api.cases(tok), api.alerts(tok)]);
     setMe(m); setTxns(t); setCases(c); setAlerts(a);
   }, []);
 
-  const resetChat = () => { setCid(null); setMsgs([]); setReply(null); setEvents([]); };
+  const resetChat = () => { setCid(null); setMsgs([]); setReply(null); };
 
   const openCustomer = useCallback(async (id: string, language: Lang) => {
     setError(null); setBusy(true);
     try {
       const { token: tok } = await api.login(id);
       setToken(tok); setCustomerId(id); setLang(language);
-      setCid(null); setMsgs([]); setReply(null); setEvents([]); setAppTab("home");
+      setCid(null); setMsgs([]); setReply(null); setAppTab("home");
       await refreshCustomer(tok);
     } catch (e) { fail(e); } finally { setBusy(false); }
   }, [refreshCustomer]);
@@ -74,6 +74,7 @@ export default function Demo() {
   const chooseScenario = (s: Scenario) => {
     setScenario(s);
     if (s.id === PQR_SCENARIO.id) { setBankTab("complaints"); setMobile("bank"); return; }
+    setBankTab("cases"); setSelected(null);
     openCustomer(s.customer_id, s.language);
   };
 
@@ -81,29 +82,25 @@ export default function Demo() {
     (async () => {
       try {
         const [sc, cs] = await Promise.all([api.scenarios(), api.customers()]);
-        setScenarios(sc); setCustomers(cs); refreshHealth(); refreshQueue();
-        if (sc[0]) { setScenario(sc[0]); await openCustomer(sc[0].customer_id, sc[0].language); }
+        setScenarios(sc); setCustomers(cs); refreshHealth(); refreshBank();
+        setScenario(PQR_SCENARIO);
+        if (sc[0]) await openCustomer(sc[0].customer_id, sc[0].language);
         else if (cs[0]) await openCustomer(cs[0].customer_id, "es");
       } catch (e) { fail(e); }
     })();
-  }, [openCustomer, refreshHealth, refreshQueue]);
+  }, [openCustomer, refreshHealth, refreshBank]);
 
-  useEffect(() => {  // the queue fills from any conversation; keep it fresh
-    const t = setInterval(refreshQueue, 4000);
+  useEffect(() => {  // cases arrive from every channel; keep the board fresh
+    const t = setInterval(refreshBank, 3000);
     return () => clearInterval(t);
-  }, [refreshQueue]);
+  }, [refreshBank]);
 
   const afterReply = async (r: Reply, tok: string) => {
     setReply(r);
     setMsgs((m) => [...m, { role: "bank", text: r.text, reply: r }]);
-    refreshTrail(r.conversation_id);
-    refreshHealth();
+    setSelected(r.conversation_id);
+    refreshHealth(); refreshBank();
     await refreshCustomer(tok).catch(() => undefined);
-    if (r.action === "handoff") {
-      await refreshQueue();
-      setSelected(r.handoff?.case_ref ?? null);
-      setBankTab("queue");
-    }
   };
 
   const withBusy = async (fn: () => Promise<void>) => {
@@ -117,12 +114,13 @@ export default function Demo() {
   const startFromPurchase = (t: Txn) => token && withBusy(async () => {
     const s = await api.start(lang, token, t.transaction_id);
     setCid(s.conversation_id); setMsgs([{ role: "bank", text: s.text, reply: s.reply }]); setReply(s.reply);
-    setAppTab("chat"); setBankTab("decisions"); refreshTrail(s.conversation_id);
+    setAppTab("chat"); setBankTab("cases"); setSelected(s.conversation_id); refreshBank();
   });
 
   const startPlain = async (tok: string): Promise<string> => {
     const s = await api.start(lang, tok);
-    setCid(s.conversation_id); setMsgs([{ role: "bank", text: s.text }]); setReply(null); setEvents([]);
+    setCid(s.conversation_id); setMsgs([{ role: "bank", text: s.text }]); setReply(null);
+    setBankTab("cases"); setSelected(s.conversation_id);
     return s.conversation_id;
   };
 
@@ -138,6 +136,7 @@ export default function Demo() {
     const s = await api.startAlert(a.transaction_id, lang, token);
     const text = recognized ? T[lang].alertYes : T[lang].alertNo;
     setCid(s.conversation_id); setMsgs([{ role: "bank", text: s.text }, { role: "customer", text }]); setAppTab("chat");
+    setBankTab("cases"); setSelected(s.conversation_id);
     await afterReply(await api.send(s.conversation_id, text, token), token);
   });
 
@@ -162,12 +161,15 @@ export default function Demo() {
 
   const resetDemo = () => withBusy(async () => {
     await api.reset();
-    setQueue([]); setSelected(null); setPqr({}); resetChat(); refreshHealth();
+    setQueue([]); setBoard([]); setSelected(null); setPqr({}); resetChat(); refreshHealth();
     if (customerId) await openCustomer(customerId, lang);
   });
 
   const outage = health?.nlu.reason === "simulated_outage";
   const nluLabel = health ? (health.nlu.mode === "claude" ? "AI: Claude" : "AI: rules fallback") : "AI: …";
+
+  const selectedCase = board.find((c) => c.trace_id === selected) ?? null;
+  const allScenarios = scenarios.length ? [PQR_SCENARIO, ...scenarios] : [];
 
   return (
     <div className="demo">
@@ -175,18 +177,19 @@ export default function Demo() {
         <div className="guide-row">
           <div className="brand"><span className="brand-mark" aria-hidden />LATAM Bank <span className="brand-sub">card dispute operations · live demo</span></div>
           <div className="guide-tools">
-            <span className={`pill ${health?.nlu.mode === "rules" ? "pill-warn" : "pill-ok"}`} title={health?.nlu.reason ?? "Claude Haiku 4.5 interprets; rules decide"}>{nluLabel}</span>
+            <span className={`pill ${health?.nlu.mode === "rules" ? "pill-warn" : "pill-ok"}`} title={health?.nlu.reason ?? "Claude Haiku 4.5 reads text; rules decide"}>{nluLabel}</span>
             <button className="btn btn-ghost" onClick={toggleOutage} disabled={busy || !health?.demo_mode} aria-pressed={outage}>{outage ? "Restore AI" : "Simulate AI outage"}</button>
             <button className="btn btn-ghost" onClick={expireSession} disabled={busy || !token}>Expire session</button>
             <button className="btn btn-ghost" onClick={resetDemo} disabled={busy}>Reset demo</button>
           </div>
         </div>
-        <p className="pitch">One case system for disputed card charges. Cases come in three ways: the <strong>app chat</strong>, <strong>written complaints</strong> and <strong>fraud alerts</strong> the bank sends first.
-          Language AI only reads what customers write; written rules decide, every action is checked after it runs, and cases that need judgement go to a person with the facts already gathered.</p>
+        <p className="pitch">An operations system for disputed card charges, not a chatbot. Cases arrive three ways and follow one path:
+          <strong> AI only reads</strong> what customers write, <strong>written rules decide</strong>, the customer confirms, bank tools act, and
+          <strong> every action is read back</strong> before anyone is told it happened. Cases that need judgement go to a person with the facts already gathered.</p>
         <div className="guide-row">
           <nav className="scenarios" aria-label="Guided scenarios">
             <span className="guide-label">Try</span>
-            {(scenarios.length ? [...scenarios, PQR_SCENARIO] : []).map((s, i) => (
+            {allScenarios.map((s, i) => (
               <button key={s.id} className="scenario" aria-pressed={scenario?.id === s.id} onClick={() => chooseScenario(s)} disabled={busy}>
                 <span className="scenario-n">{i + 1}</span>{s.label}
               </button>
@@ -215,26 +218,28 @@ export default function Demo() {
       </header>
 
       <div className="mobile-switch" role="group" aria-label="Side">
+        <button aria-pressed={mobile === "bank"} onClick={() => setMobile("bank")}>Bank{queue.some((q) => q.status === "new") && " •"}</button>
         <button aria-pressed={mobile === "client"} onClick={() => setMobile("client")}>Customer app</button>
-        <button aria-pressed={mobile === "bank"} onClick={() => setMobile("bank")}>Bank side{queue.some((q) => q.status === "new") && " •"}</button>
       </div>
 
-      <main className="split">
+      <main className="ops-layout">
+        <section className="side side-bank" data-hidden-mobile={mobile !== "bank"} aria-label="Bank side">
+          <p className="side-label">The bank · every case, from every channel</p>
+          <Workflow cases={board} selected={selectedCase} />
+          <BankConsole
+            tab={bankTab} onTab={setBankTab} cases={board} queue={queue} selected={selected} onSelect={setSelected}
+            onQueueChanged={async () => { refreshBank(); if (token) await refreshCustomer(token); }}
+            nlu={health?.nlu ?? null} pqr={pqr} onPqr={setPqr}
+            onOpenCustomer={(id) => { setScenario(null); setMobile("client"); openCustomer(id, lang); }}
+          />
+        </section>
         <section className="side side-client" data-hidden-mobile={mobile !== "client"} aria-label="Customer app">
-          <p className="side-label">What the customer sees</p>
+          <p className="side-label">One channel · the customer&apos;s app</p>
           <CustomerApp
             lang={lang} me={me} txns={txns} cases={cases} alerts={alerts} tab={appTab} onTab={setAppTab}
             msgs={msgs} reply={reply} busy={busy}
             onDispute={startFromPurchase} onAlert={answerAlert} onSend={send}
             onNewChat={() => { resetChat(); setAppTab("home"); }} onReauth={reauth}
-          />
-        </section>
-        <section className="side side-bank" data-hidden-mobile={mobile !== "bank"} aria-label="Bank side">
-          <p className="side-label">What the bank sees · every channel lands here</p>
-          <BankConsole
-            tab={bankTab} onTab={setBankTab} queue={queue} selected={selected} onSelect={setSelected}
-            onQueueChanged={async () => { await refreshQueue(); if (token) await refreshCustomer(token); refreshTrail(cid); }}
-            events={events} reply={reply} nlu={health?.nlu ?? null} pqr={pqr} onPqr={setPqr}
           />
         </section>
       </main>

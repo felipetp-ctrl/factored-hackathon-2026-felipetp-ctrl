@@ -62,6 +62,7 @@ def run_pqr_complaint(
     sleep: Callable[[float], None] = time.sleep,
     regulatory_threat: bool = False,
     very_negative_sentiment: bool = False,
+    on_flow: Callable[[DisputeFlow], None] | None = None,
 ) -> FlowResult:
     """Async channel. Identity comes from the PQR system (internal trusted issuer). The filed
     complaint is the customer's consent to open a dispute; card blocking is never done
@@ -75,6 +76,8 @@ def run_pqr_complaint(
         tools=tools, store=store, policy=policy, clock=clock,
         trace_id=f"pqr-{complaint.complaint_id}", channel=Channel.PQR, language=complaint.language, sleep=sleep,
     )
+    if on_flow is not None:
+        on_flow(flow)
     result = flow.handle(
         Turn(
             token=token, summary=complaint.description, transaction_id=complaint.transaction_id,

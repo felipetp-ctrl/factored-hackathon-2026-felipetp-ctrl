@@ -19,6 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from dispute_ops.auth import AuthError
+from dispute_ops.board import snapshot
 from dispute_ops.language.intent_model import classifier_monitoring
 from dispute_ops.language.rule_nlu import is_rules_model
 from dispute_ops.channels import PqrComplaint, read_complaint, run_pqr_complaint, select_fraud_alerts
@@ -232,7 +233,7 @@ def create_app(container: Container, workspace_factory: Callable[[], Container] 
                 complaint, reason_code=reading.reason_code, classifier_confidence=reading.reason_confidence,
                 tools=c.tools, store=c.store, policy=c.policy, sessions=c.sessions, clock=c.clock,
                 sleep=n.sleep, regulatory_threat=reading.regulatory_threat,
-                very_negative_sentiment=reading.very_negative_sentiment,
+                very_negative_sentiment=reading.very_negative_sentiment, on_flow=c.async_flows.append,
             )
             out.append({
                 "complaint_id": item["complaint_id"], "action": r.action, "state": r.state,
@@ -391,6 +392,13 @@ def create_app(container: Container, workspace_factory: Callable[[], Container] 
     def trace(trace_id: str, c: C) -> list[dict[str, Any]]:
         return [e.model_dump(mode="json") for e in c.store.list_audit(trace_id)]
 
+    @app.get("/agent/cases", dependencies=[AgentOnly])
+    def cases_board(c: C) -> list[dict[str, Any]]:
+        """Every case in flight or finished, from every channel, with the stage it reached (bank case board)."""
+        flows = [conv.flow for conv in list(c.conversations.conversations.values())] + list(c.async_flows)
+        rows = [r for r in (snapshot(f, c.store) for f in flows) if r is not None]
+        return sorted(rows, key=lambda r: r["updated_at"], reverse=True)
+
     @app.get("/agent/alerts", dependencies=[AgentOnly])
     def alerts(c: C) -> list[dict[str, Any]]:
         return [t.model_dump(mode="json") for t in select_fraud_alerts(
@@ -404,7 +412,7 @@ def create_app(container: Container, workspace_factory: Callable[[], Container] 
                 PqrComplaint(**item.model_dump(exclude={"reason_code", "classifier_confidence"})),
                 reason_code=item.reason_code, classifier_confidence=item.classifier_confidence,
                 tools=c.tools, store=c.store, policy=c.policy, sessions=c.sessions, clock=c.clock,
-                sleep=c.conversations.sleep,
+                sleep=c.conversations.sleep, on_flow=c.async_flows.append,
             )
             out.append({
                 "complaint_id": item.complaint_id, "action": r.action, "state": r.state,

@@ -47,6 +47,19 @@ export type Reply = {
   nlu_mode: "claude" | "rules" | "none";
   usage: { model: string; cost_usd: number; latency_ms: number } | null;
   latency_ms: number;
+  draft?: Draft;
+};
+export type Draft = { transaction: Candidate | null; reason_code: string | null; evidence: Record<string, string>; channel: string };
+export type StageStatus = "done" | "active" | "stopped" | "pending";
+export type StageKey = "understand" | "decide" | "confirm" | "act" | "verify";
+export type CaseRow = {
+  trace_id: string; channel: "chat" | "pqr" | "proactive"; language: string; customer_id: string | null;
+  customer_name: string | null; country: string | null; started_at: string; updated_at: string; state: string;
+  outcome: "in_progress" | "resolved" | "person" | "person_done" | "closed"; outcome_detail: string;
+  transaction: { transaction_id: string; merchant: string | null; amount: string; currency: string; amount_usd: string; date: string } | null;
+  reason_code: string | null; evidence: Record<string, string>; reader: string; customer_turns: number;
+  case_id: string | null; case_ref: string | null;
+  stages: Record<StageKey, { status: StageStatus; detail: string }>;
 };
 export type Me = {
   customer_id: string; first_name: string | null; country: string; segment: string;
@@ -133,5 +146,7 @@ export const api = {
   trace: (id: string) => call<TraceEvent[]>(`/agent/traces/${id}`),
   pqrInbox: () => call<PqrLetter[]>("/demo/pqr/inbox"),
   pqrProcess: () => call<PqrResult[]>("/demo/pqr/process", post({})),
+  board: () => call<CaseRow[]>("/agent/cases"),
+  fraudAlerts: () => call<(Alert & { customer_id: string })[]>("/agent/alerts"),
   metrics: () => call<Record<string, any>>("/agent/metrics"),
 };
