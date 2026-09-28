@@ -84,7 +84,8 @@ Real data: `make data` downloads nothing by itself — sync the organizer bucket
 credentials from the organizers, never committed), then it builds bronze/silver/gold in ~20 s, writes
 `docs/data_quality_report.md` and a gold sample for the demo (`DEMO_DB=data/demo/dispute_ops.db make api`).
 
-Deploy: `render.yaml` (API, Docker) + Vercel for `frontend/` with `NEXT_PUBLIC_API_URL` pointing at the API.
+Deploy: every push to `main` deploys both sides — Render builds the API from `render.yaml` (Docker), Vercel builds the web
+app with Root Directory `frontend` and `NEXT_PUBLIC_API_URL` pointing at the API; other branches get Vercel previews.
 
 ## Results
 
