@@ -28,12 +28,11 @@ chat / PQR / fraud alert
 - API: **https://latam-bank-dispute-ops-api.onrender.com** (OpenAPI docs at `/docs`; free plan — the first request after
   idle time can take about a minute while the service wakes up)
 
-The page opens on **the bank**: a diagram of how every case moves (three ways in → Understand, the only AI step →
-Decide by written policy → customer confirms → bank tools act → every action read back → resolved, to a person or
-closed) and a **case board** with every case from every channel. Click a case to trace its path, see the handoff package
-and the audit trail. The customer's app is one channel on the side, with a guided dispute form instead of a chat window
-([ADR-024](docs/decisions/ADR-024-bank-first-no-chat.md)). Pick one of the seven guided scenarios in the top bar — each
-says what to do and what should happen — or any customer of the dataset sample:
+The page opens on **the bank's case board**; the customer's app is one channel on the side, with a guided dispute form
+instead of a chat window. Every case takes the same five steps (Understand, the only AI step → Decide by written policy →
+customer confirms → bank tools act → every action read back); click a case to see its path, what an agent needs and the
+audit trail ([ADR-024](docs/decisions/ADR-024-bank-first-no-chat.md)). Open **Guided tour** in the top bar for seven
+scenarios, each with what to do and what should happen:
 
 | # | Scenario | What to look for |
 |---|---|---|
