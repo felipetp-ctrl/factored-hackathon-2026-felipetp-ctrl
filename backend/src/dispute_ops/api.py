@@ -21,7 +21,7 @@ from pydantic import BaseModel, Field
 from dispute_ops.auth import AuthError
 from dispute_ops.language.intent_model import classifier_monitoring
 from dispute_ops.language.rule_nlu import is_rules_model
-from dispute_ops.channels import PqrComplaint, run_pqr_complaint, select_fraud_alerts
+from dispute_ops.channels import PqrComplaint, read_complaint, run_pqr_complaint, select_fraud_alerts
 from dispute_ops.container import Container
 from dispute_ops.conversation import Reply
 from dispute_ops.domain import AuditEvent, ReasonCode
@@ -198,6 +198,57 @@ def create_app(container: Container, workspace_factory: Callable[[], Container] 
             raise HTTPException(404, "not available")
         c.conversations.simulated_outage = body.on
         return {"nlu": c.conversations.nlu_status()}
+
+    def _inbox(c: Container) -> list[dict[str, Any]]:
+        path = c.settings.resolved_scenarios_path().parent / "pqr_inbox.json"
+        return json.loads(path.read_text()) if path.exists() else []
+
+    @app.get("/demo/pqr/inbox")
+    def demo_pqr_inbox(c: C) -> list[dict[str, Any]]:
+        """Written complaints waiting in the demo PQR inbox (team-written letters about real sample charges)."""
+        if workspaces is None:
+            raise HTTPException(404, "not available")
+        return _inbox(c)
+
+    @app.post("/demo/pqr/process")
+    def demo_pqr_process(c: C) -> list[dict[str, Any]]:
+        """Run the inbox through the PQR channel: the free reader (rules + intent-v2, no model cost) reads each
+        letter, the matcher looks for the charge, the policy decides. Same flow and tools as the chat."""
+        if workspaces is None:
+            raise HTTPException(404, "not available")
+        n = c.conversations
+        reader = n.nlu if getattr(n.nlu, "mode", "claude") == "rules" else n.fallback
+        if reader is None:
+            raise HTTPException(503, "no reader available")
+        out = []
+        for item in _inbox(c):
+            reading = read_complaint(reader, item["description"], c.policy)
+            complaint = PqrComplaint(
+                complaint_id=item["complaint_id"], customer_id=item["customer_id"], description=item["description"],
+                affected_product_id=item.get("affected_product_id"), claimed_amount=item.get("claimed_amount"),
+                created_at=item.get("created_at"), evidence=reading.evidence(), language=item.get("language", "es"),
+            )
+            r = run_pqr_complaint(
+                complaint, reason_code=reading.reason_code, classifier_confidence=reading.reason_confidence,
+                tools=c.tools, store=c.store, policy=c.policy, sessions=c.sessions, clock=c.clock,
+                sleep=n.sleep, regulatory_threat=reading.regulatory_threat,
+                very_negative_sentiment=reading.very_negative_sentiment,
+            )
+            out.append({
+                "complaint_id": item["complaint_id"], "action": r.action, "state": r.state,
+                "reading": {
+                    "reason_code": reading.reason_code, "confidence": round(reading.reason_confidence, 2),
+                    "evidence": reading.evidence(), "regulatory_threat": reading.regulatory_threat,
+                },
+                "transaction_id": r.handoff.transaction_id if r.handoff else (r.case.transaction_id if r.case else None),
+                "case_id": r.case.case_id if r.case else None,
+                "case_ref": r.handoff.case_ref if r.handoff else None,
+                "handoff_reasons": r.handoff.reason_for_handoff if r.handoff else [],
+                "open_questions": r.handoff.open_questions if r.handoff else [],
+                "rule_ids": r.policy.rule_ids if r.policy else [],
+                "candidate_transactions": (r.handoff.risk_signals.get("candidate_transactions", []) if r.handoff else []),
+            })
+        return out
 
     @app.post("/auth/session")
     def create_session(body: SessionRequest, c: C) -> dict[str, str]:

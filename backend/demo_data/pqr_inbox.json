@@ -1,0 +1,20 @@
+[
+ {"complaint_id": "PQR-DEMO-01", "customer_id": "CLI-254GJ2NT9FVT", "language": "es", "received_via": "email",
+  "affected_product_id": "PRD-ILOPHMN8HUT4", "claimed_amount": "294.92", "created_at": "2026-06-16T09:12:00+00:00",
+  "description": "Buenos días. En mi estado de cuenta aparece un cargo de 294.92 dólares en una estación de servicio que no reconozco. Tengo mi tarjeta conmigo y nunca estuve en ese comercio."},
+ {"complaint_id": "PQR-DEMO-02", "customer_id": "CLI-5WUJY51FSC0Y", "language": "pt", "received_via": "web",
+  "affected_product_id": "PRD-NYRTADZN695C", "claimed_amount": "276.67", "created_at": "2026-06-15T18:40:00+00:00",
+  "description": "Comprei ingressos no Teatro Nacional que custavam 176,67 dólares, mas cobraram 276,67 no meu cartão. Quero contestar a diferença."},
+ {"complaint_id": "PQR-DEMO-03", "customer_id": "CLI-2GSCL9XRHDJK", "language": "es", "received_via": "branch",
+  "affected_product_id": null, "claimed_amount": null, "created_at": "2026-06-10T11:05:00+00:00",
+  "description": "Queja relacionada con transactions. La clienta indica un cobro que no hizo en mayo; no recuerda el monto ni el comercio."},
+ {"complaint_id": "PQR-DEMO-04", "customer_id": "CLI-0PZGOBL1EZLI", "language": "es", "received_via": "email",
+  "affected_product_id": "PRD-92U1HMMXV1W4", "claimed_amount": "1959500.77", "created_at": "2026-06-12T08:30:00+00:00",
+  "description": "No reconozco una compra de 1.959.500,77 pesos en Super Ahorro. La tarjeta la tengo yo y no conozco ese comercio."},
+ {"complaint_id": "PQR-DEMO-05", "customer_id": "CLI-2IPXDN0WS5U1", "language": "es", "received_via": "app",
+  "affected_product_id": "PRD-0ZFFKKGU7RBC", "claimed_amount": "331.46", "created_at": "2026-06-14T21:15:00+00:00",
+  "description": "Hay un cobro de Uber por 331.46 que no reconozco."},
+ {"complaint_id": "PQR-DEMO-06", "customer_id": "CLI-6OZ0CYNAPE8R", "language": "pt", "received_via": "email",
+  "affected_product_id": "PRD-S5O4DKEFBM7Q", "claimed_amount": "804360.69", "created_at": "2026-06-13T14:02:00+00:00",
+  "description": "Cobraram 804.360,69 na Tienda Don José e eu não fiz essa compra. O cartão está comigo e não conheço essa loja. Se não resolverem vou reclamar no Banco Central."}
+]

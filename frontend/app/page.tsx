@@ -3,11 +3,17 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { BankConsole, type BankTab } from "@/components/BankConsole";
 import { type AppTab, CustomerApp, type Msg } from "@/components/CustomerApp";
 import {
-  api, ApiError, type Alert, type Case, type DemoCustomer, type Health, type Lang, type Me, type QueueItem, type Reply,
+  api, ApiError, type Alert, type Case, type DemoCustomer, type Health, type Lang, type Me, type PqrResult, type QueueItem, type Reply,
   type Scenario, type TraceEvent, type Txn,
 } from "@/lib/api";
 import { FLAG } from "@/lib/format";
 import { T } from "@/lib/i18n";
+
+const PQR_SCENARIO: Scenario = {
+  id: "written_complaints", label: "Written complaints", customer_id: "", language: "es",
+  try: "Open Written complaints on the bank side and process the inbox: six letters by email, web form, branch and app, in Spanish and Portuguese.",
+  expected: "Two disputes open with no person involved. The other four go to the Queue with the reason: a charge that cannot be pinned down, an amount above the limit, a missing answer, or a regulator threat.",
+};
 
 export default function Demo() {
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
@@ -36,6 +42,7 @@ export default function Demo() {
   const [selected, setSelected] = useState<string | null>(null);
   const [events, setEvents] = useState<TraceEvent[]>([]);
   const [mobile, setMobile] = useState<"client" | "bank">("client");
+  const [pqr, setPqr] = useState<Record<string, PqrResult>>({});
 
   const fail = (e: unknown) => {
     if (e instanceof TypeError) setError("The API is waking up or unreachable. On the free plan the first request can take about a minute; try again shortly.");
@@ -64,7 +71,11 @@ export default function Demo() {
     } catch (e) { fail(e); } finally { setBusy(false); }
   }, [refreshCustomer]);
 
-  const chooseScenario = (s: Scenario) => { setScenario(s); openCustomer(s.customer_id, s.language); };
+  const chooseScenario = (s: Scenario) => {
+    setScenario(s);
+    if (s.id === PQR_SCENARIO.id) { setBankTab("complaints"); setMobile("bank"); return; }
+    openCustomer(s.customer_id, s.language);
+  };
 
   useEffect(() => {
     (async () => {
@@ -151,7 +162,7 @@ export default function Demo() {
 
   const resetDemo = () => withBusy(async () => {
     await api.reset();
-    setQueue([]); setSelected(null); resetChat(); refreshHealth();
+    setQueue([]); setSelected(null); setPqr({}); resetChat(); refreshHealth();
     if (customerId) await openCustomer(customerId, lang);
   });
 
@@ -162,7 +173,7 @@ export default function Demo() {
     <div className="demo">
       <header className="guide">
         <div className="guide-row">
-          <div className="brand"><span className="brand-mark" aria-hidden />LATAM Bank <span className="brand-sub">card dispute service · live demo</span></div>
+          <div className="brand"><span className="brand-mark" aria-hidden />LATAM Bank <span className="brand-sub">card dispute operations · live demo</span></div>
           <div className="guide-tools">
             <span className={`pill ${health?.nlu.mode === "rules" ? "pill-warn" : "pill-ok"}`} title={health?.nlu.reason ?? "Claude Haiku 4.5 interprets; rules decide"}>{nluLabel}</span>
             <button className="btn btn-ghost" onClick={toggleOutage} disabled={busy || !health?.demo_mode} aria-pressed={outage}>{outage ? "Restore AI" : "Simulate AI outage"}</button>
@@ -170,10 +181,12 @@ export default function Demo() {
             <button className="btn btn-ghost" onClick={resetDemo} disabled={busy}>Reset demo</button>
           </div>
         </div>
+        <p className="pitch">One case system for disputed card charges. Cases come in three ways: the <strong>app chat</strong>, <strong>written complaints</strong> and <strong>fraud alerts</strong> the bank sends first.
+          Language AI only reads what customers write; written rules decide, every action is checked after it runs, and cases that need judgement go to a person with the facts already gathered.</p>
         <div className="guide-row">
           <nav className="scenarios" aria-label="Guided scenarios">
             <span className="guide-label">Try</span>
-            {scenarios.map((s, i) => (
+            {(scenarios.length ? [...scenarios, PQR_SCENARIO] : []).map((s, i) => (
               <button key={s.id} className="scenario" aria-pressed={scenario?.id === s.id} onClick={() => chooseScenario(s)} disabled={busy}>
                 <span className="scenario-n">{i + 1}</span>{s.label}
               </button>
@@ -217,11 +230,11 @@ export default function Demo() {
           />
         </section>
         <section className="side side-bank" data-hidden-mobile={mobile !== "bank"} aria-label="Bank side">
-          <p className="side-label">What the bank sees</p>
+          <p className="side-label">What the bank sees · every channel lands here</p>
           <BankConsole
             tab={bankTab} onTab={setBankTab} queue={queue} selected={selected} onSelect={setSelected}
             onQueueChanged={async () => { await refreshQueue(); if (token) await refreshCustomer(token); refreshTrail(cid); }}
-            events={events} reply={reply} nlu={health?.nlu ?? null}
+            events={events} reply={reply} nlu={health?.nlu ?? null} pqr={pqr} onPqr={setPqr}
           />
         </section>
       </main>

@@ -1,9 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
-import { api, type NluStatus, type QueueItem, type Reply, type TraceEvent } from "@/lib/api";
+import { api, type NluStatus, type PqrLetter, type PqrResult, type QueueItem, type Reply, type TraceEvent } from "@/lib/api";
 import { dayTime } from "@/lib/format";
 
-export type BankTab = "queue" | "decisions" | "operations";
+export type BankTab = "queue" | "complaints" | "decisions" | "operations";
 
 const REASONS = ["FRAUD_CNP", "FRAUD_CP", "DUPLICATE", "INCORRECT_AMOUNT", "NOT_RECEIVED", "CANCELLED_RECURRING"];
 const REASON_EN: Record<string, string> = {
@@ -188,6 +188,86 @@ function Decisions({ events, reply }: { events: TraceEvent[]; reply: Reply | nul
   );
 }
 
+// ---- Written complaints (PQR) ---------------------------------------------------------------------------
+const VIA_EN: Record<string, string> = { email: "Email", web: "Web form", branch: "Branch", app: "App form" };
+
+function Outcome({ r }: { r: PqrResult }) {
+  if (r.action === "done") return (
+    <p className="pqr-out pqr-ok"><strong>Dispute opened automatically</strong> · <span className="mono">{r.case_id}</span> · {r.rule_ids.join(", ")}
+      <span className="muted"> · card not blocked: that needs the customer&apos;s explicit yes</span></p>
+  );
+  if (r.action === "handoff") return (
+    <div className="pqr-out pqr-person">
+      <p><strong>To a person</strong> · {r.handoff_reasons.map((x) => HANDOFF_EN[x] ?? x).join(", ")}</p>
+      {r.open_questions.length > 0 && <p className="small">Still to find out: {r.open_questions.map((q) => FIELD_EN[q] ?? q).join(", ")}</p>}
+      {r.candidate_transactions.length > 0 && <p className="small">{r.candidate_transactions.length} possible charges attached for the agent to check with the customer</p>}
+    </div>
+  );
+  return <p className="pqr-out">{r.action} · {r.state}</p>;
+}
+
+function Complaints({ results, setResults, onProcessed }: {
+  results: Record<string, PqrResult>; setResults: (r: Record<string, PqrResult>) => void; onProcessed: () => void;
+}) {
+  const [letters, setLetters] = useState<PqrLetter[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => { api.pqrInbox().then(setLetters).catch(() => setError("Could not load the inbox.")); }, []);
+  const processed = Object.keys(results).length > 0;
+  const run = async () => {
+    setBusy(true); setError(null);
+    try {
+      const out = await api.pqrProcess();
+      setResults(Object.fromEntries(out.map((r) => [r.complaint_id, r])));
+      onProcessed();
+    } catch (e) { setError(e instanceof Error ? e.message : String(e)); } finally { setBusy(false); }
+  };
+  const opened = Object.values(results).filter((r) => r.action === "done").length;
+  return (
+    <div className="pqr">
+      <div className="pqr-head">
+        <div>
+          <h3>Written complaints</h3>
+          <p className="muted small">Letters that arrive by email, web form or branch, with nobody to answer questions. The same case engine as the chat reads them, finds the charge and applies the policy.
+            The reader here is the free one (rules + our trained classifier intent-v2), with no model cost.</p>
+        </div>
+        <button className="btn btn-primary" onClick={run} disabled={busy || processed || letters.length === 0}>{busy ? "Processing…" : processed ? "Processed" : `Process ${letters.length} complaints`}</button>
+      </div>
+      {processed && <p className="pkg-done">{opened} of {letters.length} opened without a person; {letters.length - opened} sent to the <strong>Queue</strong> with the data found and what is still missing.</p>}
+      {error && <p className="error" role="alert">{error}</p>}
+      <p className="pqr-real small"><strong>Why this matters.</strong> We ran the same charge matcher on all 13,580 real dispute complaints in the dataset: only <strong>15.8%</strong> point to exactly one charge, 63.5% fit several and 20.7% fit none. A letter alone rarely identifies the charge, so most go to a person with a shortlist, and the chat is where the bank can ask.</p>
+      <ul className="pqr-list">
+        {letters.map((l) => {
+          const r = results[l.complaint_id];
+          return (
+            <li key={l.complaint_id} className="pqr-item">
+              <div className="pqr-meta">
+                <span className="mono">{l.complaint_id}</span>
+                <span>{VIA_EN[l.received_via] ?? l.received_via} · {l.language.toUpperCase()} · {dayTime(l.created_at)}</span>
+                <span className="muted">{l.claimed_amount ? `claims ${l.claimed_amount}` : "no amount"} · {l.affected_product_id ? "card given" : "no card given"}</span>
+              </div>
+              <blockquote className="pqr-letter">{l.description}</blockquote>
+              {r && (
+                <>
+                  <p className="pqr-read small">
+                    <span className="kind">Read</span>{" "}
+                    {r.reading.reason_code ? <>{REASON_EN[r.reading.reason_code] ?? r.reading.reason_code} ({Math.round(r.reading.confidence * 100)}%)</> : "no reason found"}
+                    {Object.entries(r.reading.evidence).map(([k, v]) => <span key={k} className="chip">{FIELD_EN[k] ?? k}: {v}</span>)}
+                    {r.reading.regulatory_threat && <span className="chip chip-risk">regulator threat</span>}
+                    {r.transaction_id && <> · charge <span className="mono">{r.transaction_id}</span></>}
+                  </p>
+                  <Outcome r={r} />
+                </>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+      <p className="muted small">Letters written by the team about real charges of the demo sample; the real complaint texts are five templates, so they cannot show reading. Processing runs once per demo; <em>Reset demo</em> brings the inbox back.</p>
+    </div>
+  );
+}
+
 // ---- Operations ----------------------------------------------------------------------------------------
 const EVAL = [
   { label: "Correct outcome", base: "56/84", prop: "84/84" },
@@ -222,6 +302,18 @@ function Operations({ nlu }: { nlu: NluStatus | null }) {
         </table>
         <p className="muted small">Zero observed unsafe outcomes in 84 conversations does not prove zero risk. Full reports in <span className="mono">eval/results/</span>.</p>
       </section>
+      <section>
+        <h3>Where it breaks · hard-v1</h3>
+        <p className="muted small">test-v2 customers knew each charge to the cent. hard-v1 customers remember like people do (a rounded amount, &ldquo;last week&rdquo;, one word of the merchant). The set was frozen before any fix; blind test, 36 scenarios, one run. Customers were simulated by another model, and the Claude reader was a Claude subagent given the production prompt, not the API.</p>
+        <table className="eval-table">
+          <thead><tr><th /><th>Before fixes</th><th>After fixes</th></tr></thead>
+          <tbody>
+            <tr><th>Correct · free fallback</th><td>16/36</td><td><strong>30/36</strong></td></tr>
+            <tr><th>Correct · Claude reader</th><td>24/36</td><td><strong>31/36</strong></td></tr>
+            <tr><th>Unsafe · free fallback</th><td>1</td><td>3 (1 after a post-hoc fix)</td></tr>
+          </tbody>
+        </table>
+      </section>
     </div>
   );
 }
@@ -230,17 +322,20 @@ function Operations({ nlu }: { nlu: NluStatus | null }) {
 export function BankConsole(props: {
   tab: BankTab; onTab: (t: BankTab) => void; queue: QueueItem[]; selected: string | null; onSelect: (r: string) => void;
   onQueueChanged: () => void; events: TraceEvent[]; reply: Reply | null; nlu: NluStatus | null;
+  pqr: Record<string, PqrResult>; onPqr: (r: Record<string, PqrResult>) => void;
 }) {
   const fresh = props.queue.filter((q) => q.status === "new").length;
   return (
     <div className="console">
       <nav className="console-tabs" role="tablist">
         <button role="tab" aria-selected={props.tab === "queue"} onClick={() => props.onTab("queue")}>Queue{fresh > 0 && <span className="badge badge-hot">{fresh}</span>}</button>
+        <button role="tab" aria-selected={props.tab === "complaints"} onClick={() => props.onTab("complaints")}>Written complaints</button>
         <button role="tab" aria-selected={props.tab === "decisions"} onClick={() => props.onTab("decisions")}>Decisions</button>
         <button role="tab" aria-selected={props.tab === "operations"} onClick={() => props.onTab("operations")}>Operations</button>
       </nav>
       <div className="console-body">
         {props.tab === "queue" && <Queue items={props.queue} selected={props.selected} onSelect={props.onSelect} onChanged={props.onQueueChanged} />}
+        {props.tab === "complaints" && <Complaints results={props.pqr} setResults={props.onPqr} onProcessed={props.onQueueChanged} />}
         {props.tab === "decisions" && <Decisions events={props.events} reply={props.reply} />}
         {props.tab === "operations" && <Operations nlu={props.nlu} />}
       </div>

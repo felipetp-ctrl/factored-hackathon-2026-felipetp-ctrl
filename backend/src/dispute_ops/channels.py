@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 from dispute_ops.auth import SessionService
 from dispute_ops.domain import FRAUD_ALERT_MIN_SCORE, Channel, ReasonCode, Transaction
 from dispute_ops.flow import DisputeFlow, FlowResult, Turn
+from dispute_ops.language.nlu import NluContext, NluResult
 from dispute_ops.policy.engine import PolicyEngine
 from dispute_ops.store import Store
 from dispute_ops.tools import BankingTools
@@ -27,6 +28,7 @@ class PqrComplaint(BaseModel):
     claimed_amount: Decimal | None = None
     created_at: datetime | None = None
     evidence: dict[str, str] = Field(default_factory=dict)
+    language: str = "es"
 
 
 MATCH_LOOKBACK_DAYS = 120
@@ -58,6 +60,8 @@ def run_pqr_complaint(
     sessions: SessionService,
     clock: Callable[[], datetime],
     sleep: Callable[[float], None] = time.sleep,
+    regulatory_threat: bool = False,
+    very_negative_sentiment: bool = False,
 ) -> FlowResult:
     """Async channel. Identity comes from the PQR system (internal trusted issuer). The filed
     complaint is the customer's consent to open a dispute; card blocking is never done
@@ -69,12 +73,13 @@ def run_pqr_complaint(
         complaint = complaint.model_copy(update={"transaction_id": matched})
     flow = DisputeFlow(
         tools=tools, store=store, policy=policy, clock=clock,
-        trace_id=f"pqr-{complaint.complaint_id}", channel=Channel.PQR, language="es", sleep=sleep,
+        trace_id=f"pqr-{complaint.complaint_id}", channel=Channel.PQR, language=complaint.language, sleep=sleep,
     )
     result = flow.handle(
         Turn(
             token=token, summary=complaint.description, transaction_id=complaint.transaction_id,
             reason_code=reason_code, classifier_confidence=classifier_confidence, evidence=complaint.evidence,
+            regulatory_threat=regulatory_threat, very_negative_sentiment=very_negative_sentiment,
         )
     )
     if result.action == "confirm":
@@ -82,6 +87,21 @@ def run_pqr_complaint(
     if result.handoff is not None and shortlist and complaint.transaction_id is None:
         result.handoff.risk_signals["candidate_transactions"] = [t.transaction_id for t in shortlist]
     return result
+
+
+def read_complaint(nlu, text: str, policy: PolicyEngine) -> NluResult:
+    """Read a written complaint with the language layer: the reason first, then a second pass for the evidence that
+    reason requires (the same question the chat would ask, answered by the letter itself). Nobody is there to
+    clarify, so anything not read stays missing and the flow sends the case to a person."""
+    first = nlu.interpret(text, NluContext(state="START")).result
+    if first.reason_code is None:
+        return first
+    needed = [e for e in policy.required_evidence(first.reason_code) if not first.evidence().get(e)]
+    if not needed:
+        return first
+    second = nlu.interpret(text, NluContext(state="COLLECT_EVIDENCE", ask_for=needed)).result
+    fields = {e: getattr(second, e) for e in needed if getattr(second, e, None) is not None}
+    return first.model_copy(update=fields)
 
 
 def select_fraud_alerts(

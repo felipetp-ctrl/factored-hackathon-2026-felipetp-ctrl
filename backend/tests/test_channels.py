@@ -105,3 +105,13 @@ def test_pqr_ignores_a_product_that_belongs_to_another_customer(store):
     c = PqrComplaint(complaint_id="Q11", customer_id="CUST001", description="x", affected_product_id="PRD002",
                      claimed_amount=Decimal("1250.00"), created_at=NOW)
     assert match_complaint(store, c, NOW)[0] == "TXN001"
+
+
+def test_pqr_regulator_threat_goes_to_a_person_even_when_eligible(deps, store):
+    c = PqrComplaint(
+        complaint_id="Q12", customer_id="CUST001", transaction_id="TXN003", description="voy a la superintendencia",
+        evidence={"duplicate_transaction_id": "TXN002"},
+    )
+    r = run_pqr_complaint(c, reason_code=ReasonCode.DUPLICATE, classifier_confidence=0.93, regulatory_threat=True, **deps)
+    assert r.action == "handoff" and r.handoff.reason_for_handoff == ["regulatory_or_legal_threat"]
+    assert store.find_open_dispute("TXN003") is None

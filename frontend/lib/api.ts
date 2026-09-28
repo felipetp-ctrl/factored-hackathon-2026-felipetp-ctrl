@@ -67,6 +67,16 @@ export type Scenario = { id: string; label: string; customer_id: string; languag
 export type NluStatus = { mode: "claude" | "rules"; reason: string | null; fallback: boolean };
 export type Health = { status: string; policy_version: string; now: string; demo_mode: boolean; nlu: NluStatus };
 export type TraceEvent = { trace_id: string; at: string; kind: string; data: Record<string, any> };
+export type PqrLetter = {
+  complaint_id: string; customer_id: string; language: Lang; received_via: string; affected_product_id: string | null;
+  claimed_amount: string | null; created_at: string; description: string;
+};
+export type PqrResult = {
+  complaint_id: string; action: string; state: string; transaction_id: string | null; case_id: string | null;
+  case_ref: string | null; handoff_reasons: string[]; open_questions: string[]; rule_ids: string[];
+  candidate_transactions: string[];
+  reading: { reason_code: string | null; confidence: number; evidence: Record<string, string>; regulatory_threat: boolean };
+};
 export type DemoCustomer = { customer_id: string; first_name: string | null; country: string; segment: string };
 
 export class ApiError extends Error {
@@ -121,5 +131,7 @@ export const api = {
   resolve: (ref: string, body: { action: "open_dispute" | "close"; note: string; reason_code?: string | null }) =>
     call<{ status: string; case_id?: string; decision?: PolicyDecision }>(`/agent/handoffs/${ref}/resolve`, post(body)),
   trace: (id: string) => call<TraceEvent[]>(`/agent/traces/${id}`),
+  pqrInbox: () => call<PqrLetter[]>("/demo/pqr/inbox"),
+  pqrProcess: () => call<PqrResult[]>("/demo/pqr/process", post({})),
   metrics: () => call<Record<string, any>>("/agent/metrics"),
 };
