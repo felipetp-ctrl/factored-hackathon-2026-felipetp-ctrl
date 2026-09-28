@@ -66,7 +66,14 @@ _GREETING = re.compile(
     r"^\W*(hola|oi|ola|buenas|buenos dias|bom dia|boa tarde|boa noite|buenas tardes|buenas noches|hey)"
     r"[\s!,.]*(tudo bem|como estas|como esta|que tal)?[\s!?.]*$")
 _DISPUTE_WORDS = re.compile(r"disput|contest|cargo|cobr|compra|reclam")
-_NOTHING_TO_DO = re.compile(r"nada (que|para|a) (disputar|contestar)|no necesito nada|nao preciso de nada|no tengo ningun cargo|nao tenho nenhuma")
+_NOTHING_TO_DO = re.compile(
+    r"nada (que|para|a) (disputar|contestar)|no necesito nada|nao preciso de nada|no tengo ningun cargo|nao tenho nenhuma|"
+    r"(no|nao) (hace falta|precisa|necesita|es necesario|e necessario) (abrir|contestar|disputar|nada)|pode deixar|"
+    r"dejalo asi|deja(lo)? nomas|(?<!no )(?<!nao )(?<!nunca )fui (yo|eu)\b|fue mi (hijo|hija|esposo|esposa|marido|mujer)|foi (o )?meu (filho|marido)|"
+    r"foi (a )?minha (filha|esposa|mulher)|con (mi )?permiso|com (minha )?permissao|ya me acorde|ja lembrei|agora lembrei")
+# "É essa mesmo", "esa es": picking the only charge shown.
+_THIS_ONE = re.compile(r"\b(e essa|essa mesm[ao]|isso mesmo|essa ai|e esta|esa es|es esa|esa misma|esa mism[ao]|"
+                       r"es la misma|esa exactamente|exacto|exato|justo esa|essa sim|esa si)\b")
 _BLOCK = re.compile(r"bloque")
 _NO_BLOCK = re.compile(
     r"(sin|sem|no|nao)\s+(quiero\s+|quero\s+|precisa\s+|necesito\s+|hace falta\s+|es necesario\s+|e necessario\s+)?(que\s+)?(me\s+)?bloque")
@@ -256,7 +263,7 @@ def pick_candidate(text: str, candidates: list[dict[str, str]], today: date | No
     if not candidates:
         return None
     t0 = _norm(text)
-    if len(candidates) == 1 and _YES.search(t0) and not _NO.search(t0):
+    if len(candidates) == 1 and (_YES.search(t0) or _THIS_ONE.search(t0)) and not _NO.search(t0):
         return candidates[0]["transaction_id"]
     ids = {c["transaction_id"].upper(): c["transaction_id"] for c in candidates}
     for m in _TXN_ID.finditer(text):
@@ -423,6 +430,9 @@ class RuleNlu:
             fields["purchase_date"] = parse_date(text) or parse_relative_date(text, _today(ctx))
         ids = _TXN_ID.findall(text)
         picked = pick_candidate(text, ctx.candidates, _today(ctx)) if ctx.candidates else None
+        if _NOTHING_TO_DO.search(t) and not _WRONG_ONE.search(t):
+            fields["transaction_id"] = None
+            return done("decline")
         if ctx.candidates and not picked and (_WRONG_ONE.search(t) or (no and not yes)):
             fields["wrong_transaction"] = True  # "no, none of those" / "no es esa"
             return done("provide_info")

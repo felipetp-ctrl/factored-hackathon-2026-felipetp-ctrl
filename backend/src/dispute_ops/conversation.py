@@ -239,7 +239,12 @@ class ConversationService:
             if conv.out_of_scope_streak >= 2:  # a second unrelated request: redirect and end instead of looping
                 return self._reply(conv, flow.close("out_of_scope_repeated"), started, text_key="goodbye_redirect", **base)
             return self._text_reply(conv, "out_of_scope", started, **base)
+        after_out_of_scope = conv.out_of_scope_streak > 0
         conv.out_of_scope_streak = 0
+        no_cues = not (nlu.reason_code or nlu.merchant or nlu.amount is not None or nlu.transaction_id)
+        if after_out_of_scope and no_cues and nlu.intent in ("decline", "greeting", "unclear") and flow.state == State.START:
+            # "Ok, gracias, hasta luego" after being told the request is not handled here ends the conversation.
+            return self._reply(conv, flow.close("out_of_scope_accepted"), started, text_key="goodbye_redirect", **base)
         if nlu.intent == "decline" and flow.state in {State.START, State.IDENTIFY_TXN} and not (
                 conv.candidates and nlu.wrong_transaction):
             # "No, nothing to dispute" before a charge was chosen ends the conversation politely.

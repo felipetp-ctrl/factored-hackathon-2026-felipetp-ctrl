@@ -191,6 +191,12 @@ class DisputeFlow:
     def _merge(self, turn: Turn) -> None:
         if turn.summary:
             self.summary = turn.summary
+        if self.state == State.CONFIRM and not turn.wrong_transaction:
+            # What is opened is exactly what the customer confirmed: a new reading of the reason or evidence at the
+            # summary (hard-v1 dev: FRAUD_CNP confirmed, FRAUD_CP re-read and opened) must not change the case.
+            for name in self.flags:
+                self.flags[name] = self.flags[name] or getattr(turn, name)
+            return
         if turn.reason_code is not None:
             confidence = turn.classifier_confidence if turn.classifier_confidence is not None else 1.0
             # A reason already read is replaced only by an answer to the reason question or a surer reading:

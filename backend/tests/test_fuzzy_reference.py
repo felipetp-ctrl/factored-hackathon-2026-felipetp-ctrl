@@ -134,3 +134,39 @@ def test_giving_new_details_does_not_run_out_of_clarifications(chat):
     chat("no, ninguna de esas")
     r = chat("era en el mercado")
     assert r.action == "ask" and r.candidates  # still helping, not handed off
+
+
+# ------------------------------------------------------------------------------ hard-v1 dev findings (ADR-022)
+@pytest.mark.parametrize("text", ["é essa mesmo", "e essa mesma, ja disse", "sí, esa es", "exacto"])
+def test_this_one_picks_the_only_candidate(text):
+    assert pick_candidate(text, CANDS[:1], TODAY) == "A"
+
+
+@pytest.mark.parametrize("text,intent", [
+    ("foi meu filho que usou com permissão, não precisa abrir nada", "decline"),
+    ("ah ya me acordé, fui yo", "decline"),
+    ("no fui yo", "dispute"),
+    ("nao fui eu que fiz essa compra", "dispute"),
+])
+def test_it_was_me_after_all_is_not_a_dispute(text, intent):
+    assert read(text, state="IDENTIFY_TXN", ask_for=["transaction"], candidates=CANDS[:1]).intent in (
+        (intent,) if intent == "decline" else ("dispute", "provide_info"))
+
+
+def test_the_confirmed_reason_is_the_one_opened(chat):
+    chat("no reconozco una compra en mercado central")
+    chat("la más reciente")
+    chat("sí la tengo")
+    flow = next(iter(chat.container.conversations.conversations.values())).flow
+    from dispute_ops.domain import ReasonCode
+    from dispute_ops.flow import Turn
+    token = chat.container.sessions.issue(CUSTOMER)
+    # a new reading of the reason at the summary must not change the case the customer confirmed
+    flow.handle(Turn(token=token, reason_code=ReasonCode.FRAUD_CP, classifier_confidence=1.0, confirm=True))
+    assert [r["reason_code"] for r in chat.container.store.conn.execute("SELECT reason_code FROM disputes")] == ["FRAUD_CNP"]
+
+
+def test_thanks_after_an_out_of_scope_answer_closes(chat):
+    assert chat("quiero reclamar por el aumento de la cuota anual").action == "out_of_scope"
+    r = chat("entiendo, muchas gracias, hasta luego")
+    assert r.state == "CANCELLED"

@@ -25,7 +25,8 @@ REASON_PATTERNS: list[tuple[ReasonCode, str]] = [
     (ReasonCode.FRAUD_CP, r"roba|rouba|robo\b|roubo\b|perdi (la |o |minha |mi )?(tarjeta|cartao)|extravi"),
     (ReasonCode.FRAUD_CNP, r"no (lo )?reconozco|nao reconheco|no hice|nao fiz|fraude|no fui yo|nao fui eu|desconozco|clonad"),
 ]
-OUT_OF_SCOPE = r"saldo|prestamo|emprestimo|credito|limite|abrir (una |uma )?cuenta|abrir (una |uma )?conta|ahorro|poupanca|tasa|taxa de juros|inversion|investimento"
+OUT_OF_SCOPE = (r"saldo|prestamo|emprestimo|credito|limite|abrir (una |uma )?cuenta|abrir (una |uma )?conta|ahorro|poupanca|tasa|taxa de juros|inversion|investimento|"
+    r"cuota anual|anualidad|anuidade|comision|comissao|transferencia|cashback|puntos|pontos|millas|milhas")
 HUMAN = r"humano|asesor|agente|persona real|pessoa|atendente|operador"
 
 
