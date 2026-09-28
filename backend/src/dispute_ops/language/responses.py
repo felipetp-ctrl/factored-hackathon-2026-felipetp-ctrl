@@ -66,7 +66,11 @@ T = {
     "es": {
         "greeting": "¡Hola! Soy el asistente de disputas de LATAM Bank. ¿Qué cargo de su tarjeta desea disputar?",
         "candidates": "Encontré estas compras:",
+        "candidates_closest": "No encontré una compra exactamente así; estas son las más parecidas:",
+        "candidates_recent": "No encontré una compra con esos datos. Estas son sus compras más recientes:",
+        "candidate_one": "Encontré esta compra:",
         "pick": "¿Cuál de ellas es?",
+        "pick_one": "¿Es esta? (sí/no)",
         "confirm": "Resumen: abriré una disputa por {reason} de la compra de {amount} {currency} en {merchant} del {date}. ¿Confirma? (sí/no)",
         "offer_block": "Por seguridad, también recomiendo bloquear la tarjeta usada en esta compra para evitar nuevos cargos. ¿Desea bloquearla?",
         "done": "Listo. Su disputa quedó registrada con el número de caso {case_id}.",
@@ -90,7 +94,11 @@ T = {
     "pt": {
         "greeting": "Olá! Sou o assistente de contestações do LATAM Bank. Qual cobrança do seu cartão você quer contestar?",
         "candidates": "Encontrei estas compras:",
+        "candidates_closest": "Não encontrei uma compra exatamente assim; estas são as mais parecidas:",
+        "candidates_recent": "Não encontrei uma compra com esses dados. Estas são as suas compras mais recentes:",
+        "candidate_one": "Encontrei esta compra:",
         "pick": "Qual delas é?",
+        "pick_one": "É esta? (sim/não)",
         "confirm": "Resumo: vou abrir uma contestação por {reason} da compra de {amount} {currency} em {merchant} do dia {date}. Confirma? (sim/não)",
         "offer_block": "Por segurança, também recomendo bloquear o cartão usado nesta compra para evitar novas cobranças. Quer bloqueá-lo?",
         "done": "Pronto. Sua contestação foi registrada com o protocolo {case_id}.",
@@ -155,12 +163,15 @@ def render(result: FlowResult, lang: str | None, *, transaction: Transaction | N
     if result.action == "ask":
         lines: list[str] = []
         if result.candidates:
-            lines.append(T[lang]["candidates"])
+            one = len(result.candidates) == 1
+            header = {"closest": "candidates_closest", "recent": "candidates_recent"}.get(
+                result.candidates_note or "", "candidate_one" if one else "candidates")
+            lines.append(T[lang][header])
             for i, c in enumerate(result.candidates, 1):
                 f = _txn_fields(c, lang)
                 when = c.transaction_date.strftime("%H:%M")
                 lines.append(f"{i}) {f['merchant']} · {f['amount']} {f['currency']} · {f['date']} {when} ({c.transaction_id})")
-            lines.append(T[lang]["pick"])
+            lines.append(T[lang]["pick_one" if one else "pick"])
         else:
             lines.extend(QUESTIONS[lang].get(field, field) for field in result.ask_for)
         return "\n".join(lines)

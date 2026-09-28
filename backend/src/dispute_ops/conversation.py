@@ -6,7 +6,7 @@ import time
 import uuid
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Protocol
 
@@ -189,7 +189,9 @@ class ConversationService:
 
         ctx = NluContext(
             state=("PROACTIVE_CONFIRM" if conv.proactive_txn else flow.state.value),
-            ask_for=conv.last_ask, candidates=conv.candidates, injection_flags=flags, history=conv.history,
+            ask_for=conv.last_ask, candidates=conv.candidates or _confirm_context(flow), injection_flags=flags,
+            history=conv.history,
+            today=self.clock().date().isoformat(),
         )
         outcome: NluOutcome | None = None
         mode = "claude"
@@ -238,7 +240,8 @@ class ConversationService:
                 return self._reply(conv, flow.close("out_of_scope_repeated"), started, text_key="goodbye_redirect", **base)
             return self._text_reply(conv, "out_of_scope", started, **base)
         conv.out_of_scope_streak = 0
-        if nlu.intent == "decline" and flow.state in {State.START, State.IDENTIFY_TXN}:
+        if nlu.intent == "decline" and flow.state in {State.START, State.IDENTIFY_TXN} and not (
+                conv.candidates and nlu.wrong_transaction):
             # "No, nothing to dispute" before a charge was chosen ends the conversation politely.
             return self._reply(conv, flow.close("customer_has_nothing_to_dispute"), started, text_key="goodbye", **base)
         if nlu.intent == "greeting" and flow.state == State.START:
@@ -262,6 +265,8 @@ class ConversationService:
             human_requested=nlu.intent == "human",
             very_negative_sentiment=nlu.very_negative_sentiment,
             regulatory_threat=nlu.regulatory_threat,
+            purchase_date=_iso_date(nlu.purchase_date),
+            wrong_transaction=nlu.wrong_transaction and (in_confirm or bool(conv.candidates)),
         )
 
     def _proactive_turn(self, conv: Conversation, token: str, nlu: NluResult, started: float, base: dict) -> Reply:
@@ -326,3 +331,18 @@ class ConversationService:
 
     def _audit(self, conv: Conversation, kind: str, **data: Any) -> None:
         self.store.append_audit(AuditEvent(trace_id=conv.id, at=self.clock(), kind=kind, data=data))
+
+
+def _iso_date(value: str | None) -> date | None:
+    """The NLU's day estimate, if it is a real ISO date (anything else is ignored, never guessed)."""
+    try:
+        return date.fromisoformat(value[:10]) if value else None
+    except ValueError:
+        return None
+
+
+def _confirm_context(flow: DisputeFlow) -> list[dict[str, str]]:
+    """At the summary, the charges shown before stay readable, so "no, the one from February" can be understood."""
+    if flow.state != State.CONFIRM or len(flow.last_candidates) < 2:
+        return []
+    return [_candidate(t) for t in flow.last_candidates]

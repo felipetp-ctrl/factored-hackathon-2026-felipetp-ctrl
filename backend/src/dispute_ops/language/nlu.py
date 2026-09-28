@@ -20,7 +20,7 @@ PRICES_PER_MTOK = {  # USD (input, output), Anthropic first-party list prices
     "claude-haiku-4-5": (1.00, 5.00),
     "claude-sonnet-5": (2.00, 10.00),
 }
-PROMPT_VERSION = "nlu-v2"
+PROMPT_VERSION = "nlu-v3"
 
 YesNo = Literal["yes", "no"]
 
@@ -44,6 +44,8 @@ class NluResult(BaseModel):
     very_negative_sentiment: bool
     regulatory_threat: bool
     summary: str
+    purchase_date: str | None = None
+    wrong_transaction: bool = False
 
     @field_validator("reason_confidence")
     @classmethod
@@ -65,6 +67,7 @@ class NluResult(BaseModel):
 
 class NluContext(BaseModel):
     state: str
+    today: str | None = None
     ask_for: list[str] = Field(default_factory=list)
     candidates: list[dict[str, str]] = Field(default_factory=list)
     injection_flags: list[str] = Field(default_factory=list)
@@ -120,8 +123,17 @@ reason_code (only when the customer describes the problem; confidence 0-1 in rea
 - CANCELLED_RECURRING: a subscription kept charging after they cancelled it.
 
 Transaction reference: fill merchant and/or amount when mentioned (amount as a number, no currency).
+Customers remember approximately; keep what they say: "unos 90 mil" -> amount 90000, "algo de Mercado" ->
+merchant "Mercado", numbers in words -> digits.
+purchase_date: the day of the charge the customer refers to, as an ISO date resolved against
+case_context.today ("ayer", "el sábado pasado", "semana passada" -> your best single-day estimate); null if
+they give no time reference.
 Fill transaction_id only with an id from the candidates list (for example when the customer says
-"the first one" or "la de Netflix del día 14"); never invent ids.
+"the first one", "la más reciente", "a de sábado" or "la de Netflix del día 14", or answers "sí" when exactly one
+candidate is listed); never invent ids.
+wrong_transaction: true only when state is CONFIRM and the customer says the charge in the summary is not the
+one they mean (they want a different charge, e.g. "no, esa no, la otra"); then intent is provide_info and, if
+they identify the other charge, fill transaction_id or merchant/amount/purchase_date.
 
 Evidence (only when the customer states it): card_in_possession, recognizes_merchant (yes/no),
 duplicate_transaction_id (candidate id of the other charge), expected_amount, expected_delivery_date,
@@ -137,6 +149,7 @@ language, without personal data."""
 def render_user_content(text: str, ctx: NluContext) -> str:
     context = {
         "state": ctx.state,
+        "today": ctx.today,
         "ask_for": ctx.ask_for,
         "candidates": ctx.candidates,
         "gateway_injection_flags": ctx.injection_flags,

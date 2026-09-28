@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 import time
 from collections.abc import Iterable
-from datetime import date
+from datetime import date, timedelta
 
 from dispute_ops.domain import ReasonCode
 from dispute_ops.language.gateway import detect_language
@@ -19,6 +19,10 @@ from dispute_ops.language.keywords import _norm, classify_reason, is_out_of_scop
 from dispute_ops.language.nlu import LlmUsage, NluContext, NluOutcome, NluResult
 
 RULES_MODEL = "rules"
+# Words of merchant names too generic to point at a merchant on their own.
+_MERCHANT_STOP = frozenset({
+    "online", "store", "tienda", "loja", "shop", "servicio", "servicios", "servico", "general", "centro", "grupo",
+    "empresa", "compra", "pago", "pagos", "banco", "tarjeta", "cartao"})
 
 
 def is_rules_model(model: str) -> bool:
@@ -31,6 +35,7 @@ RULE_CONFIDENCE = 0.75
 # States where the customer states what they want (or answers "why?"): the learned classifier reads these.
 # Elsewhere the service asked a yes/no or evidence question and the rules read the answer.
 LEARNED_STATES = ("START", "IDENTIFY_TXN", "CLASSIFY")
+IDENTIFY_THRESHOLD = 0.8
 
 _MONTHS = (
     "enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre|"
@@ -72,6 +77,23 @@ _REGULATOR = re.compile(
     r"demanda|processar|justicia|prensa|imprensa|reclame aqui")
 _NEGATIVE = re.compile(r"verguenza|vergonha|estafa|ladron|ladroe|inutil|basura|absurdo|pesimo|pessimo|indignad|furios|harto|lixo")
 
+_WRONG_ONE = re.compile(
+    r"\b(la otra|el otro|a outra|o outro|otra compra|outra compra|no es esa|no es ese|nao e essa|nao e esse|esa no\b|"
+    r"essa nao|ese no\b|esse nao|no era esa|nao era essa|me equivoque|me confundi|me enganei|errei|equivocad|ninguna de|"
+    r"nenhuma dessas|nenhuma delas)")
+
+
+_EXPLICIT_DECLINE = re.compile(
+    r"^\W*(no|nao)\W*$|cancel|no confirm|nao confirm|no quiero|nao quero|desist|deja(lo)? asi|deixa (pra la|assim)|mejor no|melhor nao")
+
+
+def _today(ctx: NluContext) -> date | None:
+    try:
+        return date.fromisoformat(ctx.today) if ctx.today else None
+    except ValueError:
+        return None
+
+
 _EVIDENCE_RULES: dict[str, tuple[re.Pattern[str], re.Pattern[str]]] = {  # field -> (no, yes)
     "card_in_possession": (
         re.compile(r"perdi|robaron|robad|robo\b|roubad|roubo|extravi|no la tengo|no lo tengo|nao esta comigo|nao tenho o cartao"),
@@ -97,6 +119,92 @@ _ORDINALS = [
 ]
 
 
+_UNITS = {
+    "cero": 0, "zero": 0, "un": 1, "uno": 1, "una": 1, "um": 1, "uma": 1, "dos": 2, "dois": 2, "duas": 2, "tres": 3,
+    "cuatro": 4, "quatro": 4, "cinco": 5, "seis": 6, "siete": 7, "sete": 7, "ocho": 8, "oito": 8, "nueve": 9, "nove": 9,
+    "diez": 10, "dez": 10, "once": 11, "onze": 11, "doce": 12, "doze": 12, "trece": 13, "treze": 13, "catorce": 14,
+    "catorze": 14, "quatorze": 14, "quince": 15, "quinze": 15, "dieciseis": 16, "dezesseis": 16, "diecisiete": 17,
+    "dezessete": 17, "dieciocho": 18, "dezoito": 18, "diecinueve": 19, "dezenove": 19, "veinte": 20, "vinte": 20,
+    "veintiuno": 21, "veintiun": 21, "veintidos": 22, "veintitres": 23, "veinticuatro": 24, "veinticinco": 25,
+    "veintiseis": 26, "veintisiete": 27, "veintiocho": 28, "veintinueve": 29, "treinta": 30, "trinta": 30,
+    "cuarenta": 40, "quarenta": 40, "cincuenta": 50, "cinquenta": 50, "sesenta": 60, "sessenta": 60, "setenta": 70,
+    "ochenta": 80, "oitenta": 80, "noventa": 90, "cien": 100, "ciento": 100, "cem": 100, "cento": 100,
+    "doscientos": 200, "duzentos": 200, "trescientos": 300, "trezentos": 300, "cuatrocientos": 400,
+    "quatrocentos": 400, "quinientos": 500, "quinhentos": 500, "seiscientos": 600, "seiscentos": 600,
+    "setecientos": 700, "setecentos": 700, "ochocientos": 800, "oitocentos": 800, "novecientos": 900,
+    "novecentos": 900,
+}
+_SCALES = {"mil": 1_000, "millon": 1_000_000, "millones": 1_000_000, "milhao": 1_000_000, "milhoes": 1_000_000}
+_NUMBER_WORD = re.compile(r"\b(?:" + "|".join(sorted(list(_UNITS) + list(_SCALES), key=len, reverse=True))
+                          + r")\b(?:\s+(?:y|e)?\s*\b(?:" + "|".join(sorted(list(_UNITS) + list(_SCALES), key=len,
+                                                                          reverse=True)) + r")\b)*")
+# "90 mil", "1,5 millones", "90k"
+_SCALED = re.compile(r"(\d+(?:[.,]\d+)?)\s*(mil\b|k\b|millon(?:es)?\b|milh(?:ao|oes)\b|lucas?\b|palos?\b)")
+_WEEKDAYS = {"lunes": 0, "segunda": 0, "martes": 1, "terca": 1, "miercoles": 2, "quarta": 2, "jueves": 3, "quinta": 3,
+             "viernes": 4, "sexta": 4, "sabado": 5, "domingo": 6}
+
+
+def _words_value(phrase: str) -> int | None:
+    total, current, seen = 0, 0, False
+    for w in re.findall(r"[a-z]+", phrase):
+        if w in _UNITS:
+            current += _UNITS[w]
+            seen = True
+        elif w in _SCALES:
+            scale = _SCALES[w]
+            current = max(current, 1) * scale
+            if scale >= 1_000:
+                total += current
+                current = 0
+            seen = True
+    return total + current if seen else None
+
+
+def _spoken_numbers(t: str) -> str:
+    """Rewrite spoken amounts as digits: "noventa y un mil" -> 91000, "90 mil" -> 90000, "90k" -> 90000."""
+    def scaled(m: re.Match[str]) -> str:
+        base = float(m.group(1).replace(",", "."))
+        unit = m.group(2)
+        mult = 1_000_000 if unit.startswith(("millon", "milh", "palo")) else 1_000
+        return f" {int(round(base * mult))} "
+
+    t = _SCALED.sub(scaled, t)
+
+    def words(m: re.Match[str]) -> str:
+        v = _words_value(m.group(0))
+        # a lone "un"/"uma"/"dos" is an article or a count, not an amount
+        return f" {v} " if v is not None and (v >= 10 or " " in m.group(0).strip()) else m.group(0)
+
+    return _NUMBER_WORD.sub(words, t)
+
+
+def parse_relative_date(text: str, today: date | None) -> str | None:
+    """The day a customer refers to, relative to today: "ayer", "semana passada", "el sábado", "hace 3 días"."""
+    if today is None:
+        return None
+    t = _norm(text)
+    if re.search(r"\b(anteayer|antier|anteontem)\b", t):
+        return (today - timedelta(days=2)).isoformat()
+    if re.search(r"\b(ayer|ontem)\b", t):
+        return (today - timedelta(days=1)).isoformat()
+    if re.search(r"\b(hoy|hoje|esta manana|esta manha)\b", t):
+        return today.isoformat()
+    if m := re.search(r"\b(?:hace|ha|faz)\s+(\d+|un|una|uma|dos|dois|tres)\s+(dia|dias|semana|semanas)\b", t):
+        n = {"un": 1, "una": 1, "uma": 1, "dos": 2, "dois": 2, "tres": 3}.get(m.group(1)) or int(m.group(1))
+        return (today - timedelta(days=n * (7 if m.group(2).startswith("semana") else 1))).isoformat()
+    for name, wd in _WEEKDAYS.items():
+        if re.search(rf"\b{name}(-feira)?\b", t):
+            back = (today.weekday() - wd) % 7 or 7
+            if re.search(r"pasad|passad|anterior", t) and back < 7:
+                back += 7 if re.search(r"semana pasad|semana passad", t) else 0
+            return (today - timedelta(days=back)).isoformat()
+    if re.search(r"semana pasad|semana passad|la otra semana|outra semana", t):
+        return (today - timedelta(days=7)).isoformat()
+    if re.search(r"mes pasad|mes passad", t):
+        return (today - timedelta(days=30)).isoformat()
+    return None
+
+
 def _to_number(s: str) -> float:
     if "." in s and "," in s:
         dec = "." if s.rfind(".") > s.rfind(",") else ","
@@ -114,6 +222,7 @@ def parse_amount(text: str) -> float | None:
     t = _TXN_ID.sub(" ", _norm(text))
     for pattern in _NOT_AMOUNTS:
         t = pattern.sub(" ", t)
+    t = _spoken_numbers(t)
     found: list[tuple[bool, float]] = []
     for m in _NUMBER.finditer(t):
         try:
@@ -143,9 +252,12 @@ def parse_date(text: str) -> str | None:
         return None
 
 
-def pick_candidate(text: str, candidates: list[dict[str, str]]) -> str | None:
+def pick_candidate(text: str, candidates: list[dict[str, str]], today: date | None = None) -> str | None:
     if not candidates:
         return None
+    t0 = _norm(text)
+    if len(candidates) == 1 and _YES.search(t0) and not _NO.search(t0):
+        return candidates[0]["transaction_id"]
     ids = {c["transaction_id"].upper(): c["transaction_id"] for c in candidates}
     for m in _TXN_ID.finditer(text):
         if m.group(0).upper() in ids:
@@ -159,6 +271,31 @@ def pick_candidate(text: str, candidates: list[dict[str, str]]) -> str | None:
         hits = [c for c in candidates if c["date"].endswith(f"{int(hh):02d}:{mm}")]
         if len(hits) == 1:
             return hits[0]["transaction_id"]
+    by_date = sorted(candidates, key=lambda c: c["date"])
+    if re.search(r"mas recient|mais recent|la ultima vez|mas nuev|mais nov|la de ayer|a de ontem", t):
+        return by_date[-1]["transaction_id"]
+    if re.search(r"mas antigu|mais antig|la primera vez", t):
+        return by_date[0]["transaction_id"]
+    by_amount = sorted(candidates, key=lambda c: float(c["amount"]))
+    if re.search(r"mas car[ao]|mais car[ao]|mayor|maior|mas grande|mais alt[ao]|mas alt[ao]", t):
+        return by_amount[-1]["transaction_id"]
+    if re.search(r"mas barat[ao]|mais barat[ao]|menor|mas pequen|mais pequen|mas baj[ao]|mais baix[ao]", t):
+        return by_amount[0]["transaction_id"]
+    day = parse_date(text) or parse_relative_date(text, today)
+    if day:
+        hits = [c for c in candidates if _candidate_day(c) == day]
+        if len(hits) == 1:
+            return hits[0]["transaction_id"]
+    months = {_MONTH_NUM[m] for m in re.findall(rf"\b({_MONTHS})\b", t)}
+    if len(months) == 1:
+        hits = [c for c in candidates if (d := _candidate_date(c)) is not None and d.month in months]
+        if len(hits) == 1:
+            return hits[0]["transaction_id"]
+    for name, wd in _WEEKDAYS.items():
+        if re.search(rf"\b{name}(-feira)?\b", t):
+            hits = [c for c in candidates if (d := _candidate_date(c)) is not None and d.weekday() == wd]
+            if len(hits) == 1:
+                return hits[0]["transaction_id"]
     bare = re.fullmatch(r"\W*(?:(?:la|el|a|o|opcion|opcao|numero)\s+)?([1-9])\W*", t)
     if bare and int(bare.group(1)) <= len(candidates):
         return candidates[int(bare.group(1)) - 1]["transaction_id"]
@@ -167,7 +304,27 @@ def pick_candidate(text: str, candidates: list[dict[str, str]]) -> str | None:
         hits = [c for c in candidates if abs(float(c["amount"]) - amount) < 0.005]
         if len(hits) == 1:
             return hits[0]["transaction_id"]
+        near = sorted(candidates, key=lambda c: abs(float(c["amount"]) - amount))
+        if abs(float(near[0]["amount"]) - amount) <= 0.25 * amount and (
+                len(near) == 1 or abs(float(near[1]["amount"]) - amount) > 2 * abs(float(near[0]["amount"]) - amount)):
+            return near[0]["transaction_id"]
     return None
+
+
+def _candidate_date(c: dict[str, str]) -> date | None:
+    """Candidates carry dd/mm/yyyy or ISO dates (see conversation._candidate)."""
+    raw = c.get("date", "")
+    try:
+        if m := re.match(r"(\d{2})/(\d{2})/(\d{4})", raw):
+            return date(int(m.group(3)), int(m.group(2)), int(m.group(1)))
+        return date.fromisoformat(raw[:10])
+    except ValueError:
+        return None
+
+
+def _candidate_day(c: dict[str, str]) -> str | None:
+    d = _candidate_date(c)
+    return d.isoformat() if d else None
 
 
 class RuleNlu:
@@ -179,12 +336,17 @@ class RuleNlu:
         # Global vocabulary of merchant names (no customer data): longest names first so "Tienda General"
         # wins over a shorter overlapping name.
         self.merchants = sorted({(_norm(m), m) for m in merchants if m}, key=lambda x: -len(x[0]))
+        # Significant words of merchant names ("mercado", "estacion"): customers often remember only one. The flow
+        # shows the matching charges for the customer to pick; a word alone never identifies a charge silently.
+        self.merchant_words = {w for n, _ in self.merchants for w in re.findall(r"[a-z]+", n)
+                               if len(w) >= 4 and w not in _MERCHANT_STOP}
 
     def _merchant(self, t: str) -> str | None:
         for normalized, original in self.merchants:
             if re.search(rf"(?<!\w){re.escape(normalized)}(?!\w)", t):
                 return original
-        return None
+        words = [w for w in re.findall(r"[a-z]+", t) if w in self.merchant_words]
+        return max(words, key=len) if words else None
 
     def interpret(self, text: str, ctx: NluContext) -> NluOutcome:
         started = time.perf_counter()
@@ -207,6 +369,7 @@ class RuleNlu:
             card_in_possession=None, recognizes_merchant=None, duplicate_transaction_id=None, expected_amount=None,
             expected_delivery_date=None, contacted_merchant=None, cancellation_date=None, wants_block_card=None,
             very_negative_sentiment=bool(_NEGATIVE.search(t)), regulatory_threat=bool(_REGULATOR.search(t)),
+            purchase_date=None, wrong_transaction=False,
         )
 
         def done(intent: str) -> NluResult:
@@ -215,8 +378,18 @@ class RuleNlu:
         if ctx.state == "CONFIRM":
             if _HUMAN.search(t) and not yes:
                 return done("human")
+            if _WRONG_ONE.search(t):
+                fields["wrong_transaction"] = True
+                fields["transaction_id"] = pick_candidate(text, ctx.candidates, _today(ctx)) if ctx.candidates else None
+                fields["merchant"], fields["amount"] = self._merchant(t), parse_amount(text)
+                fields["purchase_date"] = parse_date(text) or parse_relative_date(text, _today(ctx))
+                return done("provide_info")
             if _BLOCK.search(t):
                 fields["wants_block_card"] = not _NO_BLOCK.search(t)
+            # "No conozco ese comercio" at the summary restates the problem; it is not a "no" to the summary.
+            restates = any(neg.search(t) or pos.search(t) for neg, pos in _EVIDENCE_RULES.values())
+            if no and not yes and restates and not _EXPLICIT_DECLINE.search(t):
+                return done("unclear")
             if no and not yes:
                 return done("decline")
             return done("confirm" if yes or "confirm" in t else "unclear")
@@ -246,8 +419,13 @@ class RuleNlu:
             fields.update(reason_code=reason, reason_confidence=confidence)
         fields["merchant"] = self._merchant(t)
         fields["amount"] = parse_amount(text)
+        if ctx.state in ("START", "IDENTIFY_TXN", "CLASSIFY") and "reason_code" not in ctx.ask_for:
+            fields["purchase_date"] = parse_date(text) or parse_relative_date(text, _today(ctx))
         ids = _TXN_ID.findall(text)
-        picked = pick_candidate(text, ctx.candidates) if ctx.candidates else None
+        picked = pick_candidate(text, ctx.candidates, _today(ctx)) if ctx.candidates else None
+        if ctx.candidates and not picked and (_WRONG_ONE.search(t) or (no and not yes)):
+            fields["wrong_transaction"] = True  # "no, none of those" / "no es esa"
+            return done("provide_info")
         fields["transaction_id"] = picked or (ids[0].upper() if ids else None)
         if picked:
             fields["amount"] = None  # the pick already identifies the charge
@@ -280,19 +458,28 @@ class RuleNlu:
             return None
         p = self.intent_model.predict(text)
         self._last = p
-        return p if p.probability >= self.intent_model.threshold else None
+        # Answers to "which purchase?" are short references the classifier was not trained on ("era en el
+        # mercado" read as INCORRECT_AMOUNT at 0.70 in a dev probe): there it needs a surer reading.
+        threshold = self.intent_model.threshold
+        if ctx.state == "IDENTIFY_TXN" and "transaction" in ctx.ask_for:
+            threshold = max(threshold, IDENTIFY_THRESHOLD)
+        return p if p.probability >= threshold else None
 
     @staticmethod
     def _evidence(text: str, t: str, ctx: NluContext, fields: dict, yes: bool, no: bool) -> bool:
         answered = False
+        other_statement = False
         for name, (neg, pos) in _EVIDENCE_RULES.items():
             if neg.search(t):
                 fields[name] = "no"
             elif pos.search(t):
                 fields[name] = "yes"
             answered = answered or (fields[name] is not None and name in ctx.ask_for)
+            other_statement = other_statement or (fields[name] is not None and name not in ctx.ask_for)
         pending = [f for f in ctx.ask_for if f in _YES_NO_FIELDS and fields[f] is None]
-        if len(pending) == 1 and (yes or no):
+        # A bare "sí"/"no" answers the one pending question, unless the "no" belongs to another statement
+        # ("no la reconozco" answers the merchant, not "do you have the card?").
+        if len(pending) == 1 and (yes or no) and not other_statement:
             fields[pending[0]] = "yes" if yes else "no"
             answered = True
         if "expected_amount" in ctx.ask_for and (amount := parse_amount(text)) is not None:

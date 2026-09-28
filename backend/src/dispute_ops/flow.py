@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import re
 import time
+import unicodedata
 from collections.abc import Callable
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from enum import StrEnum
 from typing import Any, Literal
@@ -21,9 +23,38 @@ from dispute_ops.store import Store
 from dispute_ops.tools import BankingTools
 
 MAX_CLARIFY = 2
+# Clarifying the transaction does not count against MAX_CLARIFY while each answer adds something new (a detail
+# or a rejected candidate); this cap still ends a conversation that goes round in circles.
+MAX_IDENTIFY_ROUNDS = 5
 # Look further back than the dispute window when identifying a transaction, so the policy can
 # explain why an old charge is out of window instead of the customer never finding it.
 IDENTIFY_LOOKBACK_DAYS = 365
+# Customers remember charges approximately ("unos 90 mil", "la semana pasada", "algo de Mercado"). A reference
+# that matches only approximately is shown for the customer to pick, never taken silently.
+AMOUNT_TOLERANCE = 0.25  # relative, around the amount the customer mentions
+DATE_TOLERANCE_DAYS = 3
+MAX_CANDIDATES = 5
+_MERCHANT_STOP = frozenset({"de", "del", "la", "el", "los", "las", "do", "da", "dos", "das", "en", "em", "no", "na"})
+
+
+def _fold(text: str) -> str:
+    text = unicodedata.normalize("NFKD", text.lower())
+    return "".join(ch for ch in text if not unicodedata.combining(ch))
+
+
+def merchant_matches(hint: str, name: str | None) -> tuple[bool, bool]:
+    """(matches, exact): the whole name, the hint inside the name, or one significant word of it."""
+    if not name:
+        return False, False
+    h, n = _fold(hint).strip(), _fold(name)
+    if not h:
+        return False, False
+    if h == n:
+        return True, True
+    if h in n:
+        return True, False
+    words = {w for w in re.findall(r"\w+", n) if len(w) >= 4 and w not in _MERCHANT_STOP}
+    return bool(words & {w for w in re.findall(r"\w+", h) if len(w) >= 4}), False
 
 
 class State(StrEnum):
@@ -59,6 +90,8 @@ class Turn(BaseModel):
     very_negative_sentiment: bool = False
     ip_country_mismatch: bool = False
     regulatory_threat: bool = False
+    purchase_date: date | None = None  # approximate day of the charge the customer refers to
+    wrong_transaction: bool = False  # at confirmation: "not that one, the other"
 
 
 Action = Literal["ask", "confirm", "done", "ineligible", "handoff", "reauth", "cancelled"]
@@ -74,6 +107,9 @@ class FlowResult(BaseModel):
     card: Card | None = None
     policy: PolicyDecision | None = None
     handoff: HandoffPackage | None = None
+    # How the candidates were found: "match" (the customer's description), "closest" (partly relaxed), "recent"
+    # (nothing matched, so the latest purchases are shown instead of asking the same question again).
+    candidates_note: str | None = None
 
 
 class DisputeFlow:
@@ -112,6 +148,11 @@ class DisputeFlow:
         self._final: FlowResult | None = None
         self.rejected_references: list[str] = []
         self.foreign_references = 0
+        # What the customer said about the charge so far, kept across turns ("unos 90 mil" ... "fue en el mercado").
+        self.hints: dict[str, Any] = {}
+        self.progress = False  # this turn added a detail about the charge or rejected shown candidates
+        self.last_candidates: list[Transaction] = []
+        self.rejected_transactions: set[str] = set()
 
     # ---- public API -------------------------------------------------------------------
     def handle(self, turn: Turn) -> FlowResult:
@@ -130,6 +171,8 @@ class DisputeFlow:
         if self.flags["human_requested"]:
             return self._handoff(["customer_requested_human"])
         if self.state == State.CONFIRM:
+            if turn.wrong_transaction:
+                return self._reidentify(turn)
             return self._on_confirm(turn)
         return self._advance(turn)
 
@@ -149,9 +192,17 @@ class DisputeFlow:
         if turn.summary:
             self.summary = turn.summary
         if turn.reason_code is not None:
-            self.reason_code = turn.reason_code
-            self.confidence = turn.classifier_confidence if turn.classifier_confidence is not None else 1.0
+            confidence = turn.classifier_confidence if turn.classifier_confidence is not None else 1.0
+            # A reason already read is replaced only by an answer to the reason question or a surer reading:
+            # a later short answer ("era en el mercado") must not silently change what the customer said.
+            if self.reason_code is None or self.state == State.CLASSIFY or confidence >= self.confidence:
+                self.reason_code, self.confidence = turn.reason_code, confidence
         self.evidence.update({k: v for k, v in turn.evidence.items() if v})
+        self.progress = bool(turn.wrong_transaction)
+        for name, value in (("merchant", turn.merchant), ("amount", turn.amount), ("date", turn.purchase_date)):
+            if value is not None and value != "" and self.hints.get(name) != value:
+                self.hints[name] = value
+                self.progress = True
         for name in self.flags:
             self.flags[name] = self.flags[name] or getattr(turn, name)
 
@@ -179,6 +230,10 @@ class DisputeFlow:
         )
 
     def _identify(self, turn: Turn) -> FlowResult | None:
+        if turn.wrong_transaction and not turn.transaction_id and self.last_candidates:
+            # "No, none of those": do not offer the same charges again.
+            self.rejected_transactions.update(t.transaction_id for t in self.last_candidates)
+            self._audit("candidates_rejected_by_customer", transaction_ids=[t.transaction_id for t in self.last_candidates])
         try:
             if turn.transaction_id:
                 try:
@@ -193,21 +248,74 @@ class DisputeFlow:
                         reason = "suspicious_access" if self.foreign_references else "invalid_transaction_references"
                         return self._handoff([reason], open_questions=["transaction"])
                     return self._clarify(["transaction"], "transaction", State.IDENTIFY_TXN)
-            elif turn.merchant or turn.amount is not None:
-                candidates = self._retry(
-                    lambda: self.tools.search_transactions(
-                        turn.token, days=IDENTIFY_LOOKBACK_DAYS, merchant=turn.merchant, amount=turn.amount
-                    )
-                )
-                if len(candidates) != 1:
-                    return self._clarify(["transaction"], "transaction", State.IDENTIFY_TXN, candidates=candidates[:5])
-                self.txn = candidates[0]
+            elif self.hints:
+                candidates, note, sure = self._find(turn.token)
+                if len(candidates) == 1 and sure:
+                    self.txn = candidates[0]
+                else:
+                    return self._clarify(["transaction"], "transaction", State.IDENTIFY_TXN,
+                                         candidates=candidates[:MAX_CANDIDATES], note=note)
             else:
                 return self._clarify(["transaction"], "transaction", State.IDENTIFY_TXN)
         except ToolUnavailable:
             return self._handoff(["tool_failure"])
         self._audit("transaction_identified", transaction_id=self.txn.transaction_id)
         return None
+
+    def _find(self, token: str) -> tuple[list[Transaction], str, bool]:
+        """Candidates for what the customer described. Returns (candidates, note, sure): `sure` only when one charge
+        matches the description exactly (full merchant name or exact amount); otherwise the customer picks."""
+        txns = [t for t in self._retry(lambda: self.tools.search_transactions(token, days=IDENTIFY_LOOKBACK_DAYS))
+                if t.transaction_id not in self.rejected_transactions]
+        merchant, amount, day = self.hints.get("merchant"), self.hints.get("amount"), self.hints.get("date")
+
+        def by_merchant(ts: list[Transaction]) -> tuple[list[Transaction], bool]:
+            hits = [(t, merchant_matches(merchant, t.merchant_name)) for t in ts]
+            exact = [t for t, (ok, ex) in hits if ex]
+            return (exact, True) if exact else ([t for t, (ok, _) in hits if ok], False)
+
+        def by_amount(ts: list[Transaction], tolerant: bool) -> list[Transaction]:
+            if not tolerant:
+                return [t for t in ts if abs(t.amount - amount) < Decimal("0.005")]
+            span = max(abs(amount) * Decimal(str(AMOUNT_TOLERANCE)), Decimal("1"))
+            return sorted([t for t in ts if abs(t.amount - amount) <= span], key=lambda t: abs(t.amount - amount))
+
+        def by_date(ts: list[Transaction]) -> list[Transaction]:
+            return [t for t in ts if abs((t.transaction_date.date() - day).days) <= DATE_TOLERANCE_DAYS]
+
+        # Strict first, then drop the least reliable memory: the day, then the amount, then the merchant.
+        pool, merchant_exact = (by_merchant(txns) if merchant else (txns, False))
+        attempts: list[tuple[list[Transaction], bool]] = []
+        if amount is not None:
+            exact_amount = by_amount(pool, tolerant=False)
+            attempts.append((by_date(exact_amount) if day else exact_amount, True))
+            attempts.append((by_amount(pool, tolerant=True), False))
+        if day:
+            attempts.append((by_date(pool), False))
+        if merchant:
+            attempts.append((pool, merchant_exact and amount is None and day is None))
+        for i, (found, precise) in enumerate(attempts):
+            if found:
+                return found, "match" if i == 0 else "closest", precise
+        return txns[:MAX_CANDIDATES], "recent", False
+
+    def _reidentify(self, turn: Turn) -> FlowResult:
+        """At the confirmation the customer says the charge is not the one they meant: go back to choosing it."""
+        assert self.txn is not None
+        self._audit("transaction_rejected_by_customer", transaction_id=self.txn.transaction_id)
+        self.rejected_transactions.add(self.txn.transaction_id)
+        self.txn, self.last_policy = None, None
+        self.state = State.IDENTIFY_TXN
+        if turn.transaction_id and turn.transaction_id not in self.rejected_transactions:
+            return self._advance(turn)
+        others = [t for t in self.last_candidates if t.transaction_id not in self.rejected_transactions]
+        if len(others) == 1:
+            self.txn = others[0]
+            self._audit("transaction_identified", transaction_id=self.txn.transaction_id)
+            return self._advance(turn)
+        if others:
+            return self._clarify(["transaction"], "transaction", State.IDENTIFY_TXN, candidates=others, note="match")
+        return self._advance(turn)
 
     def _evaluate(self) -> PolicyDecision:
         assert self.txn is not None and self.reason_code is not None and self.customer_id is not None
@@ -300,15 +408,21 @@ class DisputeFlow:
         *,
         candidates: list[Transaction] | None = None,
         policy: PolicyDecision | None = None,
+        note: str | None = None,
     ) -> FlowResult:
+        if candidates:
+            self.last_candidates = list(candidates)
         if self.channel == Channel.PQR:
             return self._handoff(["async_missing_info"], policy, open_questions=fields)
-        self.attempts[counter] = self.attempts.get(counter, 0) + 1
-        if self.attempts[counter] > MAX_CLARIFY:
+        self.attempts["_rounds_" + counter] = self.attempts.get("_rounds_" + counter, 0) + 1
+        if not (counter == "transaction" and self.progress):
+            self.attempts[counter] = self.attempts.get(counter, 0) + 1
+        if self.attempts.get(counter, 0) > MAX_CLARIFY or self.attempts["_rounds_" + counter] > MAX_IDENTIFY_ROUNDS:
             return self._handoff(["clarification_exhausted"], policy, open_questions=fields)
         self.state = state
-        self._audit("clarify", fields=fields, attempt=self.attempts[counter])
-        return FlowResult(state=state, action="ask", ask_for=fields, candidates=candidates or [], policy=policy)
+        self._audit("clarify", fields=fields, attempt=self.attempts.get(counter, 0), progress=self.progress)
+        return FlowResult(state=state, action="ask", ask_for=fields, candidates=candidates or [], policy=policy,
+                          candidates_note=note if candidates else None)
 
     def _handoff(
         self, reasons: list[str], policy: PolicyDecision | None = None, open_questions: list[str] | None = None
