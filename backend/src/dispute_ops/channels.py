@@ -4,6 +4,7 @@ import time
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from decimal import Decimal
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -105,6 +106,28 @@ def read_complaint(nlu, text: str, policy: PolicyEngine) -> NluResult:
     second = nlu.interpret(text, NluContext(state="COLLECT_EVIDENCE", ask_for=needed)).result
     fields = {e: getattr(second, e) for e in needed if getattr(second, e, None) is not None}
     return first.model_copy(update=fields)
+
+
+def process_letter(
+    item: dict[str, Any], reader: Any, *, tools: BankingTools, store: Store, policy: PolicyEngine,
+    sessions: SessionService, clock: Callable[[], datetime], sleep: Callable[[float], None] = time.sleep,
+    on_flow: Callable[[DisputeFlow], None] | None = None,
+) -> tuple[NluResult, FlowResult]:
+    """One written complaint end to end: read the letter, match the charge from the structured PQR fields, decide.
+    Used by the demo inbox and by the channels-v1 evaluation, so both run the same code."""
+    reading = read_complaint(reader, item["description"], policy)
+    complaint = PqrComplaint(
+        complaint_id=item["complaint_id"], customer_id=item["customer_id"], description=item["description"],
+        affected_product_id=item.get("affected_product_id"), claimed_amount=item.get("claimed_amount"),
+        created_at=item.get("created_at"), evidence=reading.evidence(), language=item.get("language", "es"),
+    )
+    result = run_pqr_complaint(
+        complaint, reason_code=reading.reason_code, classifier_confidence=reading.reason_confidence,
+        tools=tools, store=store, policy=policy, sessions=sessions, clock=clock, sleep=sleep,
+        regulatory_threat=reading.regulatory_threat, very_negative_sentiment=reading.very_negative_sentiment,
+        on_flow=on_flow,
+    )
+    return reading, result
 
 
 def select_fraud_alerts(

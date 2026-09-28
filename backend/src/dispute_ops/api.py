@@ -22,7 +22,7 @@ from dispute_ops.auth import AuthError
 from dispute_ops.board import snapshot
 from dispute_ops.language.intent_model import classifier_monitoring
 from dispute_ops.language.rule_nlu import is_rules_model
-from dispute_ops.channels import PqrComplaint, read_complaint, run_pqr_complaint, select_fraud_alerts
+from dispute_ops.channels import PqrComplaint, process_letter, run_pqr_complaint, select_fraud_alerts
 from dispute_ops.container import Container
 from dispute_ops.conversation import Reply
 from dispute_ops.domain import AuditEvent, ReasonCode
@@ -223,18 +223,8 @@ def create_app(container: Container, workspace_factory: Callable[[], Container] 
             raise HTTPException(503, "no reader available")
         out = []
         for item in _inbox(c):
-            reading = read_complaint(reader, item["description"], c.policy)
-            complaint = PqrComplaint(
-                complaint_id=item["complaint_id"], customer_id=item["customer_id"], description=item["description"],
-                affected_product_id=item.get("affected_product_id"), claimed_amount=item.get("claimed_amount"),
-                created_at=item.get("created_at"), evidence=reading.evidence(), language=item.get("language", "es"),
-            )
-            r = run_pqr_complaint(
-                complaint, reason_code=reading.reason_code, classifier_confidence=reading.reason_confidence,
-                tools=c.tools, store=c.store, policy=c.policy, sessions=c.sessions, clock=c.clock,
-                sleep=n.sleep, regulatory_threat=reading.regulatory_threat,
-                very_negative_sentiment=reading.very_negative_sentiment, on_flow=c.async_flows.append,
-            )
+            reading, r = process_letter(item, reader, tools=c.tools, store=c.store, policy=c.policy,
+                                        sessions=c.sessions, clock=c.clock, sleep=n.sleep, on_flow=c.async_flows.append)
             out.append({
                 "complaint_id": item["complaint_id"], "action": r.action, "state": r.state,
                 "reading": {

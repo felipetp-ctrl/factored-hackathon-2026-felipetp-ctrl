@@ -1,0 +1,1203 @@
+[
+ {
+  "id": "channels-v1-dev-letter-fraud-complete-00-es",
+  "kind": "letter",
+  "key": "fraud-complete",
+  "split": "dev",
+  "language": "es",
+  "customer_id": "CLI-X3NYZVI06J8Z",
+  "transaction_id": "TRX-Q6HAJZDQ7VOFZ3JLUCQU",
+  "brief": "A written complaint (Spanish) about a card charge of 95140.31 COP at 12/06/2026 at the merchant “Servicios Públicos”. The customer states the amount. They do not recognise the merchant and say they have the card with them.",
+  "expected": {
+   "outcome": "done",
+   "transaction_id": "TRX-Q6HAJZDQ7VOFZ3JLUCQU",
+   "reason_code": "FRAUD_CNP",
+   "block": false
+  },
+  "received_via": "web",
+  "affected_product_id": "PRD-TMLD45UJEST4",
+  "claimed_amount": "95140.31",
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-test-letter-fraud-complete-00-es",
+  "kind": "letter",
+  "key": "fraud-complete",
+  "split": "test",
+  "language": "es",
+  "customer_id": "CLI-TWGPCI1LMR11",
+  "transaction_id": "TRX-SX153YVDC0WWEQ5STKKO",
+  "brief": "A written complaint (Spanish) about a card charge of 188.56 USD at 26/05/2026 at the merchant “Gasolinera Express”. The customer states the amount. They do not recognise the merchant and say they have the card with them.",
+  "expected": {
+   "outcome": "done",
+   "transaction_id": "TRX-SX153YVDC0WWEQ5STKKO",
+   "reason_code": "FRAUD_CNP",
+   "block": false
+  },
+  "received_via": "branch",
+  "affected_product_id": "PRD-YPKLKYJL7RLA",
+  "claimed_amount": "188.56",
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-test-letter-fraud-complete-01-pt",
+  "kind": "letter",
+  "key": "fraud-complete",
+  "split": "test",
+  "language": "pt",
+  "customer_id": "CLI-8RS5SUNJQW0X",
+  "transaction_id": "TRX-XBV7CTBHDMPF8S5PO3JY",
+  "brief": "A written complaint (Brazilian Portuguese) about a card charge of 1243047.01 COP at 21/05/2026 at the merchant “Mercado Central”. The customer states the amount. They do not recognise the merchant and say they have the card with them.",
+  "expected": {
+   "outcome": "done",
+   "transaction_id": "TRX-XBV7CTBHDMPF8S5PO3JY",
+   "reason_code": "FRAUD_CNP",
+   "block": false
+  },
+  "received_via": "branch",
+  "affected_product_id": "PRD-JMJHE6K62DLB",
+  "claimed_amount": "1243047.01",
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-dev-letter-fraud-no-card-info-00-pt",
+  "kind": "letter",
+  "key": "fraud-no-card-info",
+  "split": "dev",
+  "language": "pt",
+  "customer_id": "CLI-7X6AB48U1MR8",
+  "transaction_id": "TRX-P1LCGUXTA352GSSTZ31X",
+  "brief": "A written complaint (Brazilian Portuguese) about a card charge of 317.79 USD at 22/05/2026 at the merchant “Teatro Nacional”. The customer states the amount. They do not recognise the charge. They say nothing about where the card is.",
+  "expected": {
+   "outcome": "handoff",
+   "handoff_reasons": [
+    "async_missing_info"
+   ],
+   "transaction_id": "TRX-P1LCGUXTA352GSSTZ31X",
+   "reason_code": "FRAUD_CNP",
+   "missing": [
+    "card_in_possession"
+   ]
+  },
+  "received_via": "web",
+  "affected_product_id": "PRD-5XS9HABC95BD",
+  "claimed_amount": "317.79",
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-test-letter-fraud-no-card-info-00-es",
+  "kind": "letter",
+  "key": "fraud-no-card-info",
+  "split": "test",
+  "language": "es",
+  "customer_id": "CLI-ZJTA74IS8XWN",
+  "transaction_id": "TRX-PA4OQD9KA7UC7AOR18XE",
+  "brief": "A written complaint (Spanish) about a card charge of 143704.34 ARS at 09/05/2026 at the merchant “Teatro Nacional”. The customer states the amount. They do not recognise the charge. They say nothing about where the card is.",
+  "expected": {
+   "outcome": "handoff",
+   "handoff_reasons": [
+    "async_missing_info"
+   ],
+   "transaction_id": null,
+   "reason_code": null,
+   "candidates": 2
+  },
+  "received_via": "branch",
+  "affected_product_id": "PRD-FO1XYNUNSU2E",
+  "claimed_amount": "143704.34",
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-test-letter-fraud-no-card-info-01-pt",
+  "kind": "letter",
+  "key": "fraud-no-card-info",
+  "split": "test",
+  "language": "pt",
+  "customer_id": "CLI-PWSEQR7IXHEA",
+  "transaction_id": "TRX-W7C7C1BI8UGW7KTVMBKP",
+  "brief": "A written complaint (Brazilian Portuguese) about a card charge of 56324.77 ARS at 19/05/2026 at the merchant “Servicios Públicos”. The customer states the amount. They do not recognise the charge. They say nothing about where the card is.",
+  "expected": {
+   "outcome": "handoff",
+   "handoff_reasons": [
+    "async_missing_info"
+   ],
+   "transaction_id": "TRX-W7C7C1BI8UGW7KTVMBKP",
+   "reason_code": "FRAUD_CNP",
+   "missing": [
+    "card_in_possession"
+   ]
+  },
+  "received_via": "email",
+  "affected_product_id": "PRD-3FQ2K6F8CQRA",
+  "claimed_amount": "56324.77",
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-dev-letter-stolen-card-00-es",
+  "kind": "letter",
+  "key": "stolen-card",
+  "split": "dev",
+  "language": "es",
+  "customer_id": "CLI-INANP662X4NF",
+  "transaction_id": "TRX-VQBDQ5LO2HR8GEP94B2T",
+  "brief": "A written complaint (Spanish) about a card charge of 323.95 USD at 20/05/2026 at the merchant “Cable TV”. The customer states the amount. Their card was stolen (or lost) before this charge; they no longer have it.",
+  "expected": {
+   "outcome": "done",
+   "transaction_id": "TRX-VQBDQ5LO2HR8GEP94B2T",
+   "reason_code": "FRAUD_CP",
+   "block": false
+  },
+  "received_via": "branch",
+  "affected_product_id": "PRD-FGUQOJ7UH8RZ",
+  "claimed_amount": "323.95",
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-test-letter-stolen-card-00-es",
+  "kind": "letter",
+  "key": "stolen-card",
+  "split": "test",
+  "language": "es",
+  "customer_id": "CLI-G6J05JWKGXW4",
+  "transaction_id": "TRX-C78D7B8WSDYNYEV3SK6Y",
+  "brief": "A written complaint (Spanish) about a card charge of 1325989.61 COP at 10/06/2026 at the merchant “Teatro Nacional”. The customer states the amount. Their card was stolen (or lost) before this charge; they no longer have it.",
+  "expected": {
+   "outcome": "done",
+   "transaction_id": "TRX-C78D7B8WSDYNYEV3SK6Y",
+   "reason_code": "FRAUD_CP",
+   "block": false
+  },
+  "received_via": "app",
+  "affected_product_id": "PRD-RC0RCBNQNZLD",
+  "claimed_amount": "1325989.61",
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-test-letter-stolen-card-01-pt",
+  "kind": "letter",
+  "key": "stolen-card",
+  "split": "test",
+  "language": "pt",
+  "customer_id": "CLI-PYVR468FJQ4J",
+  "transaction_id": "TRX-4YH37L639TDHGX35QRCV",
+  "brief": "A written complaint (Brazilian Portuguese) about a card charge of 4650.87 ARS at 26/05/2026 at the merchant “Restaurante El Buen Sabor”. The customer states the amount. Their card was stolen (or lost) before this charge; they no longer have it.",
+  "expected": {
+   "outcome": "done",
+   "transaction_id": "TRX-4YH37L639TDHGX35QRCV",
+   "reason_code": "FRAUD_CP",
+   "block": false
+  },
+  "received_via": "branch",
+  "affected_product_id": "PRD-CMUIOUGLC5MT",
+  "claimed_amount": "4650.87",
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-dev-letter-duplicate-00-pt",
+  "kind": "letter",
+  "key": "duplicate",
+  "split": "dev",
+  "language": "pt",
+  "customer_id": "CLI-7OCG3E8OLHLG",
+  "transaction_id": "TRX-SPI8HK3FN8DTJSN1ZWB8",
+  "brief": "A written complaint (Brazilian Portuguese) about a card charge of 321.92 USD at 18/05/2026 at the merchant “Laboratorio Central”. The customer states the amount. They were charged twice for the same purchase. They do not know any transaction number.",
+  "expected": {
+   "outcome": "handoff",
+   "handoff_reasons": [
+    "async_missing_info"
+   ],
+   "transaction_id": "TRX-SPI8HK3FN8DTJSN1ZWB8",
+   "reason_code": "DUPLICATE",
+   "missing": [
+    "duplicate_transaction_id"
+   ]
+  },
+  "received_via": "email",
+  "affected_product_id": "PRD-9W6FQ65AK6Z5",
+  "claimed_amount": "321.92",
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-test-letter-duplicate-00-es",
+  "kind": "letter",
+  "key": "duplicate",
+  "split": "test",
+  "language": "es",
+  "customer_id": "CLI-BW6KRTH1MG8K",
+  "transaction_id": "TRX-FVXSLIJ5AM1IBO6RZ2ZL",
+  "brief": "A written complaint (Spanish) about a card charge of 423885.21 COP at 27/05/2026 at the merchant “Tienda Don José”. The customer states the amount. They were charged twice for the same purchase. They do not know any transaction number.",
+  "expected": {
+   "outcome": "handoff",
+   "handoff_reasons": [
+    "async_missing_info"
+   ],
+   "transaction_id": "TRX-FVXSLIJ5AM1IBO6RZ2ZL",
+   "reason_code": "DUPLICATE",
+   "missing": [
+    "duplicate_transaction_id"
+   ]
+  },
+  "received_via": "app",
+  "affected_product_id": "PRD-A4JSTU7I1BFT",
+  "claimed_amount": "423885.21",
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-test-letter-duplicate-01-pt",
+  "kind": "letter",
+  "key": "duplicate",
+  "split": "test",
+  "language": "pt",
+  "customer_id": "CLI-FX0CYCGWBYPA",
+  "transaction_id": "TRX-MKHADVJSWS38387IAXDS",
+  "brief": "A written complaint (Brazilian Portuguese) about a card charge of 39048.23 ARS at 30/04/2026 at the merchant “Super Ahorro”. The customer states the amount. They were charged twice for the same purchase. They do not know any transaction number.",
+  "expected": {
+   "outcome": "handoff",
+   "handoff_reasons": [
+    "async_missing_info"
+   ],
+   "transaction_id": "TRX-MKHADVJSWS38387IAXDS",
+   "reason_code": "DUPLICATE",
+   "missing": [
+    "duplicate_transaction_id"
+   ]
+  },
+  "received_via": "web",
+  "affected_product_id": "PRD-ATSTHIDZ84TH",
+  "claimed_amount": "39048.23",
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-dev-letter-wrong-amount-00-es",
+  "kind": "letter",
+  "key": "wrong-amount",
+  "split": "dev",
+  "language": "es",
+  "customer_id": "CLI-RRO0X8RYB4LN",
+  "transaction_id": "TRX-WCV73QDX97KD8CZEPRC3",
+  "brief": "A written complaint (Spanish) about a card charge of 144403.60 ARS at 16/05/2026 at the merchant “Mercado Central”. The customer states the amount. The charge is higher than the price they agreed: the correct amount was about 70% of the charge (state the correct amount as a number).",
+  "expected": {
+   "outcome": "done",
+   "transaction_id": "TRX-WCV73QDX97KD8CZEPRC3",
+   "reason_code": "INCORRECT_AMOUNT",
+   "block": false
+  },
+  "received_via": "email",
+  "affected_product_id": "PRD-EHKWM737EPGJ",
+  "claimed_amount": "144403.60",
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-test-letter-wrong-amount-00-es",
+  "kind": "letter",
+  "key": "wrong-amount",
+  "split": "test",
+  "language": "es",
+  "customer_id": "CLI-5WUJY51FSC0Y",
+  "transaction_id": "TRX-YNX7DAFJODLOE659OYQ6",
+  "brief": "A written complaint (Spanish) about a card charge of 276.67 USD at 10/06/2026 at the merchant “Teatro Nacional”. The customer states the amount. The charge is higher than the price they agreed: the correct amount was about 70% of the charge (state the correct amount as a number).",
+  "expected": {
+   "outcome": "done",
+   "transaction_id": "TRX-YNX7DAFJODLOE659OYQ6",
+   "reason_code": "INCORRECT_AMOUNT",
+   "block": false
+  },
+  "received_via": "email",
+  "affected_product_id": "PRD-NYRTADZN695C",
+  "claimed_amount": "276.67",
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-test-letter-wrong-amount-01-pt",
+  "kind": "letter",
+  "key": "wrong-amount",
+  "split": "test",
+  "language": "pt",
+  "customer_id": "CLI-EX6BOAOEFZHQ",
+  "transaction_id": "TRX-23BIJAU4GL46ATPW9STY",
+  "brief": "A written complaint (Brazilian Portuguese) about a card charge of 288.69 USD at 31/05/2026 at the merchant “Estación de Servicio”. The customer states the amount. The charge is higher than the price they agreed: the correct amount was about 70% of the charge (state the correct amount as a number).",
+  "expected": {
+   "outcome": "done",
+   "transaction_id": "TRX-23BIJAU4GL46ATPW9STY",
+   "reason_code": "INCORRECT_AMOUNT",
+   "block": false
+  },
+  "received_via": "email",
+  "affected_product_id": "PRD-Z3Y8BK8CKUTN",
+  "claimed_amount": "288.69",
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-dev-letter-not-received-00-pt",
+  "kind": "letter",
+  "key": "not-received",
+  "split": "dev",
+  "language": "pt",
+  "customer_id": "CLI-TXB08Q95EN8A",
+  "transaction_id": "TRX-2OZMVG8TLDRGMXJDWETH",
+  "brief": "A written complaint (Brazilian Portuguese) about a card charge of 141.09 USD at 07/05/2026 at the merchant “Cine Premium”. The customer states the amount. They paid but never received the product. It should have arrived on a specific date (state it), and they already contacted the merchant, who did not solve it.",
+  "expected": {
+   "outcome": "done",
+   "transaction_id": "TRX-2OZMVG8TLDRGMXJDWETH",
+   "reason_code": "NOT_RECEIVED",
+   "block": false
+  },
+  "received_via": "web",
+  "affected_product_id": "PRD-J7F8IQR8CSQ6",
+  "claimed_amount": "141.09",
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-test-letter-not-received-00-es",
+  "kind": "letter",
+  "key": "not-received",
+  "split": "test",
+  "language": "es",
+  "customer_id": "CLI-5QFVDPXCV9SU",
+  "transaction_id": "TRX-W1ZYDH19JV0H6IT2R5PU",
+  "brief": "A written complaint (Spanish) about a card charge of 812736.14 COP at 16/05/2026 at the merchant “Tienda Don José”. The customer states the amount. They paid but never received the product. It should have arrived on a specific date (state it), and they already contacted the merchant, who did not solve it.",
+  "expected": {
+   "outcome": "done",
+   "transaction_id": "TRX-W1ZYDH19JV0H6IT2R5PU",
+   "reason_code": "NOT_RECEIVED",
+   "block": false
+  },
+  "received_via": "web",
+  "affected_product_id": "PRD-H79E78L7VUYW",
+  "claimed_amount": "812736.14",
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-test-letter-not-received-01-pt",
+  "kind": "letter",
+  "key": "not-received",
+  "split": "test",
+  "language": "pt",
+  "customer_id": "CLI-D7ARGRWLBT81",
+  "transaction_id": "TRX-9BTQ79GIG9ZDDBXN6YFC",
+  "brief": "A written complaint (Brazilian Portuguese) about a card charge of 102452.59 ARS at 30/04/2026 at the merchant “Restaurante El Buen Sabor”. The customer states the amount. They paid but never received the product. It should have arrived on a specific date (state it), and they already contacted the merchant, who did not solve it.",
+  "expected": {
+   "outcome": "done",
+   "transaction_id": "TRX-9BTQ79GIG9ZDDBXN6YFC",
+   "reason_code": "NOT_RECEIVED",
+   "block": false
+  },
+  "received_via": "email",
+  "affected_product_id": "PRD-X0FK909M6CNG",
+  "claimed_amount": "102452.59",
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-dev-letter-subscription-00-es",
+  "kind": "letter",
+  "key": "subscription",
+  "split": "dev",
+  "language": "es",
+  "customer_id": "CLI-15CX29YY6SS9",
+  "transaction_id": "TRX-AI3TCJJ92E85WWXDUONZ",
+  "brief": "A written complaint (Spanish) about a card charge of 219.22 USD at 05/06/2026 at the merchant “Mercado Central”. The customer states the amount. It is a subscription they had already cancelled; state the day they cancelled it (before the charge).",
+  "expected": {
+   "outcome": "done",
+   "transaction_id": "TRX-AI3TCJJ92E85WWXDUONZ",
+   "reason_code": "CANCELLED_RECURRING",
+   "block": false
+  },
+  "received_via": "web",
+  "affected_product_id": "PRD-VREMQESDNL6R",
+  "claimed_amount": "219.22",
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-test-letter-subscription-00-es",
+  "kind": "letter",
+  "key": "subscription",
+  "split": "test",
+  "language": "es",
+  "customer_id": "CLI-BN0NZHORO60Q",
+  "transaction_id": "TRX-T7F6HE7A69MZBHIMNR8T",
+  "brief": "A written complaint (Spanish) about a card charge of 263.79 USD at 13/06/2026 at the merchant “Cine Premium”. The customer states the amount. It is a subscription they had already cancelled; state the day they cancelled it (before the charge).",
+  "expected": {
+   "outcome": "done",
+   "transaction_id": "TRX-T7F6HE7A69MZBHIMNR8T",
+   "reason_code": "CANCELLED_RECURRING",
+   "block": false
+  },
+  "received_via": "app",
+  "affected_product_id": "PRD-NY1L0OH793BG",
+  "claimed_amount": "263.79",
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-test-letter-subscription-01-pt",
+  "kind": "letter",
+  "key": "subscription",
+  "split": "test",
+  "language": "pt",
+  "customer_id": "CLI-7T9PVSOZCKZI",
+  "transaction_id": "TRX-69WMI1A65K6NZCJE84JB",
+  "brief": "A written complaint (Brazilian Portuguese) about a card charge of 245.69 USD at 13/05/2026 at the merchant “Uber”. The customer states the amount. It is a subscription they had already cancelled; state the day they cancelled it (before the charge).",
+  "expected": {
+   "outcome": "done",
+   "transaction_id": "TRX-69WMI1A65K6NZCJE84JB",
+   "reason_code": "CANCELLED_RECURRING",
+   "block": false
+  },
+  "received_via": "email",
+  "affected_product_id": "PRD-NSHGGHFLOW76",
+  "claimed_amount": "245.69",
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-dev-letter-vague-00-pt",
+  "kind": "letter",
+  "key": "vague",
+  "split": "dev",
+  "language": "pt",
+  "customer_id": "CLI-3F24Z7NFYOO8",
+  "transaction_id": "TRX-K2GHMKU2I1RK5Y4MMEHS",
+  "brief": "A written complaint (Brazilian Portuguese) about a card charge of 88949.21 ARS at 03/06/2026 at the merchant “Estación de Servicio”. The customer does not know the amount. A short, vague letter: an unrecognised charge “this month”, card with them. No amount, no card number.",
+  "expected": {
+   "outcome": "handoff",
+   "handoff_reasons": [
+    "async_missing_info"
+   ],
+   "transaction_id": null,
+   "reason_code": null,
+   "candidates": 3
+  },
+  "received_via": "email",
+  "affected_product_id": null,
+  "claimed_amount": null,
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-test-letter-vague-00-es",
+  "kind": "letter",
+  "key": "vague",
+  "split": "test",
+  "language": "es",
+  "customer_id": "CLI-PNTTXCK5S5R6",
+  "transaction_id": "TRX-PNTJUVH3S3QY0FE2891G",
+  "brief": "A written complaint (Spanish) about a card charge of 311.31 USD at 31/05/2026 at the merchant “Super Ahorro”. The customer does not know the amount. A short, vague letter: an unrecognised charge “this month”, card with them. No amount, no card number.",
+  "expected": {
+   "outcome": "handoff",
+   "handoff_reasons": [
+    "async_missing_info"
+   ],
+   "transaction_id": null,
+   "reason_code": null,
+   "candidates": 5
+  },
+  "received_via": "branch",
+  "affected_product_id": null,
+  "claimed_amount": null,
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-test-letter-vague-01-pt",
+  "kind": "letter",
+  "key": "vague",
+  "split": "test",
+  "language": "pt",
+  "customer_id": "CLI-LJ4SVN5D2RUV",
+  "transaction_id": "TRX-WY0IEG15DFH1QX0X0WBJ",
+  "brief": "A written complaint (Brazilian Portuguese) about a card charge of 67878.26 COP at 13/05/2026 at the merchant “Mercado Central”. The customer does not know the amount. A short, vague letter: an unrecognised charge “this month”, card with them. No amount, no card number.",
+  "expected": {
+   "outcome": "handoff",
+   "handoff_reasons": [
+    "async_missing_info"
+   ],
+   "transaction_id": null,
+   "reason_code": null,
+   "candidates": 5
+  },
+  "received_via": "email",
+  "affected_product_id": null,
+  "claimed_amount": null,
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-dev-letter-above-limit-00-es",
+  "kind": "letter",
+  "key": "above-limit",
+  "split": "dev",
+  "language": "es",
+  "customer_id": "CLI-YG3MZ6RR1E23",
+  "transaction_id": "TRX-L6BOJM7ZRHZNWFDKJ3OA",
+  "brief": "A written complaint (Spanish) about a card charge of 479.85 USD at 30/04/2026 at the merchant “Servicios Públicos”. The customer states the amount. They do not recognise the merchant and have the card with them.",
+  "expected": {
+   "outcome": "handoff",
+   "handoff_reasons": [
+    "amount_above_threshold"
+   ],
+   "transaction_id": "TRX-L6BOJM7ZRHZNWFDKJ3OA",
+   "reason_code": "FRAUD_CNP"
+  },
+  "received_via": "web",
+  "affected_product_id": "PRD-7KUOHXZC68FE",
+  "claimed_amount": "479.85",
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-test-letter-above-limit-00-es",
+  "kind": "letter",
+  "key": "above-limit",
+  "split": "test",
+  "language": "es",
+  "customer_id": "CLI-ATBAF0AXGDSG",
+  "transaction_id": "TRX-OCMYF1VDYMFVRIWPM89B",
+  "brief": "A written complaint (Spanish) about a card charge of 475.87 USD at 03/06/2026 at the merchant “Cable TV”. The customer states the amount. They do not recognise the merchant and have the card with them.",
+  "expected": {
+   "outcome": "handoff",
+   "handoff_reasons": [
+    "amount_above_threshold"
+   ],
+   "transaction_id": "TRX-OCMYF1VDYMFVRIWPM89B",
+   "reason_code": "FRAUD_CNP"
+  },
+  "received_via": "email",
+  "affected_product_id": "PRD-9NPWN6O6PFMN",
+  "claimed_amount": "475.87",
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-test-letter-above-limit-01-pt",
+  "kind": "letter",
+  "key": "above-limit",
+  "split": "test",
+  "language": "pt",
+  "customer_id": "CLI-0MT46O2VAGHS",
+  "transaction_id": "TRX-TL5HOM8UR824LC77ARH8",
+  "brief": "A written complaint (Brazilian Portuguese) about a card charge of 1928974.71 COP at 27/05/2026 at the merchant “Estación de Servicio”. The customer states the amount. They do not recognise the merchant and have the card with them.",
+  "expected": {
+   "outcome": "handoff",
+   "handoff_reasons": [
+    "amount_above_threshold"
+   ],
+   "transaction_id": "TRX-TL5HOM8UR824LC77ARH8",
+   "reason_code": "FRAUD_CNP"
+  },
+  "received_via": "email",
+  "affected_product_id": "PRD-PUVLJG9BWLO5",
+  "claimed_amount": "1928974.71",
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-dev-letter-regulator-00-pt",
+  "kind": "letter",
+  "key": "regulator",
+  "split": "dev",
+  "language": "pt",
+  "customer_id": "CLI-XPKAYH16KN1I",
+  "transaction_id": "TRX-U01XGRFJQYNIVNX398RZ",
+  "brief": "A written complaint (Brazilian Portuguese) about a card charge of 326.22 USD at 06/05/2026 at the merchant “Cine Premium”. The customer states the amount. They do not recognise the merchant, have the card, and say that if the bank does not solve it they will complain to the banking regulator.",
+  "expected": {
+   "outcome": "handoff",
+   "handoff_reasons": [
+    "regulatory_or_legal_threat"
+   ],
+   "transaction_id": "TRX-U01XGRFJQYNIVNX398RZ",
+   "reason_code": "FRAUD_CNP"
+  },
+  "received_via": "app",
+  "affected_product_id": "PRD-EV9CJDQP0PSS",
+  "claimed_amount": "326.22",
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-test-letter-regulator-00-es",
+  "kind": "letter",
+  "key": "regulator",
+  "split": "test",
+  "language": "es",
+  "customer_id": "CLI-LP2BQNTMC2F5",
+  "transaction_id": "TRX-AU15F5TYMRAAC0IZBMYG",
+  "brief": "A written complaint (Spanish) about a card charge of 139850.60 ARS at 27/05/2026 at the merchant “Centro Comercial”. The customer states the amount. They do not recognise the merchant, have the card, and say that if the bank does not solve it they will complain to the banking regulator.",
+  "expected": {
+   "outcome": "handoff",
+   "handoff_reasons": [
+    "regulatory_or_legal_threat"
+   ],
+   "transaction_id": "TRX-AU15F5TYMRAAC0IZBMYG",
+   "reason_code": "FRAUD_CNP"
+  },
+  "received_via": "web",
+  "affected_product_id": "PRD-OVRIDCA4V9TS",
+  "claimed_amount": "139850.60",
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-test-letter-regulator-01-pt",
+  "kind": "letter",
+  "key": "regulator",
+  "split": "test",
+  "language": "pt",
+  "customer_id": "CLI-2IPXDN0WS5U1",
+  "transaction_id": "TRX-2N3TK664QX6FLNO6H570",
+  "brief": "A written complaint (Brazilian Portuguese) about a card charge of 331.46 USD at 05/06/2026 at the merchant “Uber”. The customer states the amount. They do not recognise the merchant, have the card, and say that if the bank does not solve it they will complain to the banking regulator.",
+  "expected": {
+   "outcome": "handoff",
+   "handoff_reasons": [
+    "regulatory_or_legal_threat"
+   ],
+   "transaction_id": "TRX-2N3TK664QX6FLNO6H570",
+   "reason_code": "FRAUD_CNP"
+  },
+  "received_via": "app",
+  "affected_product_id": "PRD-0ZFFKKGU7RBC",
+  "claimed_amount": "331.46",
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-dev-letter-asks-person-00-es",
+  "kind": "letter",
+  "key": "asks-person",
+  "split": "dev",
+  "language": "es",
+  "customer_id": "CLI-XSI90E6WM7W6",
+  "transaction_id": "TRX-T19H7S06TP3LTZ8XALGS",
+  "brief": "A written complaint (Spanish) about a card charge of 202.97 USD at 29/04/2026 at the merchant “Restaurante El Buen Sabor”. The customer states the amount. They do not recognise the merchant, have the card, and ask for an advisor to call them.",
+  "expected": {
+   "outcome": "handoff",
+   "handoff_reasons": [
+    "customer_requested_human"
+   ],
+   "transaction_id": "TRX-T19H7S06TP3LTZ8XALGS",
+   "reason_code": "FRAUD_CNP"
+  },
+  "received_via": "web",
+  "affected_product_id": "PRD-JT5LCCKPHEJY",
+  "claimed_amount": "202.97",
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-test-letter-asks-person-00-es",
+  "kind": "letter",
+  "key": "asks-person",
+  "split": "test",
+  "language": "es",
+  "customer_id": "CLI-W14AH174AXY8",
+  "transaction_id": "TRX-FTA32TDYSK0V9JDZPBW8",
+  "brief": "A written complaint (Spanish) about a card charge of 1321593.00 COP at 06/06/2026 at the merchant “Óptica Visión”. The customer states the amount. They do not recognise the merchant, have the card, and ask for an advisor to call them.",
+  "expected": {
+   "outcome": "handoff",
+   "handoff_reasons": [
+    "customer_requested_human"
+   ],
+   "transaction_id": "TRX-FTA32TDYSK0V9JDZPBW8",
+   "reason_code": "FRAUD_CNP"
+  },
+  "received_via": "app",
+  "affected_product_id": "PRD-RN2FM4XX511P",
+  "claimed_amount": "1321593.00",
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-test-letter-asks-person-01-pt",
+  "kind": "letter",
+  "key": "asks-person",
+  "split": "test",
+  "language": "pt",
+  "customer_id": "CLI-OWM85N0QIP31",
+  "transaction_id": "TRX-ZJGLQK0L57O4T68FCZKT",
+  "brief": "A written complaint (Brazilian Portuguese) about a card charge of 250.90 USD at 05/06/2026 at the merchant “Servicios Públicos”. The customer states the amount. They do not recognise the merchant, have the card, and ask for an advisor to call them.",
+  "expected": {
+   "outcome": "handoff",
+   "handoff_reasons": [
+    "customer_requested_human"
+   ],
+   "transaction_id": "TRX-ZJGLQK0L57O4T68FCZKT",
+   "reason_code": "FRAUD_CNP"
+  },
+  "received_via": "app",
+  "affected_product_id": "PRD-DCARTPH4CCET",
+  "claimed_amount": "250.90",
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-dev-letter-late-wrong-amount-00-pt",
+  "kind": "letter",
+  "key": "late-wrong-amount",
+  "split": "dev",
+  "language": "pt",
+  "customer_id": "CLI-IF0AOU452ZT7",
+  "transaction_id": "TRX-GPQDAIFJ6FINE4YZVG30",
+  "brief": "A written complaint (Brazilian Portuguese) about a card charge of 330.33 USD at 19/03/2026 at the merchant “Internet Plus”. The customer states the amount. The charge is higher than the agreed price: the correct amount was about 70% of the charge (state it as a number). They only noticed it now, months later.",
+  "expected": {
+   "outcome": "ineligible",
+   "rule_ids": [
+    "R-WINDOW"
+   ],
+   "transaction_id": "TRX-GPQDAIFJ6FINE4YZVG30",
+   "reason_code": "INCORRECT_AMOUNT"
+  },
+  "received_via": "web",
+  "affected_product_id": "PRD-3C8HFOQ4G44K",
+  "claimed_amount": "330.33",
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-test-letter-late-wrong-amount-00-es",
+  "kind": "letter",
+  "key": "late-wrong-amount",
+  "split": "test",
+  "language": "es",
+  "customer_id": "CLI-4AAEL6WJE8X3",
+  "transaction_id": "TRX-S2MIWRXFL4KU9LLC9WB6",
+  "brief": "A written complaint (Spanish) about a card charge of 215.44 USD at 03/04/2026 at the merchant “Estación de Servicio”. The customer states the amount. The charge is higher than the agreed price: the correct amount was about 70% of the charge (state it as a number). They only noticed it now, months later.",
+  "expected": {
+   "outcome": "ineligible",
+   "rule_ids": [
+    "R-WINDOW"
+   ],
+   "transaction_id": "TRX-S2MIWRXFL4KU9LLC9WB6",
+   "reason_code": "INCORRECT_AMOUNT"
+  },
+  "received_via": "web",
+  "affected_product_id": "PRD-5TBUKCX055N5",
+  "claimed_amount": "215.44",
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-test-letter-late-wrong-amount-01-pt",
+  "kind": "letter",
+  "key": "late-wrong-amount",
+  "split": "test",
+  "language": "pt",
+  "customer_id": "CLI-HQCUW7T64NW0",
+  "transaction_id": "TRX-8BHHJRBAAR1I35Q3OWNR",
+  "brief": "A written complaint (Brazilian Portuguese) about a card charge of 1302400.56 COP at 16/03/2026 at the merchant “Clínica Médica”. The customer states the amount. The charge is higher than the agreed price: the correct amount was about 70% of the charge (state it as a number). They only noticed it now, months later.",
+  "expected": {
+   "outcome": "ineligible",
+   "rule_ids": [
+    "R-WINDOW"
+   ],
+   "transaction_id": "TRX-8BHHJRBAAR1I35Q3OWNR",
+   "reason_code": "INCORRECT_AMOUNT"
+  },
+  "received_via": "app",
+  "affected_product_id": "PRD-Y6YSWHWEOKRE",
+  "claimed_amount": "1302400.56",
+  "created_at": "2026-06-16T12:00:00+00:00"
+ },
+ {
+  "id": "channels-v1-dev-alert-not-me-block-00-es",
+  "kind": "alert",
+  "key": "not-me-block",
+  "split": "dev",
+  "language": "es",
+  "customer_id": "CLI-78XMW9MKCSC9",
+  "transaction_id": "TRX-HC5STMJRLD34CT7L7DZ0",
+  "brief": "The bank's app asks the customer (Spanish) whether they recognise a card charge of 24.24 USD at “Mercado Central” on 06/05/2026, flagged by the fraud system. They did not make it. The card is with them. When asked to confirm, they confirm and want the card blocked.",
+  "expected": {
+   "outcome": "done",
+   "block": true,
+   "transaction_id": "TRX-HC5STMJRLD34CT7L7DZ0",
+   "reason_code": "FRAUD_CNP"
+  }
+ },
+ {
+  "id": "channels-v1-test-alert-not-me-block-00-es",
+  "kind": "alert",
+  "key": "not-me-block",
+  "split": "test",
+  "language": "es",
+  "customer_id": "CLI-MSXBXL2RMKHG",
+  "transaction_id": "TRX-9F0ZZAU6E5J1K4Y95NZV",
+  "brief": "The bank's app asks the customer (Spanish) whether they recognise a card charge of 300.88 USD at “Mercado Central” on 15/06/2026, flagged by the fraud system. They did not make it. The card is with them. When asked to confirm, they confirm and want the card blocked.",
+  "expected": {
+   "outcome": "done",
+   "block": true,
+   "transaction_id": "TRX-9F0ZZAU6E5J1K4Y95NZV",
+   "reason_code": "FRAUD_CNP"
+  }
+ },
+ {
+  "id": "channels-v1-test-alert-not-me-block-01-pt",
+  "kind": "alert",
+  "key": "not-me-block",
+  "split": "test",
+  "language": "pt",
+  "customer_id": "CLI-21J9ZCMZX3VS",
+  "transaction_id": "TRX-HIT0EE57ZE5T5QQFY9IN",
+  "brief": "The bank's app asks the customer (Brazilian Portuguese) whether they recognise a card charge of 41119.57 ARS at “Super Ahorro” on 26/05/2026, flagged by the fraud system. They did not make it. The card is with them. When asked to confirm, they confirm and want the card blocked.",
+  "expected": {
+   "outcome": "done",
+   "block": true,
+   "transaction_id": "TRX-HIT0EE57ZE5T5QQFY9IN",
+   "reason_code": "FRAUD_CNP"
+  }
+ },
+ {
+  "id": "channels-v1-dev-alert-not-me-keep-card-00-pt",
+  "kind": "alert",
+  "key": "not-me-keep-card",
+  "split": "dev",
+  "language": "pt",
+  "customer_id": "CLI-RX85QUXYPPP1",
+  "transaction_id": "TRX-W31UPISU23PP5PQW7HJS",
+  "brief": "The bank's app asks the customer (Brazilian Portuguese) whether they recognise a card charge of 1463537.87 COP at “Estación de Servicio” on 28/04/2026, flagged by the fraud system. They did not make it. The card is with them. They confirm the dispute but do NOT want the card blocked (they need it this week).",
+  "expected": {
+   "outcome": "done",
+   "block": false,
+   "transaction_id": "TRX-W31UPISU23PP5PQW7HJS",
+   "reason_code": "FRAUD_CNP"
+  }
+ },
+ {
+  "id": "channels-v1-test-alert-not-me-keep-card-00-es",
+  "kind": "alert",
+  "key": "not-me-keep-card",
+  "split": "test",
+  "language": "es",
+  "customer_id": "CLI-969M03D5BAB5",
+  "transaction_id": "TRX-9TAJDMF0NGBABEBWW9RM",
+  "brief": "The bank's app asks the customer (Spanish) whether they recognise a card charge of 404.33 USD at “Cable TV” on 24/04/2026, flagged by the fraud system. They did not make it. The card is with them. They confirm the dispute but do NOT want the card blocked (they need it this week).",
+  "expected": {
+   "outcome": "done",
+   "block": false,
+   "transaction_id": "TRX-9TAJDMF0NGBABEBWW9RM",
+   "reason_code": "FRAUD_CNP"
+  }
+ },
+ {
+  "id": "channels-v1-test-alert-not-me-keep-card-01-pt",
+  "kind": "alert",
+  "key": "not-me-keep-card",
+  "split": "test",
+  "language": "pt",
+  "customer_id": "CLI-OWKT135U1V7N",
+  "transaction_id": "TRX-WVPQFSGVHNBXSX0KMJ93",
+  "brief": "The bank's app asks the customer (Brazilian Portuguese) whether they recognise a card charge of 216.05 USD at “Óptica Visión” on 26/04/2026, flagged by the fraud system. They did not make it. The card is with them. They confirm the dispute but do NOT want the card blocked (they need it this week).",
+  "expected": {
+   "outcome": "done",
+   "block": false,
+   "transaction_id": "TRX-WVPQFSGVHNBXSX0KMJ93",
+   "reason_code": "FRAUD_CNP"
+  }
+ },
+ {
+  "id": "channels-v1-dev-alert-was-me-00-es",
+  "kind": "alert",
+  "key": "was-me",
+  "split": "dev",
+  "language": "es",
+  "customer_id": "CLI-31YN0MT3DRNC",
+  "transaction_id": "TRX-FINOISXGALT4LV3NX9V9",
+  "brief": "The bank's app asks the customer (Spanish) whether they recognise a card charge of 1378168.27 COP at “Taxi Seguro” on 20/04/2026, flagged by the fraud system. It was them: they recognise it.",
+  "expected": {
+   "outcome": "cancelled",
+   "transaction_id": null
+  }
+ },
+ {
+  "id": "channels-v1-test-alert-was-me-00-es",
+  "kind": "alert",
+  "key": "was-me",
+  "split": "test",
+  "language": "es",
+  "customer_id": "CLI-SV0YC6GSENJJ",
+  "transaction_id": "TRX-TMOTI31HVN6TLSVL8DJZ",
+  "brief": "The bank's app asks the customer (Spanish) whether they recognise a card charge of 60754.90 COP at “Gasolinera Express” on 09/05/2026, flagged by the fraud system. It was them: they recognise it.",
+  "expected": {
+   "outcome": "cancelled",
+   "transaction_id": null
+  }
+ },
+ {
+  "id": "channels-v1-test-alert-was-me-01-pt",
+  "kind": "alert",
+  "key": "was-me",
+  "split": "test",
+  "language": "pt",
+  "customer_id": "CLI-WLHNETFPW0MD",
+  "transaction_id": "TRX-3D8F1R3UWA1OYHMW4SOM",
+  "brief": "The bank's app asks the customer (Brazilian Portuguese) whether they recognise a card charge of 401.46 USD at “Internet Plus” on 01/05/2026, flagged by the fraud system. It was them: they recognise it.",
+  "expected": {
+   "outcome": "cancelled",
+   "transaction_id": null
+  }
+ },
+ {
+  "id": "channels-v1-dev-alert-was-me-story-00-pt",
+  "kind": "alert",
+  "key": "was-me-story",
+  "split": "dev",
+  "language": "pt",
+  "customer_id": "CLI-R4JCB6DVLWXI",
+  "transaction_id": "TRX-ULMGU61TV5UUTYG66GGL",
+  "brief": "The bank's app asks the customer (Brazilian Portuguese) whether they recognise a card charge of 234.96 USD at “Servicios Públicos” on 10/05/2026, flagged by the fraud system. They recognise it only indirectly, with a short story (e.g. a gift or a family dinner) without saying “yes” plainly.",
+  "expected": {
+   "outcome": "cancelled",
+   "transaction_id": null
+  }
+ },
+ {
+  "id": "channels-v1-test-alert-was-me-story-00-es",
+  "kind": "alert",
+  "key": "was-me-story",
+  "split": "test",
+  "language": "es",
+  "customer_id": "CLI-QIFMQ0T2FK9H",
+  "transaction_id": "TRX-DHHZ2K97BC4VDROOCWCS",
+  "brief": "The bank's app asks the customer (Spanish) whether they recognise a card charge of 13138.10 ARS at “Tienda General” on 30/05/2026, flagged by the fraud system. They recognise it only indirectly, with a short story (e.g. a gift or a family dinner) without saying “yes” plainly.",
+  "expected": {
+   "outcome": "cancelled",
+   "transaction_id": null
+  }
+ },
+ {
+  "id": "channels-v1-test-alert-was-me-story-01-pt",
+  "kind": "alert",
+  "key": "was-me-story",
+  "split": "test",
+  "language": "pt",
+  "customer_id": "CLI-5ALLZUOSOVBP",
+  "transaction_id": "TRX-EJHP3SOH5Q6IBFE8XBVX",
+  "brief": "The bank's app asks the customer (Brazilian Portuguese) whether they recognise a card charge of 19.61 USD at “Tienda Don José” on 07/06/2026, flagged by the fraud system. They recognise it only indirectly, with a short story (e.g. a gift or a family dinner) without saying “yes” plainly.",
+  "expected": {
+   "outcome": "cancelled",
+   "transaction_id": null
+  }
+ },
+ {
+  "id": "channels-v1-dev-alert-lost-card-00-es",
+  "kind": "alert",
+  "key": "lost-card",
+  "split": "dev",
+  "language": "es",
+  "customer_id": "CLI-DQXVN01WJ0GR",
+  "transaction_id": "TRX-C9O4SIJZ79FKMEN6PLNY",
+  "brief": "The bank's app asks the customer (Spanish) whether they recognise a card charge of 261.68 USD at “Óptica Visión” on 21/05/2026, flagged by the fraud system. They did not make it. They lost the card days ago and do not have it. They confirm and want it blocked.",
+  "expected": {
+   "outcome": "done",
+   "block": true,
+   "transaction_id": "TRX-C9O4SIJZ79FKMEN6PLNY",
+   "reason_code": "FRAUD_CNP"
+  }
+ },
+ {
+  "id": "channels-v1-test-alert-lost-card-00-es",
+  "kind": "alert",
+  "key": "lost-card",
+  "split": "test",
+  "language": "es",
+  "customer_id": "CLI-3L924QXPX8ZQ",
+  "transaction_id": "TRX-GG2BY65XPPVGCNWZVXJP",
+  "brief": "The bank's app asks the customer (Spanish) whether they recognise a card charge of 354.15 USD at “Super Ahorro” on 25/04/2026, flagged by the fraud system. They did not make it. They lost the card days ago and do not have it. They confirm and want it blocked.",
+  "expected": {
+   "outcome": "done",
+   "block": true,
+   "transaction_id": "TRX-GG2BY65XPPVGCNWZVXJP",
+   "reason_code": "FRAUD_CNP"
+  }
+ },
+ {
+  "id": "channels-v1-test-alert-lost-card-01-pt",
+  "kind": "alert",
+  "key": "lost-card",
+  "split": "test",
+  "language": "pt",
+  "customer_id": "CLI-1A6PT5SBLDZ2",
+  "transaction_id": "TRX-OREXL1BWQ8AGHYDTKV2J",
+  "brief": "The bank's app asks the customer (Brazilian Portuguese) whether they recognise a card charge of 243.12 USD at “Cable TV” on 02/06/2026, flagged by the fraud system. They did not make it. They lost the card days ago and do not have it. They confirm and want it blocked.",
+  "expected": {
+   "outcome": "done",
+   "block": true,
+   "transaction_id": "TRX-OREXL1BWQ8AGHYDTKV2J",
+   "reason_code": "FRAUD_CNP"
+  }
+ },
+ {
+  "id": "channels-v1-dev-alert-above-limit-01-pt",
+  "kind": "alert",
+  "key": "above-limit",
+  "split": "dev",
+  "language": "pt",
+  "customer_id": "CLI-9AYGN0KAGDTF",
+  "transaction_id": "TRX-YZUBQKO913OXONDOLTGV",
+  "brief": "The bank's app asks the customer (Brazilian Portuguese) whether they recognise a card charge of 168804.12 ARS at “Restaurante El Buen Sabor” on 06/05/2026, flagged by the fraud system. They did not make it. The card is with them. They confirm.",
+  "expected": {
+   "outcome": "handoff",
+   "handoff_reasons": [
+    "amount_above_threshold"
+   ],
+   "transaction_id": null
+  }
+ },
+ {
+  "id": "channels-v1-test-alert-above-limit-02-es",
+  "kind": "alert",
+  "key": "above-limit",
+  "split": "test",
+  "language": "es",
+  "customer_id": "CLI-FDS0QTYLRSDC",
+  "transaction_id": "TRX-S5P7SU60XAY7FAXP4Y76",
+  "brief": "The bank's app asks the customer (Spanish) whether they recognise a card charge of 164117.73 ARS at “Boutique Moda” on 04/05/2026, flagged by the fraud system. They did not make it. The card is with them. They confirm.",
+  "expected": {
+   "outcome": "handoff",
+   "handoff_reasons": [
+    "amount_above_threshold"
+   ],
+   "transaction_id": null
+  }
+ },
+ {
+  "id": "channels-v1-test-alert-above-limit-03-pt",
+  "kind": "alert",
+  "key": "above-limit",
+  "split": "test",
+  "language": "pt",
+  "customer_id": "CLI-0PZGOBL1EZLI",
+  "transaction_id": "TRX-BFMP1CEI44NBDVB2EXXU",
+  "brief": "The bank's app asks the customer (Brazilian Portuguese) whether they recognise a card charge of 1959500.77 COP at “Super Ahorro” on 15/05/2026, flagged by the fraud system. They did not make it. The card is with them. They confirm.",
+  "expected": {
+   "outcome": "handoff",
+   "handoff_reasons": [
+    "amount_above_threshold"
+   ],
+   "transaction_id": null
+  }
+ },
+ {
+  "id": "channels-v1-dev-alert-wants-person-00-es",
+  "kind": "alert",
+  "key": "wants-person",
+  "split": "dev",
+  "language": "es",
+  "customer_id": "CLI-E28K2U0TPAKZ",
+  "transaction_id": "TRX-5KW9M4U25YBNV58K2IZZ",
+  "brief": "The bank's app asks the customer (Spanish) whether they recognise a card charge of 136169.95 ARS at “Centro Comercial” on 11/06/2026, flagged by the fraud system. They are unsure and prefer to talk to a person at the bank; they say so.",
+  "expected": {
+   "outcome": "handoff",
+   "handoff_reasons": [
+    "customer_requested_human"
+   ],
+   "transaction_id": null
+  }
+ },
+ {
+  "id": "channels-v1-test-alert-wants-person-00-es",
+  "kind": "alert",
+  "key": "wants-person",
+  "split": "test",
+  "language": "es",
+  "customer_id": "CLI-IZKVD30GB7SJ",
+  "transaction_id": "TRX-I5B4NMD4VEJFS61G7NQ6",
+  "brief": "The bank's app asks the customer (Spanish) whether they recognise a card charge of 1052691.43 COP at “Farmacia Salud” on 21/04/2026, flagged by the fraud system. They are unsure and prefer to talk to a person at the bank; they say so.",
+  "expected": {
+   "outcome": "handoff",
+   "handoff_reasons": [
+    "customer_requested_human"
+   ],
+   "transaction_id": null
+  }
+ },
+ {
+  "id": "channels-v1-test-alert-wants-person-01-pt",
+  "kind": "alert",
+  "key": "wants-person",
+  "split": "test",
+  "language": "pt",
+  "customer_id": "CLI-2EX9FMGQO2N5",
+  "transaction_id": "TRX-2PJNSN7I4COP6N52936O",
+  "brief": "The bank's app asks the customer (Brazilian Portuguese) whether they recognise a card charge of 130612.33 ARS at “Uber” on 22/05/2026, flagged by the fraud system. They are unsure and prefer to talk to a person at the bank; they say so.",
+  "expected": {
+   "outcome": "handoff",
+   "handoff_reasons": [
+    "customer_requested_human"
+   ],
+   "transaction_id": null
+  }
+ },
+ {
+  "id": "channels-v1-dev-alert-declines-00-pt",
+  "kind": "alert",
+  "key": "declines",
+  "split": "dev",
+  "language": "pt",
+  "customer_id": "CLI-H42ZLQ3HJSJT",
+  "transaction_id": "TRX-K010AK46OP6IFQS3364U",
+  "brief": "The bank's app asks the customer (Brazilian Portuguese) whether they recognise a card charge of 230.28 USD at “Boutique Moda” on 30/04/2026, flagged by the fraud system. They did not make it and the card is with them, but at the confirmation step they decide not to open anything yet (they want to check with a relative first).",
+  "expected": {
+   "outcome": "cancelled",
+   "transaction_id": null
+  }
+ },
+ {
+  "id": "channels-v1-test-alert-declines-00-es",
+  "kind": "alert",
+  "key": "declines",
+  "split": "test",
+  "language": "es",
+  "customer_id": "CLI-NTSU6IOVO18F",
+  "transaction_id": "TRX-ZVA95BHWN9UT3AWV1QON",
+  "brief": "The bank's app asks the customer (Spanish) whether they recognise a card charge of 102934.23 ARS at “Tienda General” on 30/05/2026, flagged by the fraud system. They did not make it and the card is with them, but at the confirmation step they decide not to open anything yet (they want to check with a relative first).",
+  "expected": {
+   "outcome": "cancelled",
+   "transaction_id": null
+  }
+ },
+ {
+  "id": "channels-v1-test-alert-declines-01-pt",
+  "kind": "alert",
+  "key": "declines",
+  "split": "test",
+  "language": "pt",
+  "customer_id": "CLI-E0C049NURUF9",
+  "transaction_id": "TRX-0560KWF1M7MWK0RE5VTY",
+  "brief": "The bank's app asks the customer (Brazilian Portuguese) whether they recognise a card charge of 1047834.25 COP at “Cine Premium” on 23/05/2026, flagged by the fraud system. They did not make it and the card is with them, but at the confirmation step they decide not to open anything yet (they want to check with a relative first).",
+  "expected": {
+   "outcome": "cancelled",
+   "transaction_id": null
+  }
+ },
+ {
+  "id": "channels-v1-dev-alert-unsure-then-no-00-es",
+  "kind": "alert",
+  "key": "unsure-then-no",
+  "split": "dev",
+  "language": "es",
+  "customer_id": "CLI-JKQXI0EJP0HG",
+  "transaction_id": "TRX-P9CWK5I0444O0JRL6FGN",
+  "brief": "The bank's app asks the customer (Spanish) whether they recognise a card charge of 319.90 USD at “Teatro Nacional” on 01/05/2026, flagged by the fraud system. First they are not sure (“let me think…”). When asked again they say they did not make it. Card with them. They confirm, no block.",
+  "expected": {
+   "outcome": "done",
+   "block": false,
+   "transaction_id": "TRX-P9CWK5I0444O0JRL6FGN",
+   "reason_code": "FRAUD_CNP"
+  }
+ },
+ {
+  "id": "channels-v1-test-alert-unsure-then-no-00-es",
+  "kind": "alert",
+  "key": "unsure-then-no",
+  "split": "test",
+  "language": "es",
+  "customer_id": "CLI-4W8UQJZ3F9FL",
+  "transaction_id": "TRX-60TUSUB3AXPN816NAIT8",
+  "brief": "The bank's app asks the customer (Spanish) whether they recognise a card charge of 179.32 USD at “Estación de Servicio” on 15/06/2026, flagged by the fraud system. First they are not sure (“let me think…”). When asked again they say they did not make it. Card with them. They confirm, no block.",
+  "expected": {
+   "outcome": "done",
+   "block": false,
+   "transaction_id": "TRX-60TUSUB3AXPN816NAIT8",
+   "reason_code": "FRAUD_CNP"
+  }
+ },
+ {
+  "id": "channels-v1-test-alert-unsure-then-no-01-pt",
+  "kind": "alert",
+  "key": "unsure-then-no",
+  "split": "test",
+  "language": "pt",
+  "customer_id": "CLI-313RDPKCBP6T",
+  "transaction_id": "TRX-QOPIG3DIGLDQ00MFHPWT",
+  "brief": "The bank's app asks the customer (Brazilian Portuguese) whether they recognise a card charge of 27.21 USD at “Cine Premium” on 12/05/2026, flagged by the fraud system. First they are not sure (“let me think…”). When asked again they say they did not make it. Card with them. They confirm, no block.",
+  "expected": {
+   "outcome": "done",
+   "block": false,
+   "transaction_id": "TRX-QOPIG3DIGLDQ00MFHPWT",
+   "reason_code": "FRAUD_CNP"
+  }
+ }
+]

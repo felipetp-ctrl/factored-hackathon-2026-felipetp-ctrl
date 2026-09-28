@@ -1,0 +1,200 @@
+{
+  "channels-v1-dev-letter-fraud-complete-00-es": "Buenas tardes, les escribo porque en mi estado de cuenta aparece un cobro de $95.140,31 el 12 de junio que no reconozco, nunca he comprado en Servicios Públicos. Tengo la tarjeta conmigo en este momento. Agradezco que revisen esto y me digan cómo proceder.",
+  "channels-v1-test-letter-fraud-complete-00-es": "Hola, quiero reportar un cargo de USD 188.56 hecho el 26/05/2026 en Gasolinera Express que no reconozco. Yo tengo mi tarjeta en mano, no la he prestado a nadie. Por favor ayúdenme a revertir esto.",
+  "channels-v1-test-letter-fraud-complete-01-pt": "Boa tarde, notei uma cobrança de $1.243.047,01 no dia 21/05/2026 no estabelecimento Mercado Central que eu não reconheço. Estou com meu cartão aqui comigo o tempo todo. Peço que investiguem essa cobrança, obrigado.",
+  "channels-v1-dev-letter-fraud-no-card-info-00-pt": "Prezados, identifiquei uma cobrança de USD 317,79 do dia 22/05/2026 referente a Teatro Nacional que não reconheço de forma alguma. Nunca fiz compra nesse lugar. Solicito a análise e o estorno desse valor.",
+  "channels-v1-test-letter-fraud-no-card-info-00-es": "Hola, encontré un cargo de $143.704,34 del 09/05/2026 en Teatro Nacional que no reconozco para nada. No hice esa compra. Les pido que revisen y me confirmen qué está pasando.",
+  "channels-v1-test-letter-fraud-no-card-info-01-pt": "Boa noite, vi na fatura um valor de $56.324,77 lançado em 19/05/2026 na Servicios Públicos que eu não fiz e não reconheço. Gostaria que verificassem essa cobrança o quanto antes.",
+  "channels-v1-dev-letter-stolen-card-00-es": "Buenos días, mi tarjeta fue robada hace unos días y ya no la tengo, y ahora veo un cargo de USD 323.95 del 20/05/2026 en Cable TV que yo no hice. Por favor bloqueen la tarjeta si aún no lo han hecho y ayúdenme con este reclamo.",
+  "channels-v1-test-letter-stolen-card-00-es": "Buenas, les escribo para informar que perdí mi tarjeta hace unos días y apareció un cobro de $1.325.989,61 el 10/06/2026 en Teatro Nacional que no hice yo, porque ya no tengo la tarjeta conmigo. Necesito que revisen esto urgente.",
+  "channels-v1-test-letter-stolen-card-01-pt": "Olá, meu cartão foi roubado há alguns dias e não está mais comigo. Agora apareceu uma cobrança de $4.650,87 do dia 26/05/2026 no Restaurante El Buen Sabor que com certeza não fui eu. Peço ajuda para resolver isso o quanto antes.",
+  "channels-v1-dev-letter-duplicate-00-pt": "Boa tarde, fui cobrado duas vezes pela mesma compra no Laboratorio Central, no valor de USD 321,92 cada uma, no dia 18/05/2026. Não tenho o número da transação em mãos. Peço o estorno de uma das cobranças, já que só fiz uma compra.",
+  "channels-v1-test-letter-duplicate-00-es": "Hola, me cobraron dos veces la misma compra en Tienda Don José el 27/05/2026, cada cobro por $423.885,21. No tengo el número de la transacción a mano. Solo compré una vez, así que pido que me devuelvan uno de los cobros.",
+  "channels-v1-test-letter-duplicate-01-pt": "Prezados, no dia 30/04/2026 fui cobrado em duplicidade no Super Ahorro, duas cobranças de $39.048,23 cada uma para a mesma compra. Não sei o número da transação. Só realizei a compra uma vez, peço a devolução do valor duplicado.",
+  "channels-v1-dev-letter-wrong-amount-00-es": "Buenas tardes, el 16/05/2026 me cobraron $144.403,60 en Mercado Central, pero el precio que acordamos era de $101.082,52. Me cobraron de más y quiero que corrijan la diferencia.",
+  "channels-v1-test-letter-wrong-amount-00-es": "Hola, el cargo del 10/06/2026 en Teatro Nacional fue de USD 276.67, pero el monto que yo acordé pagar era de USD 193.67. Me cobraron más de lo debido y pido que ajusten la diferencia.",
+  "channels-v1-test-letter-wrong-amount-01-pt": "Boa tarde, a cobrança de 31/05/2026 na Estación de Servicio foi de USD 288,69, mas o valor combinado era de USD 202,08. Fui cobrado a mais e solicito a correção dessa diferença.",
+  "channels-v1-dev-letter-not-received-00-pt": "Prezados, paguei USD 141,09 em 07/05/2026 na Cine Premium por um produto que deveria ter chegado até 14/05/2026 e nunca recebi. Já entrei em contato com a loja e eles não resolveram o problema. Peço o estorno desse valor.",
+  "channels-v1-test-letter-not-received-00-es": "Buenas, pagué $812.736,14 el 16/05/2026 en Tienda Don José por un producto que debía llegar el 23/05/2026 y nunca me llegó. Ya me contacté con la tienda y no me solucionaron nada. Pido que me devuelvan el dinero.",
+  "channels-v1-test-letter-not-received-01-pt": "Boa noite, fiz um pagamento de $102.452,59 em 30/04/2026 no Restaurante El Buen Sabor por um pedido que deveria chegar em 05/05/2026 e até agora não recebi nada. Já falei com o estabelecimento e não resolveram. Solicito o reembolso.",
+  "channels-v1-dev-letter-subscription-00-es": "Hola, cancelé mi suscripción con Mercado Central el 20/05/2026, pero aún así me cobraron USD 219.22 el 05/06/2026. Ya no debería tener ningún cargo de ellos. Por favor revisen y devuélvanme ese dinero.",
+  "channels-v1-test-letter-subscription-00-es": "Buenas tardes, yo cancelé la suscripción de Cine Premium el 28/05/2026 y aun así me cobraron USD 263.79 el 13/06/2026. No entiendo por qué me siguen cobrando si ya cancelé. Pido la devolución del cargo.",
+  "channels-v1-test-letter-subscription-01-pt": "Olá, cancelei minha assinatura do Uber em 01/05/2026, mas mesmo assim fui cobrado em USD 245,69 no dia 13/05/2026. Isso não devia ter acontecido pois já tinha cancelado. Peço o estorno dessa cobrança.",
+  "channels-v1-dev-letter-vague-00-pt": "Oi, vi uma cobrança estranha esse mês que eu não reconheço. Não lembro o valor certo agora, mas queria que verificassem. Estou com meu cartão aqui comigo.",
+  "channels-v1-test-letter-vague-00-es": "Hola, tengo un cargo raro este mes que no reconozco, no recuerdo el monto exacto. Tengo la tarjeta conmigo. Podrían revisar por favor?",
+  "channels-v1-test-letter-vague-01-pt": "Boa tarde, apareceu uma cobrança esse mês que eu não reconheço, mas não sei dizer o valor certo. O cartão está comigo. Podem dar uma olhada?",
+  "channels-v1-dev-letter-above-limit-00-es": "Buenas, el 30/04/2026 me cobraron USD 479.85 en Servicios Públicos y no reconozco ese cobro para nada. Tengo mi tarjeta conmigo todo el tiempo. Necesito que investiguen este cargo.",
+  "channels-v1-test-letter-above-limit-00-es": "Hola, hay un cargo de USD 475.87 del 03/06/2026 en Cable TV que no reconozco. Tengo la tarjeta en mi poder. Les pido que revisen esta transacción.",
+  "channels-v1-test-letter-above-limit-01-pt": "Boa tarde, vi uma cobrança de $1.928.974,71 do dia 27/05/2026 na Estación de Servicio que não reconheço. Estou com meu cartão em mãos. Peço a verificação desse lançamento.",
+  "channels-v1-dev-letter-regulator-00-pt": "Prezados, no dia 06/05/2026 fui cobrado em USD 326,22 na Cine Premium e não reconheço essa compra. Estou com meu cartão comigo. Se isso não for resolvido, vou registrar uma reclamação no órgão regulador bancário.",
+  "channels-v1-test-letter-regulator-00-es": "Buenas, el 27/05/2026 me cobraron $139.850,60 en Centro Comercial y no reconozco esa compra. Tengo la tarjeta conmigo. Si no resuelven esto, voy a presentar una queja ante el ente regulador bancario.",
+  "channels-v1-test-letter-regulator-01-pt": "Olá, fui cobrado em USD 331,46 no dia 05/06/2026 pela Uber e não reconheço essa cobrança. Meu cartão está comigo. Caso o banco não resolva, vou reclamar junto ao órgão regulador.",
+  "channels-v1-dev-letter-asks-person-00-es": "Hola, el 29/04/2026 me cobraron USD 202.97 en Restaurante El Buen Sabor y no reconozco ese cargo. Tengo la tarjeta conmigo. Me gustaría que un asesor me llamara para explicarme qué pasó.",
+  "channels-v1-test-letter-asks-person-00-es": "Buenas tardes, tengo un cargo de $1.321.593,00 del 06/06/2026 en Óptica Visión que no reconozco. Tengo la tarjeta conmigo. Solicito que un asesor se comunique conmigo para resolverlo.",
+  "channels-v1-test-letter-asks-person-01-pt": "Boa noite, há uma cobrança de USD 250,90 do dia 05/06/2026 na Servicios Públicos que eu não reconheço. Estou com meu cartão comigo. Gostaria que um atendente entrasse em contato comigo para explicar.",
+  "channels-v1-dev-letter-late-wrong-amount-00-pt": "Prezados, só agora percebi uma cobrança de USD 330,33 feita em 19/03/2026 na Internet Plus, mas o valor combinado era de USD 231,23. Só notei isso meses depois. Peço a correção da diferença cobrada a mais.",
+  "channels-v1-test-letter-late-wrong-amount-00-es": "Hola, recién me di cuenta de un cargo de USD 215.44 del 03/04/2026 en Estación de Servicio, pero el precio acordado era de USD 150.81. Lo noté varios meses después. Pido que corrijan la diferencia.",
+  "channels-v1-test-letter-late-wrong-amount-01-pt": "Boa tarde, notei somente agora uma cobrança de $1.302.400,56 feita em 16/03/2026 na Clínica Médica, mas o valor combinado era de $911.680,39. Só percebi isso meses depois. Solicito o ajuste dessa diferença.",
+  "channels-v1-dev-alert-not-me-block-00-es": {
+    "first": "No, esa compra no la hice yo.",
+    "card": "Sí, la tengo aquí conmigo.",
+    "confirm": "Sí, confirmo, y quiero que bloqueen la tarjeta.",
+    "again": "No, sigo sin reconocer ese cargo."
+  },
+  "channels-v1-test-alert-not-me-block-00-es": {
+    "first": "No reconozco esa compra.",
+    "card": "Sí, la tarjeta está conmigo ahora.",
+    "confirm": "Confirmo, bloqueen la tarjeta por favor.",
+    "again": "No, no fui yo."
+  },
+  "channels-v1-test-alert-not-me-block-01-pt": {
+    "first": "Não, essa compra não fui eu.",
+    "card": "Sim, estou com o cartão aqui.",
+    "confirm": "Confirmo, e quero bloquear o cartão.",
+    "again": "Não, continuo não reconhecendo essa cobrança."
+  },
+  "channels-v1-dev-alert-not-me-keep-card-00-pt": {
+    "first": "Não, não reconheço essa compra.",
+    "card": "Sim, o cartão está comigo.",
+    "confirm": "Confirmo a contestação, mas não quero bloquear o cartão, preciso dele essa semana.",
+    "again": "Não, não fui eu mesmo."
+  },
+  "channels-v1-test-alert-not-me-keep-card-00-es": {
+    "first": "No, no reconozco ese cargo.",
+    "card": "Sí, tengo la tarjeta conmigo.",
+    "confirm": "Sí, quiero abrir la disputa, pero no bloqueen la tarjeta, la necesito esta semana.",
+    "again": "No, sigo diciendo que no fui yo."
+  },
+  "channels-v1-test-alert-not-me-keep-card-01-pt": {
+    "first": "Não reconheço essa cobrança.",
+    "card": "Sim, estou com o cartão comigo.",
+    "confirm": "Confirmo a abertura, mas não bloqueiem o cartão, vou precisar dele essa semana.",
+    "again": "Não, não fui eu."
+  },
+  "channels-v1-dev-alert-was-me-00-es": {
+    "first": "Sí, esa compra la hice yo.",
+    "card": "Sí, la tengo conmigo.",
+    "confirm": "No, no hace falta abrir nada, yo la reconozco.",
+    "again": "Sí, sigo confirmando que fui yo."
+  },
+  "channels-v1-test-alert-was-me-00-es": {
+    "first": "Sí, fui yo quien hizo esa compra.",
+    "card": "Sí, la tengo conmigo.",
+    "confirm": "No es necesario, ya les dije que reconozco el cargo.",
+    "again": "Sí, esa sí la reconozco."
+  },
+  "channels-v1-test-alert-was-me-01-pt": {
+    "first": "Sim, fui eu que fiz essa compra.",
+    "card": "Sim, está comigo.",
+    "confirm": "Não precisa abrir nada, eu reconheço essa cobrança.",
+    "again": "Sim, essa eu reconheço."
+  },
+  "channels-v1-dev-alert-was-me-story-00-pt": {
+    "first": "Ah, deve ser aquele presente que comprei para minha mãe naquele dia.",
+    "card": "Sim, está comigo.",
+    "confirm": "Pode deixar, não precisa abrir disputa, era mesmo uma compra minha.",
+    "again": "É, foi aquilo mesmo que eu contei, o presente."
+  },
+  "channels-v1-test-alert-was-me-story-00-es": {
+    "first": "Ah, creo que fue lo que compré para la cena familiar de ese día.",
+    "card": "Sí, la tengo conmigo.",
+    "confirm": "No hace falta abrir nada, fue esa compra que les comenté.",
+    "again": "Sí, fue lo de la cena que les mencioné."
+  },
+  "channels-v1-test-alert-was-me-story-01-pt": {
+    "first": "Acho que foi aquele mimo que comprei para minha irmã.",
+    "card": "Sim, comigo.",
+    "confirm": "Não precisa abrir disputa, foi aquela compra do presente.",
+    "again": "Isso, foi o presente que falei."
+  },
+  "channels-v1-dev-alert-lost-card-00-es": {
+    "first": "No, yo no hice esa compra.",
+    "card": "No, perdí la tarjeta hace unos días y no la tengo.",
+    "confirm": "Sí, confirmo, bloqueen la tarjeta por favor.",
+    "again": "No, sigo sin reconocerla."
+  },
+  "channels-v1-test-alert-lost-card-00-es": {
+    "first": "No, esa no fui yo.",
+    "card": "No, se me perdió la tarjeta hace unos días.",
+    "confirm": "Sí, confirmo y quiero que la bloqueen.",
+    "again": "No, no la reconozco."
+  },
+  "channels-v1-test-alert-lost-card-01-pt": {
+    "first": "Não, essa compra não fui eu.",
+    "card": "Não, perdi o cartão há alguns dias e não estou com ele.",
+    "confirm": "Confirmo, e quero que bloqueiem o cartão.",
+    "again": "Não, continuo não reconhecendo."
+  },
+  "channels-v1-dev-alert-above-limit-01-pt": {
+    "first": "Não, não reconheço essa cobrança.",
+    "card": "Sim, está comigo.",
+    "confirm": "Sim, confirmo, pode bloquear o cartão como vocês recomendam.",
+    "again": "Não, continuo não reconhecendo."
+  },
+  "channels-v1-test-alert-above-limit-02-es": {
+    "first": "No, no reconozco esa compra.",
+    "card": "Sí, la tengo conmigo.",
+    "confirm": "Sí, confirmo, bloqueen la tarjeta si lo recomiendan.",
+    "again": "No, no fui yo."
+  },
+  "channels-v1-test-alert-above-limit-03-pt": {
+    "first": "Não, não fui eu que fiz essa compra.",
+    "card": "Sim, comigo.",
+    "confirm": "Confirmo, podem bloquear o cartão.",
+    "again": "Não, não reconheço."
+  },
+  "channels-v1-dev-alert-wants-person-00-es": {
+    "first": "No estoy seguro, prefiero hablar con alguien del banco.",
+    "card": "Sí, la tengo conmigo.",
+    "confirm": "Prefiero que me llame un asesor antes de confirmar nada.",
+    "again": "Sigo sin estar seguro, quisiera hablar con una persona."
+  },
+  "channels-v1-test-alert-wants-person-00-es": {
+    "first": "No sé bien, quisiera hablar con alguien del banco mejor.",
+    "card": "Sí, la tengo conmigo.",
+    "confirm": "Prefiero esperar a hablar con un asesor antes de confirmar.",
+    "again": "Todavía no estoy seguro, necesito hablar con una persona."
+  },
+  "channels-v1-test-alert-wants-person-01-pt": {
+    "first": "Não tenho certeza, prefiro falar com alguém do banco.",
+    "card": "Sim, está comigo.",
+    "confirm": "Prefiro falar com um atendente antes de confirmar isso.",
+    "again": "Ainda não tenho certeza, queria falar com uma pessoa."
+  },
+  "channels-v1-dev-alert-declines-00-pt": {
+    "first": "Não, não reconheço essa compra.",
+    "card": "Sim, está comigo.",
+    "confirm": "Prefiro não abrir nada agora, quero perguntar para um familiar antes.",
+    "again": "Continuo não reconhecendo, mas ainda quero confirmar com alguém primeiro."
+  },
+  "channels-v1-test-alert-declines-00-es": {
+    "first": "No, no reconozco esa compra.",
+    "card": "Sí, la tengo conmigo.",
+    "confirm": "Mejor no abran nada todavía, quiero consultarlo con un familiar primero.",
+    "again": "Sigo sin reconocerla, pero prefiero confirmar con alguien antes."
+  },
+  "channels-v1-test-alert-declines-01-pt": {
+    "first": "Não, não fui eu.",
+    "card": "Sim, comigo.",
+    "confirm": "Prefiro não abrir a disputa agora, vou checar com um familiar antes.",
+    "again": "Ainda não reconheço, mas quero confirmar com alguém primeiro."
+  },
+  "channels-v1-dev-alert-unsure-then-no-00-es": {
+    "first": "Espera, déjame pensarlo un momento...",
+    "card": "Sí, la tengo conmigo.",
+    "confirm": "Sí, confirmo, pero no bloqueen la tarjeta.",
+    "again": "Ya lo pensé, no, no hice esa compra."
+  },
+  "channels-v1-test-alert-unsure-then-no-00-es": {
+    "first": "No sé, déjame revisar bien antes de responder.",
+    "card": "Sí, la tengo conmigo.",
+    "confirm": "Confirmo, pero no quiero que bloqueen la tarjeta.",
+    "again": "Ya vi bien, no, esa compra no fue mía."
+  },
+  "channels-v1-test-alert-unsure-then-no-01-pt": {
+    "first": "Deixa eu pensar um pouco, não tenho certeza agora.",
+    "card": "Sim, está comigo.",
+    "confirm": "Confirmo, mas não quero bloquear o cartão.",
+    "again": "Já pensei, não, essa compra não fui eu."
+  }
+}
