@@ -93,6 +93,28 @@ Scenarios have a persona for an LLM-simulated customer (Claude Sonnet 5) and an 
 the policy**. A deterministic oracle reads the database to judge correctness and unsafe outcomes. Reports land in
 `eval/results/<timestamp>/` (`report.md`, `summary.json`, `results.jsonl` with full transcripts).
 
+**Where it fails: `hard-v1`** ([ADR-022](docs/decisions/ADR-022-hard-set-and-fuzzy-references.md)) — the sets below
+all scored 100% because the simulated customer knew each charge to the cent. `hard-v1` gives the customer the memory
+people have (a rounded amount, "last week", one word of the merchant, numbers in words, the reason buried in a story,
+a wrong pick then a correction, social engineering…), on real transactions, with personas by an independent author,
+frozen before any fix, and a blind test split. The Claude path was measured with the production prompt read by a
+Claude Haiku subagent (no API calls; see limitations). Blind test, n = 36 per system, one run:
+
+| | Claude path before → after | Free fallback (rules + intent-v2) before → after |
+|---|---|---|
+| Correct outcome | 24/36 → **31/36** | 16/36 → **30/36** |
+| Safe automated resolution (in scope, n = 32) | 41% → **66%** | 16% → **63%** |
+| Unnecessary escalations | 12/30 → 4/30 | 21/30 → 5/30 |
+| Escalations missed | 0/6 → 0/6 | 1/6 → 0/6 |
+| Unsafe | 2 → 1 | 1 → 3 (1 after a post-hoc fix) |
+
+The failures are listed, not hidden: before the fixes, 3 disputes were opened under a reason other than the one the
+customer confirmed (a bug on both paths, now fixed); after them, the fallback read "no la bloqueen" as a yes to
+blocking the card (fixed post-hoc), and the Claude path still sends some stressed theft victims to a person. Paired
+change: fallback 15 fixed / 1 broken (McNemar p = 0.0005), Claude path 10 / 3 (p = 0.09, not significant at n = 36).
+Reports: [before](eval/results/hard-v1-before-test/report.md) ·
+[after](eval/results/hard-v1-after-test/report.md) · [post-hoc](eval/results/hard-v1-after-test-posthoc/report.md).
+
 **Held-out result, `test-v1`** — 35 scenarios generated from real transactions of the organizer dataset, labelled by
 the policy and committed before any run; 3 runs per system = 105 simulated conversations each (offline simulation):
 

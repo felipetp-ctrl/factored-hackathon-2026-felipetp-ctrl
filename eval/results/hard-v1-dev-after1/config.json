@@ -1,0 +1,8 @@
+{
+ "set": "eval/scenarios/hard-v1-dev.json",
+ "variants": [
+  "rules_intent_v2",
+  "claude_sim"
+ ],
+ "prompt_version": "nlu-v3"
+}

@@ -25,3 +25,4 @@ Every significant decision in the project, with the alternatives considered and 
 | [019](ADR-019-learned-intent-classifier.md) | Trained intent/reason classifier inside the free fallback NLU | accepted |
 | [020](ADR-020-fraud-label-audit.md) | No fraud model (labels have no behavioural signal); fraud alert threshold 80 → 35 | accepted |
 | [021](ADR-021-learnability-scan.md) | Learnability scan: no multivariate signal in the organizer data | accepted |
+| [022](ADR-022-hard-set-and-fuzzy-references.md) | hard-v1: a held-out set built to break the system; fuzzy references, confirmed case frozen | accepted |

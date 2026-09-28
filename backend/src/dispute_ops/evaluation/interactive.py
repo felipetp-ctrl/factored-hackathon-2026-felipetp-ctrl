@@ -59,12 +59,12 @@ class CachedNlu:
 
     mode = "claude"
 
-    def __init__(self, cache: dict[str, dict], pending: dict[str, str]) -> None:
-        self.cache, self.pending = cache, pending
+    def __init__(self, cache: dict[str, dict], pending: dict[str, str], prompt_version: str = PROMPT_VERSION) -> None:
+        self.cache, self.pending, self.prompt_version = cache, pending, prompt_version
 
-    @staticmethod
-    def request_id(user_content: str) -> str:
-        return hashlib.sha1(f"{PROMPT_VERSION}\n{user_content}".encode()).hexdigest()[:12]
+    def request_id(self, user_content: str) -> str:
+        # Readings are keyed by the prompt version they were produced with, recorded in the run's config.
+        return hashlib.sha1(f"{self.prompt_version}\n{user_content}".encode()).hexdigest()[:12]
 
     def interpret(self, text: str, ctx: NluContext) -> NluOutcome:
         content = render_user_content(text, ctx)
@@ -92,6 +92,7 @@ def _config(out: Path, set_path: str | None = None, variants: str | None = None)
         cfg["set"] = str(Path(set_path).resolve())
     if variants:
         cfg["variants"] = [v for v in variants.split(",") if v]
+    cfg.setdefault("prompt_version", PROMPT_VERSION)
     if "set" not in cfg or "variants" not in cfg:
         raise SystemExit("first call needs --set and --variants")
     unknown = [v for v in cfg["variants"] if v not in VARIANTS]
@@ -101,12 +102,12 @@ def _config(out: Path, set_path: str | None = None, variants: str | None = None)
     return cfg
 
 
-def _container_factory(variant: str, cache: dict, pending: dict):
+def _container_factory(variant: str, cache: dict, pending: dict, prompt_version: str = PROMPT_VERSION):
     mode, intent = VARIANTS[variant]
 
     def build(settings: Settings) -> Container:
         if mode == "claude_sim":  # production "auto" shape: Claude first, rule NLU (+ intent-v2) as fallback
-            c = Container.build(settings, nlu=CachedNlu(cache, pending))
+            c = Container.build(settings, nlu=CachedNlu(cache, pending, prompt_version))
             c.conversations.fallback = RuleNlu(c.store.distinct_merchants(), intent_model=IntentModel.load(DEFAULT_PATH))
             return c
         return Container.build(settings)
@@ -124,7 +125,7 @@ def replay(out: Path) -> tuple[list[ScenarioResult], dict[str, dict], dict[str, 
     for sc in load_scenarios(Path(cfg["set"])):
         for variant in cfg["variants"]:
             key = f"{sc.id}|{variant}"
-            factory, settings = _container_factory(variant, cache, pending_nlu)
+            factory, settings = _container_factory(variant, cache, pending_nlu, cfg["prompt_version"])
             r = run_scenario(sc, _system(variant), ScriptedSimulator(messages.get(key, [])), settings=settings,
                              container_factory=factory)
             if r.error and r.error.startswith("NeedsMessage"):
@@ -195,7 +196,7 @@ def finalize(out: Path, note: str) -> str:
         "data": "gold demo store (organizer data)", "repeats": "1 run per variant (same customer until replies diverge)",
         "systems": " · ".join(cfg["variants"]),
         "customer_simulator": "Claude Sonnet run as a Claude Code subagent (persona + transcript only)",
-        "claude_sim": ("NLU readings by a Claude Haiku subagent given the production prompt " + PROMPT_VERSION +
+        "claude_sim": ("NLU readings by a Claude Haiku subagent given the production prompt " + cfg["prompt_version"] +
                        "; validated against NluResult; cost is a character-count estimate at Haiku list prices; "
                        "model latency not measured"),
         "api_calls": "none", "note": note,

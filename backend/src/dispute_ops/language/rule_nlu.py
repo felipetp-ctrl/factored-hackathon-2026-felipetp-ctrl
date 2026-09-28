@@ -78,6 +78,7 @@ _BLOCK = re.compile(r"bloque")
 _NO_BLOCK = re.compile(
     r"(sin|sem|no|nao)\s+(quiero\s+|quero\s+|precisa\s+|necesito\s+|hace falta\s+|es necesario\s+|e necessario\s+)?(que\s+)?(me\s+)?bloque")
 # Whole words only: the baseline's substring match reads "empréstimo pessoal" (personal loan) as "pessoa".
+_NEGATED_BLOCK = re.compile(r"\b(no|nao|sin|sem|nunca|jamas|ni)\b[^.!?;]*\bbloque")
 _HUMAN = re.compile(r"\b(humano|asesor|asesora|agente|persona real|una persona|uma pessoa|pessoa|atendente|operador|operadora)\b")
 _REGULATOR = re.compile(
     r"condusef|superintendencia|bcra|banco central|procon|defensor(ia)? del consumidor|denunci|abogad|advogad|"
@@ -392,7 +393,9 @@ class RuleNlu:
                 fields["purchase_date"] = parse_date(text) or parse_relative_date(text, _today(ctx))
                 return done("provide_info")
             if _BLOCK.search(t):
-                fields["wants_block_card"] = not _NO_BLOCK.search(t)
+                # Blocking is a write action: any negation before "bloque..." in the same sentence means no
+                # ("no la bloqueen", "no quiero que la bloqueen" were read as yes; hard-v1 test, fixed post-hoc).
+                fields["wants_block_card"] = not (_NO_BLOCK.search(t) or _NEGATED_BLOCK.search(t))
             # "No conozco ese comercio" at the summary restates the problem; it is not a "no" to the summary.
             restates = any(neg.search(t) or pos.search(t) for neg, pos in _EVIDENCE_RULES.values())
             if no and not yes and restates and not _EXPLICIT_DECLINE.search(t):

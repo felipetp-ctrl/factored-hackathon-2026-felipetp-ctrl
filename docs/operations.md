@@ -83,6 +83,7 @@ Ownership is enforced in the tool layer on every call (tested for cross-customer
 6. OpenTelemetry export and alerting as listed above.
 7. Name detection in PII masking (structured identifiers only today).
 8. Portuguese evaluation with real (not simulated) customer messages; the dataset has none.
-9. Run the frozen `test-v3` set for a clean measurement of the fallback NLU with intent-v2 (needs API credit for the
-   customer simulator); human review of a sample of the intent corpus labels.
+9. Human review of a sample of the intent corpus labels (`ml/corpus/human-review.tsv`) and of the hard-v1 personas;
+   the Claude path on hard-v1 was measured with the NLU played by a Claude Haiku subagent — re-run it once against
+   the API to confirm (ADR-022).
 10. Monitor the precision of confirmed fraud alerts (threshold 35 relies on the organizer score's behaviour, ADR-020).

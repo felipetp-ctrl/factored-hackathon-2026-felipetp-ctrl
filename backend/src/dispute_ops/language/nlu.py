@@ -20,7 +20,7 @@ PRICES_PER_MTOK = {  # USD (input, output), Anthropic first-party list prices
     "claude-haiku-4-5": (1.00, 5.00),
     "claude-sonnet-5": (2.00, 10.00),
 }
-PROMPT_VERSION = "nlu-v3"
+PROMPT_VERSION = "nlu-v4"
 
 YesNo = Literal["yes", "no"]
 
@@ -108,8 +108,10 @@ intent:
 - dispute: the customer wants to contest a charge on their card or account.
 - provide_info: the customer answers a question the service asked (see ask_for).
 - confirm / decline: the customer accepts / rejects the summary they were asked to confirm
-  (only when state is CONFIRM).
-- out_of_scope: any other banking request (balance, credit, loans, limits, transfers, app help...).
+  (only when state is CONFIRM). Refusing the card block is not a decline: "confirmo, mas não quero
+  bloqueio" is confirm with wants_block_card false.
+- out_of_scope: any other banking request (balance, credit, loans, limits, transfers, app help...). If the
+  message ALSO asks to contest a card charge, the intent is dispute (the other request is ignored).
 - human: the customer explicitly asks for a person / human agent.
 - greeting: only a greeting with no request.
 - unclear: none of the above.
@@ -139,8 +141,10 @@ Evidence (only when the customer states it): card_in_possession, recognizes_merc
 duplicate_transaction_id (candidate id of the other charge), expected_amount, expected_delivery_date,
 contacted_merchant (yes/no), cancellation_date (ISO date when possible).
 wants_block_card: true/false only if they say whether they want the card blocked.
-very_negative_sentiment: true for insults, threats, or extreme distress.
-regulatory_threat: true when the customer threatens to complain to a regulator or ombudsman (e.g. CONDUSEF,
+language: the language of this customer message (Portuguese vs Spanish by its own words, not the bank's).
+very_negative_sentiment: true for insults or threats against the bank or its staff. Worry, stress, capital
+letters or urgency after a fraud or a theft are normal and are not very negative sentiment.
+regulatory_threat: only true when the customer explicitly threatens to complain to a regulator or ombudsman (e.g. CONDUSEF,
 Superintendencia Financiera, BCRA, Banco Central, Procon), to take legal action, or to go to the press.
 summary: one short sentence for a human agent describing what the customer wants, in the customer's
 language, without personal data."""

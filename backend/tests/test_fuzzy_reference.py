@@ -170,3 +170,12 @@ def test_thanks_after_an_out_of_scope_answer_closes(chat):
     assert chat("quiero reclamar por el aumento de la cuota anual").action == "out_of_scope"
     r = chat("entiendo, muchas gracias, hasta luego")
     assert r.state == "CANCELLED"
+
+
+@pytest.mark.parametrize("text,block", [
+    ("sí, confirmo. pero no la bloqueen porfa", False), ("sí, confirmo! pero no quiero que la bloqueen", False),
+    ("sim, confirmo, não precisa bloquear", False), ("confirmo, sin bloquear", False),
+    ("sí, confirmo y bloquéela", True), ("sim, pode bloquear", True),
+])
+def test_block_card_only_without_negation(text, block):
+    assert read(text, state="CONFIRM").wants_block_card is block
