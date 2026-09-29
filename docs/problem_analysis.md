@@ -75,6 +75,39 @@ as triage: it resolves the matchable cases and hands the rest to an agent with t
 | No new risk | Policy outside the model, confirmation before acting, verification before reporting | Unsafe outcomes counted with denominators, vs. an LLM baseline |
 | Same treatment across countries | Single calibrated amount threshold (ADR-013) | Outcomes by country and segment |
 
+## 3a. What the data says about running the service
+
+![Disputes by channel](figures/disputes_by_channel.png)
+
+**Where disputes come from decides what to automate next.** Half arrive through the call center, 35% as written text
+(email and web form) and 10% in the app. The service covers the written half and the app; the phone half is the next
+channel (a call transcript read into the same case engine), not a second product. The 1.1% that arrive through the
+regulator always go to a person under the policy.
+
+![Disputes by weekday](figures/disputes_by_weekday.png)
+
+**Staff for Tuesday to Friday.** Dispute complaints peak Tuesday to Friday (about 2,260 per weekday over three years)
+and halve on Sunday; hours of the day are flat. The agent queue the service leaves behind should be staffed on that
+weekly curve.
+
+![Amount against the US$ 450 rule](figures/amount_vs_threshold.png)
+
+**The amount rule is a capacity dial.** Card purchase amounts are uniform between US$ 0 and 500 in this data, so the
+US$ 450 hand-off rule (set at the 90th percentile, ADR-013) sends exactly one disputable purchase in ten to a person
+on amount alone, in every country. Moving the limit moves the queue linearly: each US$ 50 is about 10% of disputes.
+
+![First-contact resolution by reason](figures/fcr_by_reason.png)
+
+**The lever on satisfaction is resolving at the first contact.** Complaints are resolved at first contact 43.6% of the
+time, against 91.5% for transactional contacts; in this data CSAT depends on resolution alone (3.0 resolved vs 2.0
+not, on 1–4; ADR-021). A dispute the service registers in the first conversation moves that contact into the
+resolved group.
+
+**Human workload (projection).** At 377 disputes a month and the conservative automation share (63%, hard-v1), about
+140 cases a month still need a person, instead of 377: roughly 5–6 a day Tuesday to Friday. At 22 minutes of human work
+per case (7.2 min measured contact + 15 min assumed back-office), that is about 2 agent-hours on a peak day, down from
+about 5. Assumptions as in §4; not a measured production figure.
+
 ## 4. Customer and business outcomes (projection — assumptions stated)
 
 Assumptions, all adjustable:

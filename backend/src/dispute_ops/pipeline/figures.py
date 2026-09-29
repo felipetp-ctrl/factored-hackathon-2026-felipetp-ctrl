@@ -142,6 +142,76 @@ def channels_results(out: Path) -> None:
     _save(fig, out, "channels_v1.png", "Offline, deterministic, no model calls. Texts by an independent author; labels from the policy.")
 
 
+def disputes_by_channel(silver: Path, out: Path) -> None:
+    rows = duckdb.sql(f"""SELECT reception_channel, count(*) FROM '{silver}/complaints.parquet'
+        WHERE category = 'Transactions' GROUP BY 1 ORDER BY 2""").fetchall()
+    total = sum(r[1] for r in rows)
+    fig, ax = plt.subplots(figsize=(8, 3.0))
+    names = {"Call Center": "Call center", "Email": "Email", "Web": "Web form", "App": "App", "Branch": "Branch", "Regulator": "Regulator"}
+    ax.barh([names.get(r[0], r[0]) for r in rows], [100 * r[1] / total for r in rows],
+            color=[AMBER if r[0] == "Call Center" else GREEN for r in rows], height=.6)
+    for i, r in enumerate(rows):
+        ax.text(100 * r[1] / total + .8, i, f"{100 * r[1] / total:.1f}%", va="center", fontsize=9.5)
+    ax.set_xlim(0, 60)
+    ax.set_xlabel("share of 13,580 dispute complaints")
+    ax.set_title("Half of disputes arrive by phone; the other half are written")
+    ax.grid(axis="y", visible=False)
+    _save(fig, out, "disputes_by_channel.png", "Complaints in category Transactions by reception channel, silver layer.")
+
+
+def disputes_by_weekday(silver: Path, out: Path) -> None:
+    rows = dict(duckdb.sql(f"""SELECT dayofweek(creation_date), count(*) FROM '{silver}/complaints.parquet'
+        WHERE category = 'Transactions' GROUP BY 1""").fetchall())
+    order = [1, 2, 3, 4, 5, 6, 0]
+    labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    vals = [rows.get(d, 0) for d in order]
+    fig, ax = plt.subplots(figsize=(8, 3.0))
+    ax.bar(labels, vals, color=[GREEN if v >= 2000 else GRAY for v in vals], width=.6)
+    for i, v in enumerate(vals):
+        ax.text(i, v + 40, f"{v:,}", ha="center", fontsize=9.5)
+    ax.set_ylim(0, max(vals) * 1.2)
+    ax.set_ylabel("dispute complaints, 3 years")
+    ax.set_title("Tuesday to Friday carry twice Sunday's load")
+    ax.grid(axis="x", visible=False)
+    _save(fig, out, "disputes_by_weekday.png", "Complaints in category Transactions by weekday of creation; hours of the day are flat.")
+
+
+def amount_vs_threshold(gold: Path, out: Path) -> None:
+    vals = [r[0] for r in duckdb.sql(f"""SELECT amount_usd FROM '{gold}/card_transactions.parquet'
+        WHERE transaction_type = 'Purchase' AND transaction_status IN ('Approved', 'Pending') AND amount_usd IS NOT NULL
+        USING SAMPLE 200000 ROWS (reservoir, 7)""").fetchall()]
+    above = 100 * sum(v > 450 for v in vals) / len(vals)
+    fig, ax = plt.subplots(figsize=(8, 3.2))
+    bins = list(range(0, 526, 25))
+    ax.hist(vals, bins=bins, color=GREEN, rwidth=.9)
+    ax.axvline(450, color=PURPLE, lw=2)
+    ax.text(515, ax.get_ylim()[1] * .9, f"US$ 450 limit:\n{above:.0f}% of purchases\ngo to a person on\namount alone",
+            color=INK, fontsize=9.5, va="top")
+    ax.set_xlim(0, 680)
+    ax.set_xlabel("card purchase amount, US$ (uniform between 0 and 500 in this synthetic data)")
+    ax.set_ylabel("purchases (sample)")
+    ax.set_title("The amount rule sends one disputable purchase in ten to a person")
+    ax.grid(axis="x", visible=False)
+    _save(fig, out, "amount_vs_threshold.png", "200,000-row sample of approved/pending card purchases, gold layer; threshold calibrated at p90 (ADR-013).")
+
+
+def fcr_by_reason(silver: Path, out: Path) -> None:
+    rows = duckdb.sql(f"""SELECT contact_reason, 100 * avg(was_resolved::INT) FROM '{silver}/call_center_interactions.parquet'
+        GROUP BY 1 ORDER BY 2""").fetchall()
+    names = {"Queja": "Complaint", "Retención": "Retention", "Comercial": "Sales", "Técnico": "Technical",
+             "Producto": "Product", "Transaccional": "Transactional"}
+    fig, ax = plt.subplots(figsize=(8, 3.0))
+    ax.barh([names.get(r[0], r[0]) for r in rows], [r[1] for r in rows],
+            color=[PURPLE if r[0] == "Queja" else GRAY for r in rows], height=.6)
+    for i, r in enumerate(rows):
+        ax.text(r[1] + 1, i, f"{r[1]:.1f}%", va="center", fontsize=9.5)
+    ax.set_xlim(0, 105)
+    ax.set_xlabel("resolved at first contact")
+    ax.set_title("Complaints are the contact least often solved on the first call")
+    ax.grid(axis="y", visible=False)
+    _save(fig, out, "fcr_by_reason.png", "686,296 call-center interactions, silver layer. In this data CSAT follows resolution: 3.0 resolved vs 2.0 not (1-4).")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--silver", default=str(ROOT / "data/silver"))
@@ -149,8 +219,15 @@ def main() -> None:
     a = ap.parse_args()
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
-    if (Path(a.silver) / "complaints.parquet").exists():
-        monthly_disputes(Path(a.silver), out)
+    silver = Path(a.silver)
+    if (silver / "complaints.parquet").exists():
+        monthly_disputes(silver, out)
+        disputes_by_channel(silver, out)
+        disputes_by_weekday(silver, out)
+    if (silver / "call_center_interactions.parquet").exists():
+        fcr_by_reason(silver, out)
+    if (silver.parent / "gold" / "card_transactions.parquet").exists():
+        amount_vs_threshold(silver.parent / "gold", out)
     written_complaint_match(out)
     hard_set_before_after(out)
     cost_projection(out)
