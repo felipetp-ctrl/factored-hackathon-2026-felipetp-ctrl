@@ -101,7 +101,7 @@ Offline simulations on held-out cases; nothing here is a production measurement.
 | Reading the dispute reason, another author, blind labels (`independent-v1`) | 525 | trained classifier 94.1% | Keyword rules 45.7% |
 
 Latency per turn p50 2.1 s / p95 3.1 s with Claude (test-v2); cost per safe resolution US$ 0.013 vs US$ 0.033 for the
-chatbot. Failures are listed in every report, including the bugs the hard sets found. Limits: the Claude path in
+chatbot. 95% intervals for all of these: [uncertainty](docs/analysis/uncertainty.md). Failures are listed in every report, including the bugs the hard sets found. Limits: the Claude path in
 `hard-v1` was read by a Claude subagent given the production prompt, not the API; sets are small (zero unsafe in 84
 conversations does not prove zero risk); intent labels come from models, checked by one blind human reviewer on 90 messages (κ = 0.91,
 [review](ml/results/human-review.md)).

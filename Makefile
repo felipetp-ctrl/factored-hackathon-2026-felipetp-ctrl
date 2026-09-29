@@ -1,4 +1,4 @@
-.PHONY: install test lint api eval eval-channels figures calibration web data train fraud-audit learnability mlflow-ui
+.PHONY: install test lint api eval eval-channels figures calibration uncertainty web data train fraud-audit learnability mlflow-ui
 install:
 	cd backend && uv sync
 test:
@@ -11,6 +11,8 @@ eval:
 	cd backend && uv run python -m dispute_ops.evaluation $(ARGS)
 eval-channels:
 	cd backend && uv run python -m dispute_ops.evaluation.channels_eval --set ../eval/scenarios/channels-v1.json --split test --db demo_data/dispute_ops.db --out ../eval/results/channels-v1-test
+uncertainty:
+	cd backend && uv run python -m dispute_ops.evaluation.uncertainty
 calibration:
 	cd backend && uv run --group ml python -m dispute_ops.ml.calibration
 figures:

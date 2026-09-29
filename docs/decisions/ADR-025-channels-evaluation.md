@@ -62,6 +62,7 @@ read. Whole-case latency p50 2.4 ms, p95 5.0 ms on a laptop, US$ 0 model cost.
 - Alert customers are scripted, not interactive; a question the author did not foresee gets "I don't know" (one gap in
   the test run).
 - Structured PQR fields are taken as the intake form gives them; the channel reads only the free text.
-- The fixes change how the summary and the alert question are read in every channel. hard-v1 and test-v3 need
-  simulated customers and were not re-run; the 342 unit and scenario tests, including the five guided demo scenarios,
-  pass.
+- The fixes change how the summary and the alert question are read in every channel. Regression check (2026-09-29):
+  hard-v1's recorded customer messages and NLU readings replayed on the current code (`eval/results/hard-v1-replay-0929`)
+  finish all 72 conversations without diverging and give the same outcomes as the last measurement (free reader 32/36,
+  Claude path 31/36, one unsafe each). test-v3 was not replayed.

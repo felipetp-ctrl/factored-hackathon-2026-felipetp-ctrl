@@ -18,6 +18,10 @@ The README has the one-table summary; this page keeps every set, its method and 
 ![hard-v1 before and after](figures/hard_v1_before_after.png)
 ![channels-v1](figures/channels_v1.png)
 
+**Uncertainty.** 95% intervals for every headline number: [docs/analysis/uncertainty.md](analysis/uncertainty.md).
+**Regression.** hard-v1 replayed on the current code after the channels-v1 fixes: identical outcomes
+([ADR-025](decisions/ADR-025-channels-evaluation.md)).
+
 **Why the country numbers differ in hard-v1:** mostly case mix — Argentina drew the must-go-to-a-person and ambiguous
 templates, Colombia mostly plain disputes; like for like the gap shrinks to two scenarios that fail elsewhere too
 ([analysis](analysis/hard-v1-disparity.md)).
