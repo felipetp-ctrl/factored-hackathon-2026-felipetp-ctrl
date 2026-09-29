@@ -65,6 +65,7 @@ class TableReport:
     range_violations: dict[str, int] = field(default_factory=dict)
     orphans_quarantined: dict[str, int] = field(default_factory=dict)
     orphans_nulled: dict[str, int] = field(default_factory=dict)
+    immutable_conflicts: dict[str, int] = field(default_factory=dict)
     silver_rows: int = 0
     skipped: str | None = None
 
@@ -164,6 +165,17 @@ def run_silver(con: duckdb.DuckDBPyConnection, c: Contract, paths: Paths, report
                 report.range_violations[col] = n
 
     quarantine_dir = paths.silver / "_quarantine"
+    for col in c.immutable:
+        # Versions of one key that disagree on an identity column: keep none of them in silver.
+        conflict = (f"({pk}) IN (SELECT {pk} FROM _typed WHERE {_q(col)} IS NOT NULL GROUP BY {pk} "
+                    f"HAVING count(DISTINCT {_q(col)}) > 1)")
+        n = con.execute(f"SELECT count(*) FROM _dedup WHERE {conflict}").fetchone()[0]
+        if n:
+            quarantine_dir.mkdir(parents=True, exist_ok=True)
+            con.execute(f"COPY (SELECT * FROM _typed WHERE {conflict}) TO "
+                        f"'{quarantine_dir / f'{c.name}__immutable_{col}.parquet'}' (FORMAT parquet)")
+            con.execute(f"DELETE FROM _dedup WHERE {conflict}")
+            report.immutable_conflicts[col] = n
     for col, target in c.fks.items():
         parent, parent_col = target.split(".")
         parent_file = paths.silver / f"{parent}.parquet"
@@ -232,6 +244,31 @@ def run_gold(con: duckdb.DuckDBPyConnection, paths: Paths, as_of: datetime) -> d
 
 
 # ---------------------------------------------------------------------------------------------- orchestration
+# Freshness policy (ADR-012): a daily batch after each process_date closes, so the newest partition may lag the run by
+# at most FRESH_LAG_DAYS; a late file for an older day is absorbed by the next run and counted here as a late arrival.
+FRESH_LAG_DAYS = 2
+EVENT_DATE = {"transactions": "transaction_date", "complaints": "creation_date", "call_center_interactions": "interaction_date"}
+
+
+def check_freshness(con: duckdb.DuckDBPyConnection, paths: Paths, as_of: datetime) -> dict[str, Any]:
+    out: dict[str, Any] = {}
+    for table, event_col in EVENT_DATE.items():
+        f = paths.silver / f"{table}.parquet"
+        if not f.exists():
+            continue
+        cols = {r[0] for r in con.execute(f"DESCRIBE SELECT * FROM read_parquet('{f}')").fetchall()}
+        if "process_date" not in cols:
+            continue
+        newest = con.execute(f"SELECT max(process_date) FROM read_parquet('{f}')").fetchone()[0]
+        lag = (as_of.date() - newest).days if newest else None
+        late = None
+        if event_col in cols:  # rows processed more than a day after the event happened
+            late = con.execute(f"SELECT count(*) FROM read_parquet('{f}') WHERE process_date > CAST({_q(event_col)} AS DATE) + 1").fetchone()[0]
+        out[table] = {"newest_process_date": str(newest), "lag_days": lag,
+                      "status": "fresh" if lag is not None and lag <= FRESH_LAG_DAYS else "stale", "late_rows": late}
+    return out
+
+
 def run_pipeline(raw: Path, out: Path, as_of: datetime, tables: list[str] | None = None) -> dict[str, Any]:
     paths = Paths(raw=Path(raw), out=Path(out))
     run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S") + "-" + uuid.uuid4().hex[:6]
@@ -244,6 +281,7 @@ def run_pipeline(raw: Path, out: Path, as_of: datetime, tables: list[str] | None
         run_bronze(con, c, paths, state, run_id, report)
         run_silver(con, c, paths, report)
     gold = run_gold(con, paths, as_of)
+    freshness = check_freshness(con, paths, as_of)
     paths.state.parent.mkdir(parents=True, exist_ok=True)
     paths.state.write_text(json.dumps(state, indent=1))
     manifest = {
@@ -252,6 +290,7 @@ def run_pipeline(raw: Path, out: Path, as_of: datetime, tables: list[str] | None
         "contracts_version": "dictionary-v1.0.0/contracts-v1",
         "tables": {k: vars(v) for k, v in reports.items()},
         "gold_rows": gold,
+        "freshness": freshness,
     }
     (paths.out / "_state").mkdir(parents=True, exist_ok=True)
     (paths.out / "_state" / f"manifest_{run_id}.json").write_text(json.dumps(manifest, indent=1, default=str))

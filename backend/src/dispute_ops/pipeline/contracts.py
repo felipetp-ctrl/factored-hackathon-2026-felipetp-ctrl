@@ -29,6 +29,10 @@ class Contract:
     # FKs the dispute use case cannot work without: orphans are quarantined. Every other FK orphan
     # keeps its row with the dangling reference set to NULL (and is counted).
     essential_fks: tuple[str, ...] = ()
+    # Identity columns a re-delivery may never change (who owns a card, which card a charge was made on). A key whose
+    # versions disagree on one of them is quarantined instead of silently taking the newest value (ADR-012 addendum:
+    # every product id the organizer's 2026-08-31 backup shares with the current delivery has a different owner).
+    immutable: tuple[str, ...] = ()
 
 
 V = Col()
@@ -37,6 +41,7 @@ REQ = Col(required=True)
 CONTRACTS: dict[str, Contract] = {c.name: c for c in [
     Contract(
         name="customers", source="customers.csv", pk=("customer_id",), order_by="last_updated",
+        immutable=("document_number", "date_of_birth"),
         fks={"registration_branch_id": "branches.branch_id"},
         columns={
             "customer_id": REQ, "document_number": REQ,
@@ -73,7 +78,7 @@ CONTRACTS: dict[str, Contract] = {c.name: c for c in [
     Contract(
         name="products", source="products.csv", pk=("product_id",), order_by="last_updated",
         fks={"customer_id": "customers.customer_id", "opening_branch_id": "branches.branch_id"},
-        essential_fks=("customer_id",),
+        essential_fks=("customer_id",), immutable=("customer_id", "product_number"),
         columns={
             "product_id": REQ, "customer_id": REQ, "product_type": REQ, "product_number": REQ,
             "currency": Col(required=True, domain=("MXN", "COP", "ARS", "USD")),
@@ -89,7 +94,7 @@ CONTRACTS: dict[str, Contract] = {c.name: c for c in [
     Contract(
         name="transactions", source="transactions/**/*.csv", pk=("transaction_id",), order_by="process_date",
         fks={"customer_id": "customers.customer_id", "product_id": "products.product_id"},
-        essential_fks=("customer_id", "product_id"),
+        essential_fks=("customer_id", "product_id"), immutable=("customer_id", "product_id"),
         columns={
             "transaction_id": REQ, "transaction_date": Col("TIMESTAMP", required=True),
             "process_date": Col("DATE", required=True), "product_id": REQ, "customer_id": REQ,
@@ -107,7 +112,7 @@ CONTRACTS: dict[str, Contract] = {c.name: c for c in [
     Contract(
         name="complaints", source="complaints/**/*.csv", pk=("complaint_id",), order_by="process_date",
         fks={"customer_id": "customers.customer_id", "affected_product_id": "products.product_id"},
-        essential_fks=("customer_id",),
+        essential_fks=("customer_id",), immutable=("customer_id",),
         columns={
             "complaint_id": REQ, "creation_date": Col("TIMESTAMP", required=True), "process_date": Col("DATE", required=True),
             "customer_id": REQ, "case_type": Col(required=True, domain=("Complaint", "Claim", "Request", "Suggestion")),

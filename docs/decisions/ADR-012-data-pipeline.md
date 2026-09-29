@@ -38,3 +38,41 @@ We report this rather than inventing duplicates; the dedup logic is exercised by
 | `service_agents` | 1.2k | Agent routing and staffing are out of scope; the handoff goes to one queue. |
 | `marketing_campaigns`, `campaign_sends` | 200 · 2M | Commercial data unrelated to disputes; campaign conversion was checked in the learnability scan only. |
 
+
+## Addendum (2026-09-29): identity is immutable, freshness is checked, and the organizer's backup is not an earlier version
+
+**Re-delivery contract.** Newest-wins deduplication handles late and corrected files, but it would also accept a
+correction that changes *who owns what*. Each contract now lists immutable identity columns (customers: document number,
+date of birth; products: owning customer, card number; transactions: customer, product; complaints: customer). A key
+whose versions disagree on one of them is quarantined (`silver/_quarantine/<table>__immutable_<col>.parquet`, counted as
+"identity conflicts" in the quality report) instead of taking the newest value. Test:
+`test_a_redelivery_that_moves_a_card_to_another_customer_is_quarantined` (a mutable field in the same delivery still
+updates).
+
+**What the real data showed.** The organizer bucket has an earlier snapshot, `data_backup_20260831/` (the six dimension
+tables only). Loading it first and the current delivery second, as a re-delivery:
+
+| | Shared ids | Only in one snapshot | Shared ids whose identity changed |
+|---|---|---|---|
+| customers | 4,025 of 150,000 | 145,975 each side | 1,052 document numbers |
+| products | 128,599 of 400,000 | 271,401 each side | **128,599 owners (all of them)**, 7,151 card numbers |
+
+The backup is a different synthetic generation, not an earlier state of the same records: every product id the two
+share belongs to a different customer. Under plain newest-wins, a mixed load would have silently moved 128,599 cards —
+and their charges and disputes — to other people. With the contract, those keys are quarantined and reported. The
+current delivery alone has no identity conflicts, so the demo and every evaluation are unaffected.
+
+**Freshness.** Each run reports, per fact table, the newest `process_date`, its lag behind the run and the rows processed
+more than a day after the event (`check_freshness`; status "stale" beyond 2 days). On the current data every table is
+fresh and **no row arrives late**: `process_date` equals the event date for all transactions, complaints and calls,
+despite the dictionary's note on late arrivals. The late-arrival path stays tested on the labelled fixture.
+
+```mermaid
+flowchart LR
+  S3["Organizer S3<br/>CSV, daily partitions"] -->|new or changed files only<br/>size + mtime state| B["Bronze<br/>raw text + lineage:<br/>_source_file, _ingested_at, _batch_id"]
+  B -->|types, contracts, newest-wins,<br/>identity check, FK check| S["Silver<br/>one row per key"]
+  S -->|rejects, domains, ranges,<br/>orphans, identity conflicts| Q["Quarantine + quality report"]
+  S --> G["Gold<br/>card_transactions, card_products,<br/>customer_dim, dispute_complaints,<br/>fraud_alert_candidates"]
+  G -->|deterministic sample| D["Demo store (SQLite)<br/>read by the API"]
+  S -->|every run| M["Manifest<br/>counts, findings, freshness"]
+```

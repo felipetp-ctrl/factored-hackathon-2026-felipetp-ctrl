@@ -146,3 +146,46 @@ def test_gold_fills_amount_usd_from_currency_or_daily_fx(raw, tmp_path):
     assert rows["TX-1"] == (68.5, "reported")
     assert rows["TX-7"] == (640.0, "identity_usd")
     assert rows["TX-3"][0] == pytest.approx(22.5) and rows["TX-3"][1] == "fx_daily"
+
+
+def test_a_redelivery_that_moves_a_card_to_another_customer_is_quarantined(raw, tmp_path):
+    """Identity columns are immutable: every product id the organizer's backup shares with the current delivery has a
+    different owner, and newest-wins would silently hand a card (and its charges) to someone else."""
+    import csv
+
+    out = tmp_path / "out"
+    run_pipeline(raw, out, AS_OF, tables=["branches", "customers", "products"])
+    rows = list(csv.DictReader(open(raw / "products.csv", encoding="utf-8-sig")))
+    customers = sorted({r["customer_id"] for r in rows})
+    moved = dict(rows[0])
+    moved["customer_id"] = next(c for c in customers if c != moved["customer_id"])
+    moved["last_updated"] = "2026-12-31 00:00:00"
+    kept = dict(rows[1])
+    kept["current_balance"] = "123.45"  # a mutable field may change
+    kept["last_updated"] = "2026-12-31 00:00:00"
+    with open(raw / "products_redelivery.csv", "w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=list(rows[0]))
+        w.writeheader()
+        w.writerows([moved, kept])
+    from dataclasses import replace
+
+    from dispute_ops.pipeline import contracts
+
+    original = contracts.CONTRACTS["products"]
+    contracts.CONTRACTS["products"] = replace(original, source="products*.csv")
+    try:
+        m = run_pipeline(raw, out, AS_OF, tables=["products"])["tables"]["products"]
+    finally:
+        contracts.CONTRACTS["products"] = original
+    assert m["immutable_conflicts"] == {"customer_id": 1}
+    silver = duckdb.sql(f"SELECT product_id, current_balance FROM '{out}/silver/products.parquet'").fetchall()
+    ids = {r[0] for r in silver}
+    assert moved["product_id"] not in ids and kept["product_id"] in ids
+    assert dict(silver)[kept["product_id"]] == 123.45
+    assert (out / "silver/_quarantine/products__immutable_customer_id.parquet").exists()
+
+
+def test_freshness_is_reported_per_fact_table(raw, tmp_path):
+    f = run_pipeline(raw, tmp_path / "out", AS_OF)["freshness"]
+    assert f["transactions"]["status"] in ("fresh", "stale") and f["transactions"]["lag_days"] is not None
+    assert "late_rows" in f["transactions"]

@@ -15,14 +15,14 @@ ROOT = Path(__file__).resolve().parents[4]
 
 def quality_markdown(m: dict) -> str:
     lines = [f"# Data quality report — run `{m['run_id']}`", "", f"As of {m['as_of']} · contracts {m['contracts_version']}", "",
-             "| Table | new files | bronze rows | rejected lines | duplicates removed | silver rows | quarantined | nulled FKs |",
-             "|---|---|---|---|---|---|---|---|"]
+             "| Table | new files | bronze rows | rejected lines | duplicates removed | silver rows | quarantined | identity conflicts | nulled FKs |",
+             "|---|---|---|---|---|---|---|---|---|"]
     for t, r in m["tables"].items():
         if r["skipped"]:
-            lines.append(f"| {t} | skipped: {r['skipped']} |||||||")
+            lines.append(f"| {t} | skipped: {r['skipped']} ||||||||")
             continue
         lines.append(f"| {t} | {r['new_files']} | {r['bronze_rows_total']:,} | {r['rejected_lines']} | {r['duplicate_rows_removed']:,} | "
-                     f"{r['silver_rows']:,} | {r['orphans_quarantined'] or '-'} | {r['orphans_nulled'] or '-'} |")
+                     f"{r['silver_rows']:,} | {r['orphans_quarantined'] or '-'} | {r.get('immutable_conflicts') or '-'} | {r['orphans_nulled'] or '-'} |")
     lines += ["", "## Contract findings", ""]
     for t, r in m["tables"].items():
         items = [(k, r[k]) for k in ("unexpected_columns", "missing_columns", "cast_failures", "required_nulls",
@@ -31,6 +31,12 @@ def quality_markdown(m: dict) -> str:
             lines.append(f"**{t}**")
             lines += [f"- {k}: `{json.dumps(v, ensure_ascii=False)}`" for k, v in items]
             lines.append("")
+    if m.get("freshness"):
+        lines += ["## Freshness", "", "Policy: daily batch; the newest partition may lag the run by at most 2 days (ADR-012).", "",
+                  "| Table | newest process_date | lag (days) | status | rows processed > 1 day after the event |", "|---|---|---|---|---|"]
+        lines += [f"| {t} | {f['newest_process_date']} | {f['lag_days']} | {f['status']} | {f['late_rows'] if f['late_rows'] is not None else '-'} |"
+                  for t, f in m["freshness"].items()]
+        lines.append("")
     lines += ["## Gold", "", *[f"- {k}: {v:,} rows" for k, v in m["gold_rows"].items()]]
     if "demo_store" in m:
         lines += ["", f"Demo store: {m['demo_store']}"]
