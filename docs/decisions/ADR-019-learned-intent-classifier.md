@@ -101,5 +101,6 @@ changes the main path, so it needs a live evaluation first.
   real corpus would likely favour embeddings or fine-tuning.
 
 ## Next
-Human review of the 90-message sample (`ml/corpus/human-review.tsv`); a live cascade evaluation; retrain on real,
-consented customer messages when available.
+Done 2026-09-28: blind human review of the 90-message sample, 78/85 agree, κ = 0.91
+([report](../../ml/results/human-review.md)); DISPUTE_NO_REASON is the label to redefine. Still to do: a live cascade
+evaluation; retrain on real, consented customer messages when available.

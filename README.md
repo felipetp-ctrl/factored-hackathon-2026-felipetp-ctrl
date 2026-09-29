@@ -103,7 +103,8 @@ Offline simulations on held-out cases; nothing here is a production measurement.
 Latency per turn p50 2.1 s / p95 3.1 s with Claude (test-v2); cost per safe resolution US$ 0.013 vs US$ 0.033 for the
 chatbot. Failures are listed in every report, including the bugs the hard sets found. Limits: the Claude path in
 `hard-v1` was read by a Claude subagent given the production prompt, not the API; sets are small (zero unsafe in 84
-conversations does not prove zero risk); intent labels come from models, with a 90-message human review pending.
+conversations does not prove zero risk); intent labels come from models, checked by one blind human reviewer on 90 messages (κ = 0.91,
+[review](ml/results/human-review.md)).
 
 ![Vague-memory test before and after fixes](docs/figures/hard_v1_before_after.png)
 

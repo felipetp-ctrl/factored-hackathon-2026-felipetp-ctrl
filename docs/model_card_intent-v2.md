@@ -48,8 +48,9 @@ dates, openers and trailers) gives 2,808 training examples. The organizer data h
 ## Risks and limitations
 - All evaluation text is written by language models (simulated customers, subagent writers); none by real customers,
   and the organizer data has no Portuguese. Both independent annotators are Sonnet instances: κ = 1.0 shows the set is
-  unambiguous under the definitions, not that humans would agree. A human review sample is pending
-  (`ml/corpus/human-review.tsv`).
+  unambiguous under the definitions. A blind human review of 90 messages agreed on 78 of 85 decided (91.8%,
+  κ = 0.91; 5 “can't decide”); the weak label is DISPUTE_NO_REASON (4/8), which a person reads as an unrecognised
+  charge ([human review](../ml/results/human-review.md)). One annotator, the project's author.
 - A confident wrong reason reaches the confirmation summary; a customer who confirms without reading gets the wrong
   dispute type (the same holds for the keyword rules and for the language model).
 - Explicit keywords keep precedence for routing (out of scope over "human"), so keyword false positives are not
