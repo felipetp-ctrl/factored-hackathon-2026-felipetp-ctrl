@@ -45,6 +45,11 @@ dates, openers and trailers) gives 2,808 training examples. The organizer data h
   encoder **fine-tuned** on the same data (independent set 93.0% vs 95.6% for TF-IDF, 15× slower on CPU; one seed,
   no hyperparameter search — `ml/results/finetune-e5-small.md`). Neither is deployable on the 512 MB instance.
 
+## Calibration (out of sample)
+On the independent set (n = 540): ECE 0.064, Brier 0.082; above 0.6 the model under-states its confidence. At the
+0.60 threshold it accepts 93.5% of messages at 97.6% accuracy, the same in Spanish and Portuguese
+([calibration](../ml/results/calibration.md)).
+
 ## Risks and limitations
 - All evaluation text is written by language models (simulated customers, subagent writers); none by real customers,
   and the organizer data has no Portuguese. Both independent annotators are Sonnet instances: κ = 1.0 shows the set is

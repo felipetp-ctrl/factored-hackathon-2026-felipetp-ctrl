@@ -13,6 +13,7 @@ The README has the one-table summary; this page keeps every set, its method and 
 | channels-v1 | Written complaints and fraud-alert answers | 24 + 18 | letters 23/24, alerts 17/18, 0 unsafe | [ADR-025](decisions/ADR-025-channels-evaluation.md) |
 | independent-v1 | Reason reading, another author, blind labels | 525 | intent-v2 94.1% vs keyword rules 45.7% | [report](../ml/results/independent-v1.md) |
 | human-review | The intent labels themselves, one blind human | 90 | 78/85 agree, κ = 0.91; DISPUTE_NO_REASON weakest (4/8) | [report](../ml/results/human-review.md) |
+| calibration | Is the classifier's confidence trustworthy out of sample? | 540 | ECE 0.064, under-confident above 0.6; 0.60 keeps 93.5% at 97.6% | [report](../ml/results/calibration.md) |
 
 ![hard-v1 before and after](figures/hard_v1_before_after.png)
 ![channels-v1](figures/channels_v1.png)
