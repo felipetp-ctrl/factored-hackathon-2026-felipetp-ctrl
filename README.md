@@ -3,8 +3,15 @@
 An AI-first customer-service **system** (not a chatbot) for one banking workflow: **disputing card charges** —
 "cargo no reconocido" / "compra não reconhecida". Built for the Factored AI & Data Hackathon 2026.
 
-Customers talk in **Spanish or Portuguese** through chat, written complaints (PQR) or a proactive fraud alert.
+Customers reach it in **Spanish or Portuguese** through the app, written complaints (PQR) or a proactive fraud alert.
 A deterministic core decides; the language model only interprets.
+
+**Judging in two minutes**
+1. Open the [live demo](https://latam-bank-disputes.vercel.app) → *Process written complaints* → *See the cases* →
+   click a case. Or read the [walkthrough with screenshots](docs/demo.md).
+2. Results in one table: [Results](#results). Every requirement of the challenge → where it is met:
+   [traceability](docs/requirements_traceability.md).
+3. Why it is built this way: [decisions at a glance](#decisions-at-a-glance), 25 ADRs in [docs/decisions](docs/decisions/).
 
 ```
 chat / PQR / fraud alert
@@ -25,8 +32,8 @@ chat / PQR / fraud alert
 ## Live demo
 
 - Web app: **https://latam-bank-disputes.vercel.app**
-- API: **https://latam-bank-dispute-ops-api.onrender.com** (OpenAPI docs at `/docs`; free plan — the first request after
-  idle time can take about a minute while the service wakes up)
+- API: **https://latam-bank-dispute-ops-api.onrender.com** (OpenAPI docs at `/docs`; free plan, kept warm by a scheduled
+  ping during the judging window)
 
 The page opens on **the bank's case board**; the customer's app is one channel on the side, with a guided dispute form
 instead of a chat window. Every case takes the same five steps (Understand, the only AI step → Decide by written policy →
@@ -44,7 +51,7 @@ scenarios, each with what to do and what should happen:
 | 6 | Needs a person | Above US$ 450 → the case lands in *With a person* with verified facts → act on it as the agent → the customer sees it |
 | 7 | Attack | Prompt injection + another customer's transaction id → same answer as "not found" → handed off as suspicious access |
 
-Every bank message has a **Why?** link with the rule that decided it. The top bar can expire the session or
+Every bank message has a **Why?** link with the rule that decided it. The **⋯** menu can expire the session or
 **simulate an AI outage** (the rule-based fallback takes over). Each browser tab gets its own copy of the data;
 *Reset demo* starts it over. No key is needed: the public deploy runs in demo mode on synthetic data (ADR-016).
 
@@ -117,6 +124,20 @@ monitoring: [docs/evaluation.md](docs/evaluation.md#machine-learning).
 
 **The problem in data.** About 380 unrecognised-charge complaints a month, 70% still open, 15 days to resolve, and a
 written complaint identifies the charge only 15.8% of the time ([problem analysis](docs/problem_analysis.md)).
+
+## Decisions at a glance
+
+| Decision | Why | Trade-off | ADR |
+|---|---|---|---|
+| One workflow: card-charge disputes | 20% of complaints, 70% open, 15 days to resolve; the intake is where it breaks | No other workflows | [001](docs/decisions/ADR-001-workflow.md) |
+| The model reads, code decides | Permissions and policy outside model prose; write tools never reachable by the model | Fewer phrasings handled than a free agent | [004](docs/decisions/ADR-004-hybrid-orchestration.md), [010](docs/decisions/ADR-010-llm-interprets-templates-speak.md) |
+| Versioned YAML policy with rule ids | Every decision explainable by a rule, not by model reasoning | Rules must be maintained | [008](docs/decisions/ADR-008-policy-order.md), [013](docs/decisions/ADR-013-policy-v2-calibration.md) |
+| Free fallback reader with a trained classifier | Works when the model is down or over budget, US$ 0 | Understands less than Claude | [017](docs/decisions/ADR-017-rule-fallback-nlu.md), [019](docs/decisions/ADR-019-learned-intent-classifier.md) |
+| No fraud model | Labels have no learnable signal (AUC 0.50); threshold recalibrated instead | No fraud ML showcase | [020](docs/decisions/ADR-020-fraud-label-audit.md) |
+| Three channels, one case engine | Half of disputes are written; the bank can ask first | More surface to evaluate (done: channels-v1) | [023](docs/decisions/ADR-023-case-system-framing.md), [025](docs/decisions/ADR-025-channels-evaluation.md) |
+| Bank-first UI, no chat window | A case system, not a chatbot | The conversation is one click away | [024](docs/decisions/ADR-024-bank-first-no-chat.md) |
+| DuckDB contracts, bronze/silver/gold, immutable identity | Reproducible, fast (8 s), refuses re-deliveries that move cards between customers | Batch only | [012](docs/decisions/ADR-012-data-pipeline.md) |
+| Sets built to break the system, frozen before running | Earlier sets scored 100%; honest failure rates need hard cases | Lower headline numbers | [009](docs/decisions/ADR-009-evaluation-method.md), [022](docs/decisions/ADR-022-hard-set-and-fuzzy-references.md) |
 
 ## Repository
 

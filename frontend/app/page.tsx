@@ -104,7 +104,6 @@ export default function Demo() {
   const afterReply = async (r: Reply, tok: string) => {
     setReply(r);
     setMsgs((m) => [...m, { role: "bank", text: r.text, reply: r }]);
-    setSelected(r.conversation_id);
     refreshHealth(); refreshBank();
     await refreshCustomer(tok).catch(() => undefined);
   };
@@ -120,13 +119,13 @@ export default function Demo() {
   const startFromPurchase = (t: Txn) => token && withBusy(async () => {
     const s = await api.start(lang, token, t.transaction_id);
     setCid(s.conversation_id); setMsgs([{ role: "bank", text: s.text, reply: s.reply }]); setReply(s.reply);
-    setAppTab("chat"); setBankTab("cases"); setSelected(s.conversation_id); refreshBank();
+    setAppTab("chat"); setBankTab("cases"); refreshBank();
   });
 
   const startPlain = async (tok: string): Promise<string> => {
     const s = await api.start(lang, tok);
     setCid(s.conversation_id); setMsgs([{ role: "bank", text: s.text }]); setReply(null);
-    setBankTab("cases"); setSelected(s.conversation_id);
+    setBankTab("cases");
     return s.conversation_id;
   };
 
@@ -142,7 +141,7 @@ export default function Demo() {
     const s = await api.startAlert(a.transaction_id, lang, token);
     const text = recognized ? T[lang].alertYes : T[lang].alertNo;
     setCid(s.conversation_id); setMsgs([{ role: "bank", text: s.text }, { role: "customer", text }]); setAppTab("chat");
-    setBankTab("cases"); setSelected(s.conversation_id);
+    setBankTab("cases");
     await afterReply(await api.send(s.conversation_id, text, token), token);
   });
 
