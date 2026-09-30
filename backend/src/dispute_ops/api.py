@@ -171,7 +171,7 @@ def create_app(container: Container, workspace_factory: Callable[[], Container] 
     @app.get("/health")
     def health(c: C) -> dict[str, Any]:
         return {"status": "ok", "policy_version": c.policy.version, "now": c.clock().isoformat(),
-                "demo_mode": demo, "nlu": c.conversations.nlu_status()}
+                "demo_mode": demo, "nlu": c.conversations.nlu_status(), "llm_budget": c.conversations.budget.status()}
 
     @app.get("/demo/customers")
     def demo_customers(c: C) -> list[dict[str, Any]]:

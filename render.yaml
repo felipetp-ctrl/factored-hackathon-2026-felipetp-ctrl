@@ -27,5 +27,10 @@ services:
       # Claude first, free rule-based NLU when the model fails or the spend cap is reached (ADR-017)
       - key: NLU_MODE
         value: auto
+      # Judging window (ADR-026): below the provider workspace limit of US$ 5
       - key: LLM_BUDGET_USD
-        value: "20"
+        value: "4.5"
+      - key: LLM_DAILY_BUDGET_USD
+        value: "0.6"
+      - key: LLM_WORKSPACE_BUDGET_USD
+        value: "0.25"

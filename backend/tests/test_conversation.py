@@ -220,3 +220,36 @@ def test_status_reports_degraded_mode(tools, store, clock, token):
     svc.send(cid, token, "hola")
     svc.send(cid, token, "hola")
     assert svc.nlu_status() == {"mode": "rules", "reason": "model_unavailable", "fallback": True}
+
+
+def test_daily_cap_switches_to_rules_and_resets_the_next_day():
+    from datetime import UTC, datetime, timedelta
+
+    from dispute_ops.conversation import Budget
+
+    now = [datetime(2026, 10, 6, 23, 0, tzinfo=UTC)]
+    b = Budget(5.0, daily_limit_usd=0.5, clock=lambda: now[0])
+    b.add(0.5)
+    assert b.exhausted() and b.status()["today_usd"] == 0.5
+    now[0] += timedelta(hours=2)  # next day: the daily cap reopens, the total keeps counting
+    assert not b.exhausted() and b.status()["spent_usd"] == 0.5
+
+
+def test_workspace_cap_stops_one_visitor_and_counts_against_the_total():
+    from dispute_ops.conversation import Budget
+
+    total = Budget(1.0, daily_limit_usd=None)
+    tab_a, tab_b = total.child(0.3), total.child(0.3)
+    tab_a.add(0.3)
+    assert tab_a.exhausted() and not tab_b.exhausted() and total.spent_usd == 0.3
+    tab_b.add(0.29)
+    total.child(0.3).add(0.41)
+    assert total.exhausted() and tab_b.exhausted()  # the total ends every workspace
+
+
+def test_zero_cost_turns_do_not_count():
+    from dispute_ops.conversation import Budget
+
+    b = Budget(0.0001)
+    b.add(0.0)
+    assert b.by_day == {} and b.spent_usd == 0.0

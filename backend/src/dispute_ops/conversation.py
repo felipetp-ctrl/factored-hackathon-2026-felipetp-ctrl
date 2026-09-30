@@ -30,14 +30,51 @@ class Nlu(Protocol):
 
 
 class Budget:
-    """Spend cap for model calls, shared by every workspace of a process. The hard cap is the provider's
-    workspace limit; this one switches the service to the free rule-based NLU before that is reached."""
+    """Spend caps for model calls. The hard cap is the provider's workspace spend limit; these switch the
+    service to the free rule-based NLU before it is reached: a total for the process, an optional daily
+    cap (so one busy day cannot use up the judging window) and, through `child`, a cap per demo workspace
+    (so one visitor cannot use up the day). Counters live in memory: a restart resets them, which is why
+    the provider limit stays the real ceiling."""
 
-    def __init__(self, limit_usd: float | None) -> None:
-        self.limit_usd, self.spent_usd = limit_usd, 0.0
+    def __init__(
+        self, limit_usd: float | None, *, daily_limit_usd: float | None = None,
+        clock: Callable[[], datetime] | None = None, parent: Budget | None = None,
+    ) -> None:
+        self.limit_usd, self.daily_limit_usd, self.parent = limit_usd, daily_limit_usd, parent
+        self.clock = clock or (lambda: datetime.now().astimezone())
+        self.spent_usd = 0.0
+        self.by_day: dict[str, float] = {}
+
+    def child(self, limit_usd: float | None) -> Budget:
+        """A per-workspace cap that also counts against this budget."""
+        return Budget(limit_usd, clock=self.clock, parent=self)
+
+    def _today(self) -> str:
+        return self.clock().date().isoformat()
+
+    def add(self, cost_usd: float) -> None:
+        if cost_usd <= 0:
+            return
+        self.spent_usd += cost_usd
+        day = self._today()
+        self.by_day[day] = self.by_day.get(day, 0.0) + cost_usd
+        if self.parent is not None:
+            self.parent.add(cost_usd)
 
     def exhausted(self) -> bool:
-        return self.limit_usd is not None and self.spent_usd >= self.limit_usd
+        if self.limit_usd is not None and self.spent_usd >= self.limit_usd:
+            return True
+        if self.daily_limit_usd is not None and self.by_day.get(self._today(), 0.0) >= self.daily_limit_usd:
+            return True
+        return self.parent is not None and self.parent.exhausted()
+
+    def status(self) -> dict[str, Any]:
+        root = self.parent or self
+        return {
+            "spent_usd": round(root.spent_usd, 4), "limit_usd": root.limit_usd,
+            "today_usd": round(root.by_day.get(root._today(), 0.0), 4), "daily_limit_usd": root.daily_limit_usd,
+            "exhausted": self.exhausted(),
+        }
 
 
 class Reply(BaseModel):
@@ -236,7 +273,7 @@ class ConversationService:
         nlu, usage = outcome.result, outcome.usage
         if is_rules_model(usage.model):
             mode = "rules"
-        self.budget.spent_usd += usage.cost_usd
+        self.budget.add(usage.cost_usd)
         conv.usages.append(usage)
         if first_turn:
             self._set_language(conv, nlu.language)

@@ -20,7 +20,8 @@ Everything measured here is an offline measurement on a laptop or a simulation; 
 - Cost: ≈ US$ 0.003 per turn, ≈ US$ 0.009–0.017 per resolved dispute (Haiku list prices, measured token usage).
 - Throughput limit is the model provider's rate limit for the account, not the API: the Python process spends < 50 ms per turn outside the model call.
 - The circuit breaker opens after 3 consecutive model failures for 60 s. Since v0.0.2 the rule-based NLU takes over
-  during that window, when the spend cap (`LLM_BUDGET_USD`, default 20, shared by the process) is reached, or when the
+  during that window, when a spend cap is reached (`LLM_BUDGET_USD` total, `LLM_DAILY_BUDGET_USD` per day,
+  `LLM_WORKSPACE_BUDGET_USD` per demo workspace; ADR-026, reported in `/health`), or when the
   API key is missing (ADR-017); every turn records which NLU read it. Without a fallback configured, turns are handed
   to a person with a reference.
 

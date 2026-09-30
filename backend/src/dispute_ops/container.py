@@ -44,6 +44,9 @@ class Settings(BaseModel):
     # auto = Claude with the free rule-based NLU as fallback (rules only when no API key); claude; rules.
     nlu_mode: str = "auto"
     llm_budget_usd: float | None = 20.0
+    # Optional caps on top of the total (ADR-026): per calendar day, and per demo workspace (browser tab).
+    llm_daily_budget_usd: float | None = None
+    llm_workspace_budget_usd: float | None = None
     # Learned intent/reason classifier inside the rule-based NLU (ADR-019): a model JSON path, "" for the
     # bundled intent-v2, or "off" for keyword rules only.
     intent_model: str = ""
@@ -65,6 +68,9 @@ class Settings(BaseModel):
             scenarios_path=env.get("SCENARIOS_PATH", ""),
             nlu_mode=env.get("NLU_MODE", "auto"),
             llm_budget_usd=float(env["LLM_BUDGET_USD"]) if env.get("LLM_BUDGET_USD") else 20.0,
+            llm_daily_budget_usd=float(env["LLM_DAILY_BUDGET_USD"]) if env.get("LLM_DAILY_BUDGET_USD") else None,
+            llm_workspace_budget_usd=(
+                float(env["LLM_WORKSPACE_BUDGET_USD"]) if env.get("LLM_WORKSPACE_BUDGET_USD") else None),
             intent_model=env.get("INTENT_MODEL", ""),
         )
 
