@@ -27,10 +27,14 @@ services:
       # Claude first, free rule-based NLU when the model fails or the spend cap is reached (ADR-017)
       - key: NLU_MODE
         value: auto
-      # Judging window (ADR-026): below the provider workspace limit of US$ 5
+      # Judging window (ADR-026): durable ledger shared with evaluation runs; US$ 10 of credit in total
+      - key: LLM_LEDGER_URL
+        sync: false
+      - key: LLM_GLOBAL_BUDGET_USD
+        value: "9.5"
       - key: LLM_BUDGET_USD
-        value: "4.5"
+        value: "9.5"
       - key: LLM_DAILY_BUDGET_USD
-        value: "0.6"
+        value: "1.0"
       - key: LLM_WORKSPACE_BUDGET_USD
-        value: "0.25"
+        value: "0.3"

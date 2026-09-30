@@ -13,7 +13,6 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Any, Protocol
 
-import anthropic
 
 from dispute_ops.auth import AuthError
 from dispute_ops.container import Container
@@ -21,6 +20,12 @@ from dispute_ops.domain import ReasonCode
 from dispute_ops.errors import AccessDenied, NotFound, ToolUnavailable
 from dispute_ops.language.nlu import PRICES_PER_MTOK
 from dispute_ops.language.responses import message
+
+
+def _api_client():  # metered for evaluation runs (ADR-026)
+    from dispute_ops.metering import api_client
+
+    return api_client()
 
 
 @dataclass
@@ -116,7 +121,7 @@ class NaiveLlmSystem:
 
     def __init__(self, container: Container, client: Any | None = None, model: str = BASELINE_MODEL) -> None:
         self.c = container
-        self.client = (client or anthropic.Anthropic()).with_options(timeout=60.0, max_retries=2)
+        self.client = (client or _api_client()).with_options(timeout=60.0, max_retries=2)
         self.model = model
         self.messages: list[dict[str, Any]] = []
         self.transferred = False

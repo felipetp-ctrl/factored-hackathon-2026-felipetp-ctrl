@@ -47,6 +47,9 @@ class Settings(BaseModel):
     # Optional caps on top of the total (ADR-026): per calendar day, and per demo workspace (browser tab).
     llm_daily_budget_usd: float | None = None
     llm_workspace_budget_usd: float | None = None
+    # Ceiling for every source together (the project's API credit) and the durable ledger that enforces it.
+    llm_global_budget_usd: float | None = None
+    llm_ledger_url: str = ""
     # Learned intent/reason classifier inside the rule-based NLU (ADR-019): a model JSON path, "" for the
     # bundled intent-v2, or "off" for keyword rules only.
     intent_model: str = ""
@@ -71,6 +74,8 @@ class Settings(BaseModel):
             llm_daily_budget_usd=float(env["LLM_DAILY_BUDGET_USD"]) if env.get("LLM_DAILY_BUDGET_USD") else None,
             llm_workspace_budget_usd=(
                 float(env["LLM_WORKSPACE_BUDGET_USD"]) if env.get("LLM_WORKSPACE_BUDGET_USD") else None),
+            llm_global_budget_usd=float(env["LLM_GLOBAL_BUDGET_USD"]) if env.get("LLM_GLOBAL_BUDGET_USD") else None,
+            llm_ledger_url=env.get("LLM_LEDGER_URL", ""),
             intent_model=env.get("INTENT_MODEL", ""),
         )
 
@@ -78,6 +83,22 @@ class Settings(BaseModel):
         if self.scenarios_path:
             return Path(self.scenarios_path)
         return Path(self.demo_db or self.seed_path).parent / "scenarios.json"
+
+
+def make_budget(settings: Settings, source: str) -> Budget:
+    """The process-wide budget: durable and shared when a ledger URL is set, fail-closed if it cannot connect."""
+    ledger = None
+    if settings.llm_ledger_url:
+        from dispute_ops.spend_ledger import LedgerError, SpendLedger
+
+        try:
+            ledger = SpendLedger(settings.llm_ledger_url, source)
+        except LedgerError:
+            closed = Budget(settings.llm_budget_usd)
+            closed.failed = True
+            return closed
+    return Budget(settings.llm_budget_usd, daily_limit_usd=settings.llm_daily_budget_usd,
+                  global_limit_usd=settings.llm_global_budget_usd, ledger=ledger)
 
 
 class SimClock:

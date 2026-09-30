@@ -15,6 +15,13 @@ from pydantic import BaseModel, Field, field_validator
 
 from dispute_ops.domain import ReasonCode
 
+
+def _api_client():  # metered for evaluation runs (ADR-026)
+    from dispute_ops.metering import api_client
+
+    return api_client()
+
+
 NLU_MODEL = "claude-haiku-4-5"
 PRICES_PER_MTOK = {  # USD (input, output), Anthropic first-party list prices
     "claude-haiku-4-5": (1.00, 5.00),
@@ -173,7 +180,7 @@ class ClaudeNlu:
         model: str = NLU_MODEL,
         timeout: float = 20.0,
     ) -> None:
-        self.client = (client or anthropic.Anthropic()).with_options(timeout=timeout, max_retries=1)
+        self.client = (client or _api_client()).with_options(timeout=timeout, max_retries=1)
         self.model = model
 
     def interpret(self, text: str, ctx: NluContext) -> NluOutcome:

@@ -4,10 +4,16 @@ from __future__ import annotations
 
 from typing import Any, Protocol
 
-import anthropic
 
 from dispute_ops.evaluation.scenarios import Scenario
 from dispute_ops.language.nlu import PRICES_PER_MTOK
+
+
+def _api_client():  # metered for evaluation runs (ADR-026)
+    from dispute_ops.metering import api_client
+
+    return api_client()
+
 
 SIMULATOR_MODEL = "claude-sonnet-5"
 END = "[END]"
@@ -31,7 +37,7 @@ class Simulator(Protocol):
 
 class ClaudeSimulator:
     def __init__(self, client: Any | None = None, model: str = SIMULATOR_MODEL) -> None:
-        self.client = (client or anthropic.Anthropic()).with_options(timeout=120.0, max_retries=2)
+        self.client = (client or _api_client()).with_options(timeout=120.0, max_retries=2)
         self.model = model
         self.cost_usd = 0.0
 

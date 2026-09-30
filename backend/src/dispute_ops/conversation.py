@@ -30,20 +30,24 @@ class Nlu(Protocol):
 
 
 class Budget:
-    """Spend caps for model calls. The hard cap is the provider's workspace spend limit; these switch the
-    service to the free rule-based NLU before it is reached: a total for the process, an optional daily
-    cap (so one busy day cannot use up the judging window) and, through `child`, a cap per demo workspace
-    (so one visitor cannot use up the day). Counters live in memory: a restart resets them, which is why
-    the provider limit stays the real ceiling."""
+    """Spend caps for model calls; past any of them the service uses the free rule-based NLU (ADR-026).
+
+    `limit_usd` caps this process's source (the demo, or evaluation runs), `daily_limit_usd` one calendar day of it,
+    `global_limit_usd` every source together (the project's API credit), and `child` gives each demo workspace its own
+    share. With a `SpendLedger` the counters live in Postgres, shared across processes and restarts; a ledger error
+    fails closed. Without one they live in memory (tests, local runs)."""
 
     def __init__(
         self, limit_usd: float | None, *, daily_limit_usd: float | None = None,
+        global_limit_usd: float | None = None, ledger: Any = None,
         clock: Callable[[], datetime] | None = None, parent: Budget | None = None,
     ) -> None:
-        self.limit_usd, self.daily_limit_usd, self.parent = limit_usd, daily_limit_usd, parent
+        self.limit_usd, self.daily_limit_usd, self.global_limit_usd = limit_usd, daily_limit_usd, global_limit_usd
+        self.ledger, self.parent = ledger, parent
         self.clock = clock or (lambda: datetime.now().astimezone())
         self.spent_usd = 0.0
         self.by_day: dict[str, float] = {}
+        self.failed = False  # ledger unreachable: closed until the process restarts
 
     def child(self, limit_usd: float | None) -> Budget:
         """A per-workspace cap that also counts against this budget."""
@@ -52,28 +56,54 @@ class Budget:
     def _today(self) -> str:
         return self.clock().date().isoformat()
 
+    def _ledger_call(self, fn: Callable[[], None]) -> None:
+        from dispute_ops.spend_ledger import LedgerError
+
+        try:
+            fn()
+        except LedgerError:
+            self.failed = True
+
     def add(self, cost_usd: float) -> None:
         if cost_usd <= 0:
             return
         self.spent_usd += cost_usd
         day = self._today()
         self.by_day[day] = self.by_day.get(day, 0.0) + cost_usd
+        if self.ledger is not None:
+            self._ledger_call(lambda: self.ledger.add(cost_usd))
         if self.parent is not None:
             self.parent.add(cost_usd)
 
+    def _totals(self) -> tuple[float, float, float]:
+        """(this source, this source today, every source)."""
+        if self.ledger is None:
+            return self.spent_usd, self.by_day.get(self._today(), 0.0), self.spent_usd
+        self._ledger_call(self.ledger.refresh)
+        return self.ledger.total_source, self.ledger.today_source, self.ledger.total_all
+
     def exhausted(self) -> bool:
-        if self.limit_usd is not None and self.spent_usd >= self.limit_usd:
+        if self.failed:
             return True
-        if self.daily_limit_usd is not None and self.by_day.get(self._today(), 0.0) >= self.daily_limit_usd:
+        source, today, everyone = self._totals()
+        if self.failed:
+            return True
+        if self.limit_usd is not None and source >= self.limit_usd:
+            return True
+        if self.daily_limit_usd is not None and today >= self.daily_limit_usd:
+            return True
+        if self.global_limit_usd is not None and everyone >= self.global_limit_usd:
             return True
         return self.parent is not None and self.parent.exhausted()
 
     def status(self) -> dict[str, Any]:
         root = self.parent or self
+        source, today, everyone = root._totals()
         return {
-            "spent_usd": round(root.spent_usd, 4), "limit_usd": root.limit_usd,
-            "today_usd": round(root.by_day.get(root._today(), 0.0), 4), "daily_limit_usd": root.daily_limit_usd,
-            "exhausted": self.exhausted(),
+            "spent_usd": round(source, 4), "limit_usd": root.limit_usd,
+            "today_usd": round(today, 4), "daily_limit_usd": root.daily_limit_usd,
+            "all_sources_usd": round(everyone, 4), "global_limit_usd": root.global_limit_usd,
+            "durable": root.ledger is not None, "exhausted": self.exhausted(),
         }
 
 
