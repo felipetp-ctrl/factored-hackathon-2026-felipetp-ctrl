@@ -21,6 +21,7 @@ from dispute_ops.evaluation.systems import (
     BASELINE_MODEL, BASELINE_PROMPT_VERSION, NaiveLlmSystem, ProposedSystem, StrongLlmSystem,
 )
 from dispute_ops.language.nlu import NLU_MODEL, PROMPT_VERSION
+from dispute_ops.metering import BudgetExceeded
 
 RESCORE_NOTES = """## Leakage notes
 
@@ -113,8 +114,16 @@ def main() -> None:
     settings = Settings(session_secret="eval-secret", agent_api_key="eval", demo_db=args.demo_db or "")
     simulator = ClaudeSimulator()
     jobs = [(s, name, run) for run in range(args.repeats) for name in args.systems for s in scenarios]
+    def job(j):
+        try:
+            return run_scenario(j[0], SYSTEMS[j[1]], simulator, run=j[2], settings=settings)
+        except BudgetExceeded as e:  # credit cap reached (ADR-026): the job is not run, and the report says so
+            print(f"stopped by the spend cap: {e}")
+            return None
+
     with ThreadPoolExecutor(max_workers=args.workers) as pool:
-        results = list(pool.map(lambda j: run_scenario(j[0], SYSTEMS[j[1]], simulator, run=j[2], settings=settings), jobs))
+        ran = list(pool.map(job, jobs))
+    results = [r for r in ran if r is not None]
 
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     out = Path(args.out) / stamp
@@ -123,6 +132,7 @@ def main() -> None:
         "timestamp_utc": stamp, "scenario_set": Path(args.scenarios).stem if args.scenarios else SCENARIO_SET_VERSION,
         "scenarios": len(scenarios), "data": "gold demo store (organizer data)" if args.demo_db else "synthetic seed fixture",
         "repeats": args.repeats, "systems": ", ".join(args.systems),
+        "jobs_not_run_spend_cap": len(ran) - len(results),
         "proposed_nlu": f"{NLU_MODEL} / {PROMPT_VERSION}", "baseline": f"{BASELINE_MODEL} / {BASELINE_PROMPT_VERSION}",
         "customer_simulator": SIMULATOR_MODEL, "simulator_cost_usd": round(simulator.cost_usd, 4),
         "cost_assumptions": "Anthropic list prices (USD/MTok): haiku-4-5 1/5, sonnet-5 2/10; system cost only",

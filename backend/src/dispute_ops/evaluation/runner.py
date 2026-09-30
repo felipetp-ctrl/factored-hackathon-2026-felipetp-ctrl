@@ -7,6 +7,7 @@ from collections.abc import Callable
 
 from pydantic import BaseModel, Field
 
+from dispute_ops.metering import BudgetExceeded
 from dispute_ops.container import Container, Settings
 from dispute_ops.evaluation.scenarios import Scenario
 from dispute_ops.evaluation.simulator import END, Simulator
@@ -159,6 +160,8 @@ def run_scenario(
             last_action, handoff, reasons = out.action, out.handoff, out.handoff_reasons
             if system.finished():
                 break
+    except BudgetExceeded:  # the credit cap stops the whole run (ADR-026); never scored as a system failure
+        raise
     except Exception as e:  # recorded, never hidden: counts as incorrect
         error = f"{type(e).__name__}: {e}"
     verdict = judge(scenario, system.name, container, transcript, last_action, handoff, blocked_before)
