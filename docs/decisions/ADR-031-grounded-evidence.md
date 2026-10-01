@@ -32,6 +32,10 @@ interprets and the code decides; the code was not checking that the interpreted 
 - hard-v1 replay with the cached Claude readings ([partial replay](../../eval/results/hard-v1-replay-grounding/README.md)):
   66 of 72 conversations identical; in **6 of 36 Claude-path conversations (17%) the model had filled card possession
   without the customer saying it** — those now get one more question and need a new simulated turn to be scored.
+- **Real API, post-hoc** ([check](../../eval/results/hard-v1-api-adr031/README.md), US$ 0.29): the 7 affected
+  scenarios × 2 runs — **14/14 correct, 0 unsafe** (before ADR-031: 13/14, 1 unsafe). The card question was asked in
+  8 of 12 disputes; stolen-wallet-01-pt opened FRAUD_CP with the card blocked in both runs. There the simulated
+  customer mentioned the theft up front, so the summary-correction path is still covered by the unit test only.
 - Two older tests were written the same way (the fake reading said "card with me" for "no reconozco 1250"); their
   messages now state where the card is.
 
@@ -40,7 +44,7 @@ interprets and the code decides; the code was not checking that the interpreted 
 - A customer who implies possession in words the cue list misses ("la uso todos los días") is asked anyway.
 - Only card possession is grounded: it decides the fraud type and the block. `recognizes_merchant` is still taken from
   the reading; "no reconozco" is in almost every unrecognised-charge opening.
-- The conversation-level effect is not yet measured on the API; the unit tests and the replay show the mechanism.
+- The API check is post-hoc and small (7 scenarios chosen because the change affects them), not a new held-out result.
 
 ## Still open (from the same run)
 `subscription-01-pt`: a subscription the customer only called "não reconheço" was opened as FRAUD_CNP, expected

@@ -103,7 +103,7 @@ Offline simulations on held-out cases; nothing here is a production measurement.
 |---|---|---|---|
 | App conversation, customers who know the charge (`test-v2`) | 42 × 2 runs | 84/84 correct, **0 unsafe**, 71% resolved safely without a person | Plain AI chatbot: 56/84, **13 unsafe**, 44% |
 | App conversation, customers with vague memory, blind (`hard-v1`) | 36 | free reader 30/36, Claude path 31/36 after fixes | Same system before fixes: 16/36 and 24/36 |
-| Same blind set on the real API, 2 runs each (`hard-v1` API) | 36 × 2 | 65/72 correct, **4/72 unsafe** (two fixed since, ADR-027) | Plain AI chatbot: 49/72, **11/72 unsafe** |
+| Same blind set on the real API, 2 runs each (`hard-v1` API) | 36 × 2 | 65/72 correct, **4/72 unsafe** (three fixed since: ADR-027, ADR-031; re-checked on the API) | Plain AI chatbot: 49/72, **11/72 unsafe** |
 | Written complaints (`channels-v1`) | 24 | 23/24 correct, 0 unsafe | Keyword rules 19/24; everything to a person 12/24 |
 | Fraud-alert answers (`channels-v1`) | 18 | 17/18 correct, 0 unsafe | Keyword rules 17/18 |
 | Reading the dispute reason, another author, blind labels (`independent-v1`) | 525 | trained classifier 93.5% | Keyword rules 45.7% |
@@ -198,8 +198,8 @@ sub-category of 20% of complaints), while free text in complaints and transcript
 - The fallback NLU understands fewer phrasings than Claude; its learned classifier is trained on team-written text plus
   real out-of-scope calls, and tested on real speech only for routing (ADR-030). A confident wrong reason reaches the
   confirmation summary, where the customer sees the reason before confirming (ADR-019).
-- The Claude path's last API measurement (hard-v1, 65/72) predates ADR-031: about one conversation in six now asks
-  where the card is; the conversation-level effect is unit-tested and replayed, not re-measured on the API.
+- The Claude path's full API measurement (hard-v1, 65/72) predates ADR-031; only the 7 scenarios it affects were re-run
+  on the API (14/14 correct, 0 unsafe, post-hoc). About one conversation in six now asks where the card is.
 - The complaint status in the organizer data is a label, not a lifecycle (insight 7), so the current backlog and
   service level cannot be measured from it.
 - Identity is a test provider (`POST /auth/session`), standing in for the bank's real login.

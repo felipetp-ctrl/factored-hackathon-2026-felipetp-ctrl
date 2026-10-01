@@ -41,5 +41,6 @@ add `config.json`, `messages.json` and `nlu_cache.json` so they can be replayed 
 | `hard-v1-replay-grounding` | hard-v1 test | Partial replay after ADR-031: 66/72 identical, 6 Claude-path conversations now ask where the card is (see its README) |
 | `hard-v1-api/` | hard-v1 test | **Headline** — real API (Claude Haiku 4.5 reader, Sonnet 5 customers), 2 runs per system, one folder per launch |
 | `hard-v1-api-posthoc/` | hard-v1 test | Post-hoc re-run of the two human-request scenarios after ADR-027 |
+| `hard-v1-api-adr031/` | hard-v1 test subset | Post-hoc API check of ADR-031 on the 7 scenarios it affects, 2 runs: 14/14 correct, 0 unsafe (see its README) |
 | `channels-v1-dev-before` · `channels-v1-dev-after` | channels-v1 dev | Before and after the fixes made on the dev split |
 | `channels-v1-test-before` · `channels-v1-test` | channels-v1 test | **Headline** — `channels-v1-test` is the current code (`make eval-channels`) |

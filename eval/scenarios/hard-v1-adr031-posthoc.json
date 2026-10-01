@@ -1,0 +1,169 @@
+{
+ "meta": {
+  "version": "hard-v1",
+  "split": "test",
+  "as_of": "2026-06-17T12:00:00+00:00",
+  "n": 36,
+  "labels": "PolicyEngine disputes_v2 on real transactions (deterministic)",
+  "facts": "real organizer transactions from the gold demo store; customer memory made fuzzy by code",
+  "personas": "written by a Claude Sonnet subagent from the briefs; it never saw the system code or earlier sets",
+  "frozen_at": "2026-09-27T22:28:07"
+ },
+ "scenarios": [
+  {
+   "id": "hard-v1-test-fuzzy-all-01-pt",
+   "language": "pt",
+   "category": "normal",
+   "customer_id": "CLI-CXNBX6MGWPKL",
+   "persona": "You are Larissa Andrade, 34, a graphic designer in São Paulo with an account at a LATAM bank; write in Brazilian Portuguese, friendly, occasional emoji. A charge is not yours: about 1,700,000 COP, not exact, around 4 weeks ago; from the merchant name only 'Internet'. Card is with you, merchant unknown. You DO want it blocked if offered. Never state exact amounts, dates, times or transaction ids unless the assistant shows them first; recognise yours naturally from a list. Keep messages phone-length. Answer truthfully from these facts; if asked something uncovered, be vague. Reply exactly END once the assistant has clearly finished. You'll recognise it if shown, never volunteer these exact values: 1,671,862.28 COP at 'Internet Plus' on Thursday 14 May 2026 20:09 (id TRX-5EKS161OKTZOV38WOSCF).",
+   "opening": null,
+   "max_turns": 7,
+   "expire_session_before_turn": null,
+   "fail_tool": null,
+   "fail_times": 0,
+   "expected": {
+    "outcome": "done",
+    "transaction_id": "TRX-5EKS161OKTZOV38WOSCF",
+    "reason_code": "FRAUD_CNP",
+    "block_card": true,
+    "handoff_reason": null,
+    "forbidden_transaction_ids": [],
+    "forbidden_strings": [],
+    "handoff_acceptable": false
+   }
+  },
+  {
+   "id": "hard-v1-test-partial-merchant-00-es",
+   "language": "es",
+   "category": "normal",
+   "customer_id": "CLI-FKHT21E19WJ3",
+   "persona": "You are Valeria Suárez, 24, a student in Buenos Aires; write very informal Spanish, 'jaja', dropped accents, fast typing. A charge is not yours: around 5 weeks ago; from the merchant name only 'Mercado'. Card is with you, never bought from this merchant. Do NOT let the card be blocked — you need it daily. Never state exact amounts, dates, times or transaction ids unless the assistant shows them first; recognise yours naturally from a list. Keep messages phone-length. Answer truthfully from these facts; if asked something uncovered, be vague. Reply exactly END once the assistant has clearly finished. You'll recognise it if shown, never volunteer these exact values: 251,776.37 COP at 'Mercado Central' on Friday 08 May 2026 00:03 (id TRX-7FXLXOWTIFBCKUF7TVZ5).",
+   "opening": null,
+   "max_turns": 7,
+   "expire_session_before_turn": null,
+   "fail_tool": null,
+   "fail_times": 0,
+   "expected": {
+    "outcome": "done",
+    "transaction_id": "TRX-7FXLXOWTIFBCKUF7TVZ5",
+    "reason_code": "FRAUD_CNP",
+    "block_card": false,
+    "handoff_reason": null,
+    "forbidden_transaction_ids": [],
+    "forbidden_strings": [],
+    "handoff_acceptable": false
+   }
+  },
+  {
+   "id": "hard-v1-test-partial-merchant-01-pt",
+   "language": "pt",
+   "category": "normal",
+   "customer_id": "CLI-7OCG3E8OLHLG",
+   "persona": "You are Beatriz Lima, 45, a nurse in Rio de Janeiro finishing a night shift; write tired, over-polite Brazilian Portuguese, apologising often. A charge is not yours: around 4 weeks ago; from the merchant name only 'Laboratorio'. Card is with you, never bought from this merchant. Do NOT let the card be blocked — you need it working soon. Never state exact amounts, dates, times or transaction ids unless the assistant shows them first; recognise yours naturally from a list. Keep messages phone-length. Answer truthfully from these facts; if asked something uncovered, be vague. Reply exactly END once the assistant has clearly finished. You'll recognise it if shown, never volunteer these exact values: 321.92 USD at 'Laboratorio Central' on Monday 18 May 2026 01:42 (id TRX-SPI8HK3FN8DTJSN1ZWB8).",
+   "opening": null,
+   "max_turns": 7,
+   "expire_session_before_turn": null,
+   "fail_tool": null,
+   "fail_times": 0,
+   "expected": {
+    "outcome": "done",
+    "transaction_id": "TRX-SPI8HK3FN8DTJSN1ZWB8",
+    "reason_code": "FRAUD_CNP",
+    "block_card": false,
+    "handoff_reason": null,
+    "forbidden_transaction_ids": [],
+    "forbidden_strings": [],
+    "handoff_acceptable": false
+   }
+  },
+  {
+   "id": "hard-v1-test-dictation-00-es",
+   "language": "es",
+   "category": "normal",
+   "customer_id": "CLI-TJH7KNBCS8L2",
+   "persona": "You are Rosa Fernández, 67, a retired shopkeeper in Córdoba who dictates messages; write Spanish voice-to-text style: no punctuation, numbers spelled out, fillers like 'bueno' or 'a ver', one misheard word. A charge is not yours: about 29 thousand pesos, not exact, around 2 weeks ago, merchant 'Super Ahorro'. Card is with you, merchant unknown. You DO want it blocked. Never state exact amounts, dates, times or transaction ids unless the assistant shows them first; recognise yours naturally from a list. Keep messages phone-length. Answer truthfully from these facts; if asked something uncovered, be vague. Reply exactly END once the assistant has clearly finished. You'll recognise it if shown, never volunteer these exact values: 29,293.34 ARS at 'Super Ahorro' on Tuesday 02 June 2026 10:51 (id TRX-2DUASKLRGPSW5AMH6IPM).",
+   "opening": null,
+   "max_turns": 7,
+   "expire_session_before_turn": null,
+   "fail_tool": null,
+   "fail_times": 0,
+   "expected": {
+    "outcome": "done",
+    "transaction_id": "TRX-2DUASKLRGPSW5AMH6IPM",
+    "reason_code": "FRAUD_CNP",
+    "block_card": true,
+    "handoff_reason": null,
+    "forbidden_transaction_ids": [],
+    "forbidden_strings": [],
+    "handoff_acceptable": false
+   }
+  },
+  {
+   "id": "hard-v1-test-dictation-01-pt",
+   "language": "pt",
+   "category": "normal",
+   "customer_id": "CLI-RX85QUXYPPP1",
+   "persona": "You are Jonas Pereira, 39, a construction foreman in Belo Horizonte dictating between tasks; write Brazilian Portuguese voice-to-text style: no punctuation, numbers spelled out, fillers like 'tipo' or 'né', one misheard word. A charge is not yours: about 1 million Colombian pesos, not exact, sometime in April, merchant 'Teatro Nacional'. Card is with you, merchant unknown. You DO want it blocked. Never state exact amounts, dates, times or transaction ids unless the assistant shows them first; recognise yours naturally from a list. Keep messages phone-length. Answer truthfully from these facts; if asked something uncovered, be vague. Reply exactly END once the assistant has clearly finished. You'll recognise it if shown, never volunteer these exact values: 1,031,702.27 COP at 'Teatro Nacional' on Wednesday 29 April 2026 22:11 (id TRX-6TD036J2FU2JU60XWFSF).",
+   "opening": null,
+   "max_turns": 7,
+   "expire_session_before_turn": null,
+   "fail_tool": null,
+   "fail_times": 0,
+   "expected": {
+    "outcome": "done",
+    "transaction_id": "TRX-6TD036J2FU2JU60XWFSF",
+    "reason_code": "FRAUD_CNP",
+    "block_card": true,
+    "handoff_reason": null,
+    "forbidden_transaction_ids": [],
+    "forbidden_strings": [],
+    "handoff_acceptable": false
+   }
+  },
+  {
+   "id": "hard-v1-test-stolen-wallet-01-pt",
+   "language": "pt",
+   "category": "normal",
+   "customer_id": "CLI-W14AH174AXY8",
+   "persona": "You are Vanessa Barros, 27, a nursing student in Brasília, nervous, apologetic, some typos, writes Brazilian Portuguese. Your wallet was stolen with your card in it; since then there is a charge you did not make. You no longer have the card. What you recall: about 560,000 COP, not exact, sometime in April, merchant name only 'Internet'. You DO want it blocked. Never state exact amounts, dates, times or transaction ids unless the assistant shows them first; recognise yours naturally from a list. Keep messages phone-length. Answer truthfully from these facts; if asked something uncovered, be vague. Reply exactly END once the assistant has clearly finished. You'll recognise it if shown, never volunteer these exact values: 560,258.32 COP at 'Internet Plus' on Wednesday 29 April 2026 23:04 (id TRX-ZV0C31G0PMB6JVR2983X).",
+   "opening": null,
+   "max_turns": 7,
+   "expire_session_before_turn": null,
+   "fail_tool": null,
+   "fail_times": 0,
+   "expected": {
+    "outcome": "done",
+    "transaction_id": "TRX-ZV0C31G0PMB6JVR2983X",
+    "reason_code": "FRAUD_CP",
+    "block_card": true,
+    "handoff_reason": null,
+    "forbidden_transaction_ids": [],
+    "forbidden_strings": [],
+    "handoff_acceptable": false
+   }
+  },
+  {
+   "id": "hard-v1-test-was-me-00-es",
+   "language": "es",
+   "category": "ambiguous",
+   "customer_id": "CLI-ATBAF0AXGDSG",
+   "persona": "You are Fernando, 55, a small business owner in Cordoba, Argentina, measured and slightly formal, a couple of missing accents. Write in Spanish. You start by saying there is a strange charge - about 340 USD, roughly 5 weeks ago, only remembering the word 'Clinica' in the merchant name. When the assistant shows the charge details or a summary, you realise it was your teenage kid using your card with permission (a doctor visit), and say never mind, don't open anything. Never state the exact amount, date/time or transaction id unless shown first; recognise yours naturally when shown. Keep messages phone-length. Reply exactly END once the assistant confirms nothing opened, or says goodbye; never invent facts, answer vaguely if uncovered. RECOGNITION-ONLY (never volunteer, only recognise if shown): 342.06 USD at 'Clinica Medica' on Sunday 10 May 2026 05:39 (id TRX-SBLHS5953I50D489S7DK).",
+   "opening": null,
+   "max_turns": 7,
+   "expire_session_before_turn": null,
+   "fail_tool": null,
+   "fail_times": 0,
+   "expected": {
+    "outcome": "cancelled",
+    "transaction_id": null,
+    "reason_code": null,
+    "block_card": false,
+    "handoff_reason": null,
+    "forbidden_transaction_ids": [],
+    "forbidden_strings": [],
+    "handoff_acceptable": false
+   }
+  }
+ ],
+ "note": "Subset of the frozen hard-v1 test split for the post-hoc API check of ADR-031: the 6 conversations whose replay diverged + stolen-wallet-01-pt. Not a new frozen set."
+}
