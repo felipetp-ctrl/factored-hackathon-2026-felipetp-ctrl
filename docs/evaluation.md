@@ -10,6 +10,7 @@ The README has the one-table summary; this page keeps every set, its method and 
 | test-v2 | App conversation, every reason and trigger | 42 × 2 runs | 84/84, 0 unsafe vs chatbot 56/84, 13 unsafe | below |
 | test-v3 | Fallback reader end to end | 42 | 42/42 both fallback variants | below |
 | hard-v1 | App conversation, vague memory, blind | 36 | free reader 16 → 30, Claude path 24 → 31 | [ADR-022](decisions/ADR-022-hard-set-and-fuzzy-references.md), [country gap](analysis/hard-v1-disparity.md) |
+| hard-v1 on the API | Same 36 blind scenarios, real Claude Haiku 4.5, 2 runs each, vs a plain AI chatbot | 36 × 2 | 65/72 correct, 4/72 unsafe vs chatbot 49/72, 11/72 unsafe | [below](#hard-v1-on-the-real-api-2026-09-30) |
 | channels-v1 | Written complaints and fraud-alert answers | 24 + 18 | letters 23/24, alerts 17/18, 0 unsafe | [ADR-025](decisions/ADR-025-channels-evaluation.md) |
 | independent-v1 | Reason reading, another author, blind labels | 525 | intent-v2 94.1% vs keyword rules 45.7% | [report](../ml/results/independent-v1.md) |
 | human-review | The intent labels themselves, one blind human | 90 | 78/85 agree, κ = 0.91; DISPUTE_NO_REASON weakest (4/8) | [report](../ml/results/human-review.md) |
@@ -26,11 +27,44 @@ The README has the one-table summary; this page keeps every set, its method and 
 templates, Colombia mostly plain disputes; like for like the gap shrinks to two scenarios that fail elsewhere too
 ([analysis](analysis/hard-v1-disparity.md)).
 
+## hard-v1 on the real API (2026-09-30)
+
+The Claude path of hard-v1 had only been measured with a Claude subagent reading the production prompt. With API credit
+(ADR-026: every call metered against a shared ledger, our runs capped at half of US$ 10), the frozen test split was run
+end to end: Claude Haiku 4.5 reads the customer (prompt nlu-v4), Claude Sonnet 5 plays the customer from the persona,
+two runs per scenario, and the plain AI chatbot (same tools, no state machine, Haiku) as the baseline.
+
+| | This system | Plain AI chatbot |
+|---|---|---|
+| Correct outcome | **65/72** (90.3%, CI 81–95%) — run 1: 33/36, run 2: 32/36 | 49/72 (68.1%, CI 57–78%) — 25/36, 24/36 |
+| Unsafe outcomes | **4/72** (5.6%, CI 2–13%) | 11/72 (15.3%, CI 9–25%), including 2 data leaks |
+| Safe automated resolution (in scope) | 47/64 (73%) | 36/64 (56%) |
+| Escalations missed | 2/12 | 6/12 |
+| Turn latency p50 / p95 | 3.1 s / 4.3 s | 4.2 s / 7.2 s |
+| Model cost per safe resolution | US$ 0.020 | US$ 0.033 |
+
+Results: `eval/results/hard-v1-api/` (chatbot = run 0 of the first folder plus a second complete run; the first
+folder's chatbot run 1 lost 5 jobs to a network failure and 31 to a ledger bug that closed the budget, fixed in
+a8c7754, and is excluded). Total spend of these runs: US$ 3.74 (ledger).
+
+**The four unsafe outcomes of this system.**
+- 2 × a request for a person in the same message as "yes, confirm" (ES and PT): the case was opened and the card
+  blocked. Fixed by ADR-027; re-run post-hoc 3/4 (`eval/results/hard-v1-api-posthoc/`), the fourth simulated customer
+  never asked for a person.
+- 2 × wrong reason, PT run 2: a subscription the customer only called "não reconheço", and a stolen card the customer
+  mentioned only *after* confirming an unrecognised-charge summary. The confirmed case is frozen by design (c735828);
+  new facts after a confirmation are not re-read. Open.
+
+The other three incorrect outcomes are corrections of memory: the customer picked a different charge, above US$ 450,
+which went to a person as the policy requires, or no charge matched. Compared with the subagent reading (31/36), the API
+gives 33 and 32 of 36: no evidence the subagent proxy was optimistic.
+
 ## How to run the evaluations
 
 ```bash
 make eval ARGS="--scenarios ../eval/scenarios/test-v2.json --demo-db demo_data/dispute_ops.db"   # 42 scenarios × {proposed, naive LLM baseline}
 make eval ARGS="--systems proposed --only fraud --repeats 3"
+LLM_METER_SOURCE=eval LLM_BUDGET_USD=4.75 make eval ARGS="--systems proposed naive_llm --repeats 2 --scenarios ../eval/scenarios/hard-v1-test.json --demo-db demo_data/dispute_ops.db"   # real API, metered (ADR-026)
 make eval-channels   # channels-v1 test: letters and fraud-alert answers, no model calls
 make figures         # docs/figures from the silver layer and the committed results
 ```

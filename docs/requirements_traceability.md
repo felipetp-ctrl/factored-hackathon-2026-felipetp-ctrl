@@ -62,7 +62,7 @@ Status: ✅ met · 🟡 partial (gap stated) · ⬜ not yet.
 
 | Requirement | Status | Evidence |
 |---|---|---|
-| Held-out evaluation | ✅ | App: `test-v1`, `test-v2`, `test-v3`, `hard-v1` (blind, vague memory); written complaints and fraud alerts: `channels-v1` ([ADR-025](decisions/ADR-025-channels-evaluation.md)); all frozen by commit before running ([overview](evaluation.md)) |
+| Held-out evaluation | ✅ | App: `test-v1`, `test-v2`, `test-v3`, `hard-v1` (blind, vague memory; also on the real API, 2 runs); written complaints and fraud alerts: `channels-v1` ([ADR-025](decisions/ADR-025-channels-evaluation.md)); all frozen by commit before running ([overview](evaluation.md)) |
 | Incorrect or missing data | ✅ | Vague customers, missing evidence, reversed / out-of-window transactions |
 | Expired sessions | ✅ | `expired-session-*`; unit tests for expired, forged, swapped sessions |
 | Unauthorized access attempts | ✅ | `cross-customer-*` → `suspicious_access` ([ADR-014](decisions/ADR-014-suspicious-access.md)) |
@@ -98,7 +98,7 @@ Status: ✅ met · 🟡 partial (gap stated) · ⬜ not yet.
 | Requirement | Status | Evidence |
 |---|---|---|
 | Baseline and proposed on the same held-out workload | ✅ | Same scenarios, same simulator, same data copy per conversation |
-| Number and mix of cases, label quality, model/prompt versions, repeated runs | ✅ / 🟡 | Report headers; by-run tables. test-v1 3 runs, test-v2 2 runs; hard-v1 one run (needs API credit for repeats); channels-v1 is deterministic (repeats identical) |
+| Number and mix of cases, label quality, model/prompt versions, repeated runs | ✅ / 🟡 | Report headers; by-run tables. test-v1 3 runs, test-v2 2 runs; hard-v1 on the real API 2 runs per system (33/36, 32/36; chatbot 25/36, 24/36); channels-v1 is deterministic (repeats identical) |
 | Include failures | ✅ | "Failures" table in every report; invalid runs kept and labelled |
 | LLM judge validated against humans | n/a | No LLM judge: outcomes are judged deterministically. 🟡 Simulator fidelity still needs a human review sample |
 | Safe automated resolution + share attempted | ✅ | Headline metrics |

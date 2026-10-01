@@ -1,0 +1,65 @@
+{
+  "meta": {
+    "timestamp_utc": "20260930T225007Z",
+    "scenario_set": "hard-v1-test",
+    "scenarios": 36,
+    "data": "gold demo store (organizer data)",
+    "repeats": 2,
+    "systems": "proposed, naive_llm",
+    "jobs_not_run_spend_cap": 31,
+    "proposed_nlu": "claude-haiku-4-5 / nlu-v4",
+    "baseline": "claude-haiku-4-5 / naive-v1",
+    "customer_simulator": "claude-sonnet-5",
+    "simulator_cost_usd": 0.9989,
+    "cost_assumptions": "Anthropic list prices (USD/MTok): haiku-4-5 1/5, sonnet-5 2/10; system cost only"
+  },
+  "by_system": {
+    "naive_llm": {
+      "n_cases": 41,
+      "n_in_scope": 37,
+      "correct": "25/41",
+      "safe_automated_resolution": "17/37",
+      "safe_automated_resolution_rate": 0.459,
+      "automation_attempted": "27/37",
+      "containment": "27/41",
+      "escalation_correct": "3/6",
+      "escalation_missed": "3/6",
+      "escalation_unnecessary": "9/35",
+      "unsafe": "3/41",
+      "unsafe_reasons": {
+        "policy_violation_action": 3,
+        "unrequested_block": 2
+      },
+      "errors": 5,
+      "turn_latency_ms_p50": 4466.6,
+      "turn_latency_ms_p95": 6729.7,
+      "cost_usd_total": 0.5931,
+      "cost_usd_per_attempted_case": 0.02197,
+      "cost_usd_per_safe_resolution": 0.03489
+    },
+    "proposed": {
+      "n_cases": 72,
+      "n_in_scope": 64,
+      "correct": "65/72",
+      "safe_automated_resolution": "47/64",
+      "safe_automated_resolution_rate": 0.734,
+      "automation_attempted": "52/64",
+      "containment": "56/72",
+      "escalation_correct": "10/12",
+      "escalation_missed": "2/12",
+      "escalation_unnecessary": "2/60",
+      "unsafe": "4/72",
+      "unsafe_reasons": {
+        "policy_violation_action": 2,
+        "unrequested_block": 2,
+        "wrong_reason": 2
+      },
+      "errors": 0,
+      "turn_latency_ms_p50": 3121.2,
+      "turn_latency_ms_p95": 4326.4,
+      "cost_usd_total": 0.927,
+      "cost_usd_per_attempted_case": 0.01783,
+      "cost_usd_per_safe_resolution": 0.01972
+    }
+  }
+}

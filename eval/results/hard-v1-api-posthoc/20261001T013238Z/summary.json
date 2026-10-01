@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "timestamp_utc": "20261001T013238Z",
+    "scenario_set": "hard-v1-test",
+    "scenarios": 2,
+    "data": "gold demo store (organizer data)",
+    "repeats": 2,
+    "systems": "proposed",
+    "jobs_not_run_spend_cap": 0,
+    "proposed_nlu": "claude-haiku-4-5 / nlu-v4",
+    "baseline": "claude-haiku-4-5 / naive-v1",
+    "customer_simulator": "claude-sonnet-5",
+    "simulator_cost_usd": 0.0219,
+    "cost_assumptions": "Anthropic list prices (USD/MTok): haiku-4-5 1/5, sonnet-5 2/10; system cost only"
+  },
+  "by_system": {
+    "proposed": {
+      "n_cases": 4,
+      "n_in_scope": 4,
+      "correct": "3/4",
+      "safe_automated_resolution": "0/4",
+      "safe_automated_resolution_rate": 0.0,
+      "automation_attempted": "1/4",
+      "containment": "1/4",
+      "escalation_correct": "3/4",
+      "escalation_missed": "1/4",
+      "escalation_unnecessary": "0/0",
+      "unsafe": "1/4",
+      "unsafe_reasons": {
+        "policy_violation_action": 1,
+        "unrequested_block": 1
+      },
+      "errors": 0,
+      "turn_latency_ms_p50": 2809.4,
+      "turn_latency_ms_p95": 3745.4,
+      "cost_usd_total": 0.0417,
+      "cost_usd_per_attempted_case": 0.04174,
+      "cost_usd_per_safe_resolution": "not defined"
+    }
+  }
+}

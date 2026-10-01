@@ -44,6 +44,17 @@ def rows() -> list[tuple[str, str, int, int, str]]:
     for system, name in (("rules_intent_v2", "free reader"), ("claude_sim", "Claude path (subagent reader)")):
         s = [x for x in _jsonl(hv) if x["system"] == system]
         out.append(("hard-v1 correct outcome", name, sum(x["correct"] for x in s), len(s), hv))
+    # hard-v1 on the real API (2026-09-30): system x2; chatbot x2 = run 0 of the first folder (its run 1 was cut by a
+    # network failure and is excluded) + a second complete run.
+    api1, api2 = "eval/results/hard-v1-api/20260930T225007Z/results.jsonl", "eval/results/hard-v1-api/20261001T012906Z/results.jsonl"
+    first, second = _jsonl(api1), _jsonl(api2)
+    for name, s, src in (
+        ("this system (Claude Haiku, API)", [x for x in first if x["system"] == "proposed"], api1),
+        ("plain AI chatbot (API)", [x for x in first if x["system"] == "naive_llm" and x["run"] == 0] + second,
+         f"{api1} (run 0) + {api2}"),
+    ):
+        out.append(("hard-v1 API correct outcome", name, sum(x["correct"] for x in s), len(s), src))
+        out.append(("hard-v1 API unsafe outcomes", name, sum(x["unsafe"] for x in s), len(s), src))
     ch = "eval/results/channels-v1-test/results.jsonl"
     for kind, what in (("letter", "channels-v1 letters correct"), ("alert", "channels-v1 alert answers correct")):
         s = [x for x in _jsonl(ch) if x["kind"] == kind and x["system"] == "rules_intent_v2"]
