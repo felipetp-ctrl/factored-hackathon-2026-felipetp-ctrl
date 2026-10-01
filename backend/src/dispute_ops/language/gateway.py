@@ -72,3 +72,36 @@ def detect_injection(text: str) -> list[str]:
     Security comes from the tool layer, not from this filter."""
     normalized = unicodedata.normalize("NFKC", text)
     return [name for name, pattern in _INJECTION_PATTERNS if pattern.search(normalized)]
+
+
+# An explicit request to talk to a person (ES/PT). Narrow on purpose: a verb of wanting plus talking to someone, or
+# an unambiguous noun ("asesor", "atendente", "humano", "alguien de verdad"). Mentions of "persona"/"pessoa" alone
+# do not count ("la persona que me cobró").
+_HUMAN_REQUEST = re.compile(
+    r"(\b(quiero|quisiera|queria|quería|necesito|deseo|prefiero|quero|gostaria|preciso|prefiro|me\s+pasa|me\s+passa|"
+    r"me\s+comunica|pode\s+me\s+passar|puede\s+pasarme)\b[^.?!]{0,40}\b(hablar|falar|conversar|atendid[oa]|"
+    r"pasar|passar|comunicar)\b[^.?!]{0,30}\b(alguien|alguém|alguem|una\s+persona|uma\s+pessoa|un\s+asesor|"
+    r"uma?\s+atendente|un\s+agente|um\s+agente|un\s+humano|um\s+humano|un\s+ejecutivo|operador[a]?)\b)"
+    r"|\b(me\s+)?(pasa|pasen|passa|passe|transfiere|transfieran|transfira|transfere)\s+(con|com|para|pra|a)\s+"
+    r"(alguien|alguém|alguem|una\s+persona|uma\s+pessoa|un\s+asesor|uma?\s+atendente|un\s+agente|um\s+agente|"
+    r"un\s+humano|um\s+humano)\b"
+    r"|\b(alguien\s+de\s+verdad|alguém\s+de\s+verdade|alguem\s+de\s+verdade|persona\s+real|pessoa\s+real|"
+    r"persona\s+de\s+verdad|pessoa\s+de\s+verdade|ser\s+humano)\b"
+    # someone human / live / from the bank: "un agente humano", "atendente ao vivo", "alguien del banco"
+    r"|\b(un|um|una|uma|al|ao|con|com|a)\s+(agente|asesor|atendente|operador|supervisor|representante|ejecutivo)"
+    r"\s+(humano|real|en\s+vivo|ao\s+vivo)\b"
+    r"|\b(un|um)\s+humano\b"
+    r"|\b(alguien|alguém|alguem)\s+(del|do)\s+banco\b"
+    r"|\bme\s+atienda\s+una\s+persona\b|\bme\s+atenda\s+uma\s+pessoa\b"
+    # imperative transfers: "páseme con", "comuníqueme con", "me coloca em contato com", "transferirme con"
+    r"|\b(p[aá]s[ae]me|p[aá]seme|comun[ií]queme|con[eé]cteme|transfi[eé]reme|transferirme|me\s+conecte|"
+    r"me\s+coloca[mr]?\s+em\s+contato|me\s+coloquem\s+em\s+contato|me\s+transferir|me\s+transfira)\s+"
+    r"(con|com|pra|para|a)\b",
+    re.IGNORECASE,
+)
+
+
+def detect_human_request(text: str) -> bool:
+    """True when the customer explicitly asks for a person. It outranks the model's reading (ADR-027): a request
+    for a person is a handoff trigger in the policy, even in the same sentence as a yes."""
+    return bool(_HUMAN_REQUEST.search(unicodedata.normalize("NFKC", text)))

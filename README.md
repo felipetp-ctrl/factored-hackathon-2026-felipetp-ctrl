@@ -11,7 +11,7 @@ A deterministic core decides; the language model only interprets.
    click a case. Or read the [walkthrough with screenshots](docs/demo.md).
 2. Results in one table: [Results](#results). Every requirement of the challenge → where it is met:
    [traceability](docs/requirements_traceability.md).
-3. Why it is built this way: [decisions at a glance](#decisions-at-a-glance), 25 ADRs in [docs/decisions](docs/decisions/).
+3. Why it is built this way: [decisions at a glance](#decisions-at-a-glance), 27 ADRs in [docs/decisions](docs/decisions/).
 
 ```
 chat / PQR / fraud alert
@@ -103,13 +103,15 @@ Offline simulations on held-out cases; nothing here is a production measurement.
 |---|---|---|---|
 | App conversation, customers who know the charge (`test-v2`) | 42 × 2 runs | 84/84 correct, **0 unsafe**, 71% resolved safely without a person | Plain AI chatbot: 56/84, **13 unsafe**, 44% |
 | App conversation, customers with vague memory, blind (`hard-v1`) | 36 | free reader 30/36, Claude path 31/36 after fixes | Same system before fixes: 16/36 and 24/36 |
+| Same blind set on the real API, 2 runs each (`hard-v1` API) | 36 × 2 | 65/72 correct, **4/72 unsafe** (two fixed since, ADR-027) | Plain AI chatbot: 49/72, **11/72 unsafe** |
 | Written complaints (`channels-v1`) | 24 | 23/24 correct, 0 unsafe | Keyword rules 19/24; everything to a person 12/24 |
 | Fraud-alert answers (`channels-v1`) | 18 | 17/18 correct, 0 unsafe | Keyword rules 17/18 |
 | Reading the dispute reason, another author, blind labels (`independent-v1`) | 525 | trained classifier 94.1% | Keyword rules 45.7% |
 
 Latency per turn p50 2.1 s / p95 3.1 s with Claude (test-v2); cost per safe resolution US$ 0.013 vs US$ 0.033 for the
-chatbot. 95% intervals for all of these: [uncertainty](docs/analysis/uncertainty.md). Failures are listed in every report, including the bugs the hard sets found. Limits: the Claude path in
-`hard-v1` was read by a Claude subagent given the production prompt, not the API; sets are small (zero unsafe in 84
+chatbot. 95% intervals for all of these: [uncertainty](docs/analysis/uncertainty.md). Failures are listed in every report, including the bugs the hard sets found. On the real API
+(hard-v1, 2 runs): p50 3.1 s / p95 4.3 s per turn, US$ 0.020 vs US$ 0.033 per safe resolution
+([details and the four unsafe cases](docs/evaluation.md#hard-v1-on-the-real-api-2026-09-30)). Limits: sets are small (zero unsafe in 84
 conversations does not prove zero risk); intent labels come from models, checked by one blind human reviewer on 90 messages (κ = 0.91,
 [review](ml/results/human-review.md)).
 
@@ -137,6 +139,7 @@ written complaint identifies the charge only 15.8% of the time ([problem analysi
 | Three channels, one case engine | Half of disputes are written; the bank can ask first | More surface to evaluate (done: channels-v1) | [023](docs/decisions/ADR-023-case-system-framing.md), [025](docs/decisions/ADR-025-channels-evaluation.md) |
 | Bank-first UI, no chat window | A case system, not a chatbot | The conversation is one click away | [024](docs/decisions/ADR-024-bank-first-no-chat.md) |
 | DuckDB contracts, bronze/silver/gold, immutable identity | Reproducible, fast (8 s), refuses re-deliveries that move cards between customers | Batch only | [012](docs/decisions/ADR-012-data-pipeline.md) |
+| Spend ledger with caps, shared by the demo and evaluation runs | US$ 10 of credit must last the judging window; caps in code survive restarts | One more moving part; failure degrades to the free reader | [026](docs/decisions/ADR-026-judging-spend-caps.md) |
 | Sets built to break the system, frozen before running | Earlier sets scored 100%; honest failure rates need hard cases | Lower headline numbers | [009](docs/decisions/ADR-009-evaluation-method.md), [022](docs/decisions/ADR-022-hard-set-and-fuzzy-references.md) |
 
 ## Repository

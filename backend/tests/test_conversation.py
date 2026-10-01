@@ -253,3 +253,34 @@ def test_zero_cost_turns_do_not_count():
     b = Budget(0.0001)
     b.add(0.0)
     assert b.by_day == {} and b.spent_usd == 0.0
+
+
+@pytest.mark.parametrize("lang,text", [
+    ("es", "Sí, confirmo. Y sí, bloquéenla. Pero quiero hablar con alguien de verdad de esto también."),
+    ("pt", "confirma sim, e pode bloquear tambem, mas queria falar com alguem de verdade pra garantir"),
+])
+def test_a_request_for_a_person_next_to_a_yes_hands_off_and_does_nothing(tools, store, clock, token, lang, text):
+    # hard-v1 API run (2026-09-30): the model read these as "confirm" and the case was opened and the card blocked.
+    nlu = ScriptedNlu(
+        nlu_result(intent="dispute", language=lang, amount=1250, reason_code=ReasonCode.FRAUD_CNP,
+                   reason_confidence=0.92, summary="No reconoce compra de 1250"),
+        nlu_result(intent="provide_info", language=lang, card_in_possession="yes", recognizes_merchant="no"),
+        nlu_result(intent="confirm", language=lang, wants_block_card=True),
+    )
+    svc = make_service(tools, store, clock, nlu)
+    cid = svc.start()
+    svc.send(cid, token, "No reconozco una compra de 1250")
+    assert svc.send(cid, token, "La tengo y no conozco la tienda").action == "confirm"
+    r = svc.send(cid, token, text)
+    assert r.action == "handoff" and not r.case_id and r.card_status is None
+    assert r.handoff is not None and "customer_requested_human" in r.handoff.model_dump_json()
+    assert "human_request_rule" in [e.kind for e in store.list_audit(cid)]
+
+
+def test_detect_human_request_is_narrow():
+    from dispute_ops.language.gateway import detect_human_request as d
+
+    assert d("Por favor páseme con un humano") and d("Pode me passar pra alguém do banco?")
+    for text in ("la persona que me cobró no la conozco", "não fui eu, foi outra pessoa", "hablé con alguien de la tienda",
+                 "a pessoa da loja disse que ia devolver", "quero falar sobre uma cobrança", "sí, confirmo"):
+        assert not d(text), text

@@ -18,7 +18,7 @@ from dispute_ops.handoff import HandoffPackage
 from dispute_ops.language import responses
 from dispute_ops.language.breaker import CircuitBreaker
 from dispute_ops.language.rule_nlu import is_rules_model
-from dispute_ops.language.gateway import detect_injection, detect_language, redact_pii
+from dispute_ops.language.gateway import detect_human_request, detect_injection, detect_language, redact_pii
 from dispute_ops.language.nlu import LlmUsage, NluContext, NluOutcome, NluResult, NluUnavailable
 from dispute_ops.policy.engine import PolicyEngine
 from dispute_ops.store import Store
@@ -305,6 +305,10 @@ class ConversationService:
             mode = "rules"
             self._audit(conv, "nlu_fallback", reason=reason)
         nlu, usage = outcome.result, outcome.usage
+        if nlu.intent != "human" and detect_human_request(text):
+            # An explicit request for a person outranks the reading, even next to a yes (ADR-027).
+            self._audit(conv, "human_request_rule", nlu_intent=nlu.intent)
+            nlu = nlu.model_copy(update={"intent": "human"})
         if is_rules_model(usage.model):
             mode = "rules"
         self.budget.add(usage.cost_usd)
