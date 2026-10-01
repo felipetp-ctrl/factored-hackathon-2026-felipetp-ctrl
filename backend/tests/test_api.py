@@ -40,7 +40,7 @@ def test_full_conversation_over_http():
     )
     auth = login(client)
     cid = client.post("/conversations", json={"language": "pt"}).json()["conversation_id"]
-    r1 = client.post(f"/conversations/{cid}/messages", json={"text": "não reconheço 1250"}, headers=auth).json()
+    r1 = client.post(f"/conversations/{cid}/messages", json={"text": "não reconheço 1250, o cartão está comigo"}, headers=auth).json()
     assert r1["action"] == "confirm"
     r2 = client.post(f"/conversations/{cid}/messages", json={"text": "sim, bloqueia"}, headers=auth).json()
     assert r2["action"] == "done" and r2["card_status"] == "Blocked"

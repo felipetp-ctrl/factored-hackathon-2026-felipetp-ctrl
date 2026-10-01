@@ -52,9 +52,11 @@ a8c7754, and is excluded). Total spend of these runs: US$ 3.74 (ledger).
 - 2 × a request for a person in the same message as "yes, confirm" (ES and PT): the case was opened and the card
   blocked. Fixed by ADR-027; re-run post-hoc 3/4 (`eval/results/hard-v1-api-posthoc/`), the fourth simulated customer
   never asked for a person.
-- 2 × wrong reason, PT run 2: a subscription the customer only called "não reconheço", and a stolen card the customer
-  mentioned only *after* confirming an unrecognised-charge summary. The confirmed case is frozen by design (c735828);
-  new facts after a confirmation are not re-read. Open.
+- 2 × wrong reason, PT run 2: a subscription the customer only called "não reconheço" (open), and a stolen card the
+  customer mentioned only at the summary. The second had a root cause in the readings: the model had filled "card with
+  me" from an opening that never mentioned the card, so the question was skipped. Fixed by ADR-031 (grounding check +
+  a contradicted summary is corrected, not opened); unit-tested, replay shows the model filled card possession
+  unasked in 6 of 36 Claude-path conversations; not yet re-measured on the API.
 
 The other three incorrect outcomes are corrections of memory: the customer picked a different charge, above US$ 450,
 which went to a person as the policy requires, or no charge matched. Compared with the subagent reading (31/36), the API

@@ -140,6 +140,10 @@ _EVIDENCE_RULES: dict[str, tuple[re.Pattern[str], re.Pattern[str]]] = {  # field
     ),
 }
 _YES_NO_FIELDS = ("card_in_possession", "recognizes_merchant", "contacted_merchant")
+# Words that say where the card is, either way: the grounding check for a model's "card in possession" reading.
+POSSESSION_CUES = re.compile("|".join([_EVIDENCE_RULES["card_in_possession"][0].pattern,
+                                       _EVIDENCE_RULES["card_in_possession"][1].pattern,
+                                       r"cartera|billetera|carteira|bolso|bolsa|mochila|guardad|perdid|perdeu|sumi"]))
 _DATE_FIELDS = ("expected_delivery_date", "cancellation_date")
 _ORDINALS = [
     (re.compile(r"\b(primer[ao]?|primeir[ao])\b"), 0), (re.compile(r"\bsegund[ao]\b"), 1),

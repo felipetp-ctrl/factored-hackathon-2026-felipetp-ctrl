@@ -284,3 +284,48 @@ def test_detect_human_request_is_narrow():
     for text in ("la persona que me cobró no la conozco", "não fui eu, foi outra pessoa", "hablé con alguien de la tienda",
                  "a pessoa da loja disse que ia devolver", "quero falar sobre uma cobrança", "sí, confirmo"):
         assert not d(text), text
+
+
+def test_model_reading_of_card_possession_is_dropped_when_the_customer_never_said_it(tools, store, clock, token):
+    """hard-v1 API run: the model filled "card in possession: yes" from an opening that never mentioned the card."""
+    nlu = ScriptedNlu(
+        nlu_result(intent="dispute", amount=1250, reason_code=ReasonCode.FRAUD_CNP, reason_confidence=0.9,
+                   card_in_possession="yes", recognizes_merchant="no"),
+        nlu_result(intent="provide_info", card_in_possession="no"),
+    )
+    svc = make_service(tools, store, clock, nlu)
+    cid = svc.start()
+    r1 = svc.send(cid, token, "no reconozco un cargo de 1250")
+    assert r1.action == "ask" and "tarjeta con usted" in r1.text
+    assert store.list_audit_by_kind("ungrounded_evidence_dropped")
+    r2 = svc.send(cid, token, "no, me la robaron")
+    assert r2.action == "confirm" and svc.get(cid).flow.evidence["card_in_possession"] == "no"
+
+
+def test_a_reading_grounded_in_the_customers_words_is_kept(tools, store, clock, token):
+    nlu = ScriptedNlu(nlu_result(intent="dispute", amount=1250, reason_code=ReasonCode.FRAUD_CNP, reason_confidence=0.9,
+                                 card_in_possession="yes", recognizes_merchant="no"))
+    svc = make_service(tools, store, clock, nlu)
+    r = svc.send(svc.start(), token, "no reconozco un cargo de 1250, la tarjeta la tengo conmigo")
+    assert r.action == "confirm"
+
+
+def test_a_stolen_card_said_at_the_summary_corrects_it_instead_of_opening(tools, store, clock, token):
+    """hard-v1 API run: "sim, confirmo… já foi roubado junto com minha carteira" opened card-not-present fraud."""
+    nlu = ScriptedNlu(
+        nlu_result(intent="dispute", language="pt", amount=1250, reason_code=ReasonCode.FRAUD_CNP,
+                   reason_confidence=0.9, card_in_possession="yes", recognizes_merchant="no"),
+        nlu_result(intent="confirm", language="pt", reason_code=ReasonCode.FRAUD_CP, reason_confidence=0.95,
+                   card_in_possession="no", recognizes_merchant="no", wants_block_card=True),
+        nlu_result(intent="confirm", language="pt"),
+    )
+    svc = make_service(tools, store, clock, nlu)
+    cid = svc.start()
+    assert svc.send(cid, token, "não reconheço 1250, o cartão está comigo").action == "confirm"
+    r2 = svc.send(cid, token, "sim, confirmo e bloqueia, o cartão foi roubado junto com a carteira")
+    assert r2.action == "confirm" and r2.state == State.CONFIRM and not r2.case_id
+    flow = svc.get(cid).flow
+    assert flow.reason_code == ReasonCode.FRAUD_CP and flow.evidence["card_in_possession"] == "no"
+    r3 = svc.send(cid, token, "sim")
+    assert r3.state == State.DONE and r3.card_status == "Blocked"
+    assert store.get_dispute(r3.case_id).reason_code == ReasonCode.FRAUD_CP

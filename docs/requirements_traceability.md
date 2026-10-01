@@ -32,7 +32,7 @@ Status: ✅ met · 🟡 partial (gap stated) · ⬜ not yet.
 |---|---|---|
 | Maintain conversational context | ✅ | Flow state + recent turns in NLU context; language fixed after the first turn; polite endings ([ADR-018](decisions/ADR-018-conversation-fixes.md)) |
 | Clarify ambiguity | ✅ | Ask-for fields, candidate lists, max 2 attempts then handoff |
-| Ground factual responses in permitted information | ✅ | Replies are templates filled only from verified store data ([ADR-010](decisions/ADR-010-llm-interprets-templates-speak.md)) |
+| Ground factual responses in permitted information | ✅ | Replies are templates filled only from verified store data ([ADR-010](decisions/ADR-010-llm-interprets-templates-speak.md)); facts the policy relies on must have been said by the customer — a model-filled card possession is dropped and asked ([ADR-031](decisions/ADR-031-grounded-evidence.md)) |
 | Use tools when they serve the workflow | ✅ | `BankingTools` (search, get card, case status, open dispute, block card) |
 | Report only verified actions | ✅ | Read-back verification before any "done"; oracle checks `fabricated_case_id` |
 

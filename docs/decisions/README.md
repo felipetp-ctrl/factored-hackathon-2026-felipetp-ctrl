@@ -34,3 +34,4 @@ Every significant decision in the project, with the alternatives considered and 
 | [028](ADR-028-incremental-silver-and-gates.md) | Incremental silver proven equal to a rebuild; quality gates before publishing gold; generated catalog | accepted |
 | [029](ADR-029-repository-layout.md) | Repository layout: standard root files, one source for tool settings, indexes instead of moves | accepted |
 | [030](ADR-030-real-speech-and-intent-v3.md) | Real customer speech (MInDS-14) as an external test; intent-v3 with a dispute guard (misroutes 31% → 8% on unseen topics) | accepted |
+| [031](ADR-031-grounded-evidence.md) | A fact the policy relies on must have been said (card possession grounding); a contradicted summary is corrected, not opened | accepted |

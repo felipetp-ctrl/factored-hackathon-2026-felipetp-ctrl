@@ -60,7 +60,7 @@ def test_run_scenario_proposed_normal_path_is_correct_and_safe():
                    reason_confidence=0.9, card_in_possession="yes", recognizes_merchant="no"),
         nlu_result(intent="confirm", wants_block_card=True),
     )
-    r = run_scenario(SCENARIOS["fraud_block-es"], ProposedSystem, ScriptedSimulator("no reconozco 1250 amazon", "sí, bloquéela"),
+    r = run_scenario(SCENARIOS["fraud_block-es"], ProposedSystem, ScriptedSimulator("no reconozco 1250 amazon, la tarjeta la tengo conmigo", "sí, bloquéela"),
                      container_factory=factory)
     assert r.correct and not r.unsafe and r.actual_outcome == "done"
     assert r.case_transactions == ["TXN001"] and r.blocked_products == ["PRD001"]

@@ -17,7 +17,8 @@ from dispute_ops.flow import DisputeFlow, FlowResult, State, Turn
 from dispute_ops.handoff import HandoffPackage
 from dispute_ops.language import responses
 from dispute_ops.language.breaker import CircuitBreaker
-from dispute_ops.language.rule_nlu import is_rules_model
+from dispute_ops.language.keywords import _norm
+from dispute_ops.language.rule_nlu import POSSESSION_CUES, is_rules_model
 from dispute_ops.language.gateway import detect_human_request, detect_injection, detect_language, redact_pii
 from dispute_ops.language.nlu import LlmUsage, NluContext, NluOutcome, NluResult, NluUnavailable
 from dispute_ops.policy.engine import PolicyEngine
@@ -305,6 +306,8 @@ class ConversationService:
             mode = "rules"
             self._audit(conv, "nlu_fallback", reason=reason)
         nlu, usage = outcome.result, outcome.usage
+        if mode == "claude":
+            nlu = self._ground(conv, nlu, ctx)
         if nlu.intent != "human" and detect_human_request(text):
             # An explicit request for a person outranks the reading, even next to a yes (ADR-027).
             self._audit(conv, "human_request_rule", nlu_intent=nlu.intent)
@@ -341,6 +344,19 @@ class ConversationService:
         return self._reply(conv, flow.handle(self._turn(conv, token, nlu)), started, **base)
 
     # ---- helpers ------------------------------------------------------------------------------
+    def _ground(self, conv: Conversation, nlu: NluResult, ctx: NluContext) -> NluResult:
+        """A fact the policy relies on must have been said. The model filled "card in possession: yes" from an opening
+        that never mentioned the card (hard-v1 API run), so the question was skipped and a stolen card was opened as
+        card-not-present fraud. Keep the reading only if the question was just asked or the customer's own words
+        mention where the card is; otherwise the flow asks."""
+        if nlu.card_in_possession is None or "card_in_possession" in ctx.ask_for:
+            return nlu
+        said = " ".join(_norm(h) for h in conv.history if h.startswith("customer: "))
+        if POSSESSION_CUES.search(said):
+            return nlu
+        self._audit(conv, "ungrounded_evidence_dropped", field="card_in_possession", value=nlu.card_in_possession)
+        return nlu.model_copy(update={"card_in_possession": None})
+
     def _turn(self, conv: Conversation, token: str, nlu: NluResult) -> Turn:
         in_confirm = conv.flow.state == State.CONFIRM
         return Turn(

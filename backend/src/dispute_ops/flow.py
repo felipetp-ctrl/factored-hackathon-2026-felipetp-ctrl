@@ -153,6 +153,7 @@ class DisputeFlow:
         self.progress = False  # this turn added a detail about the charge or rejected shown candidates
         self.last_candidates: list[Transaction] = []
         self.rejected_transactions: set[str] = set()
+        self.block_requested = False  # asked for at a summary that was then corrected (see _on_confirm)
 
     # ---- public API -------------------------------------------------------------------
     def handle(self, turn: Turn) -> FlowResult:
@@ -347,6 +348,8 @@ class DisputeFlow:
         return decision
 
     def _on_confirm(self, turn: Turn) -> FlowResult:
+        if turn.confirm is not False and self._corrects_summary(turn):
+            return self._resummarize(turn)
         if turn.confirm is None:
             # Bounded like every other question: two unclear answers to the summary go to a person, nothing opened
             # (channels-v1 dev: an unread refusal repeated the summary until the customer gave up).
@@ -361,6 +364,23 @@ class DisputeFlow:
             self._audit("customer_declined")
             return self._finish(FlowResult(state=State.CANCELLED, action="cancelled"))
         return self._act(turn)
+
+    def _corrects_summary(self, turn: Turn) -> bool:
+        """The answer to the summary contradicts a fact the summary rests on: the card was said to be with the
+        customer and now is lost or stolen (hard-v1 API run: "sim, confirmo… já foi roubado junto com minha carteira"
+        opened card-not-present fraud). Opening what the customer just contradicted is not what they confirmed."""
+        return turn.evidence.get("card_in_possession") == "no" and self.evidence.get("card_in_possession") == "yes"
+
+    def _resummarize(self, turn: Turn) -> FlowResult:
+        before = self.reason_code
+        self.evidence["card_in_possession"] = "no"
+        if self.reason_code == ReasonCode.FRAUD_CNP:
+            self.reason_code = ReasonCode.FRAUD_CP  # an unrecognised charge on a lost or stolen card
+        self.block_requested = self.block_requested or turn.block_card
+        self._audit("summary_corrected", field="card_in_possession", reason_before=before and before.value,
+                    reason_after=self.reason_code and self.reason_code.value)
+        self.state = State.CLASSIFY
+        return self._advance(turn)
 
     def _act(self, turn: Turn) -> FlowResult:
         assert self.txn is not None and self.reason_code is not None
@@ -380,7 +400,7 @@ class DisputeFlow:
         self._record("open_dispute", "verified", case.case_id)
 
         card: Card | None = None
-        if turn.block_card:
+        if turn.block_card or self.block_requested:
             product_id = self.txn.product_id
             try:
                 current = self._retry(lambda: self.tools.get_card(turn.token, product_id))
