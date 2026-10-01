@@ -82,3 +82,22 @@ def test_budget_exceeded_is_not_an_api_error_so_runs_stop():
     import anthropic
 
     assert not issubclass(BudgetExceeded, anthropic.APIError)
+
+
+def test_budget_reopens_when_the_ledger_comes_back(monkeypatch):
+    ledger = FakeLedger()
+    b = Budget(10.0, ledger=ledger)
+    ledger.fail = True
+    assert b.exhausted()
+    monkeypatch.setattr(Budget, "REOPEN_SECONDS", 0.0)
+    assert b.exhausted()  # still down: stays closed
+    ledger.fail = False
+    assert not b.exhausted()  # one successful read reopens it
+
+
+def test_unreachable_ledger_at_start_up_keeps_the_budget_closed():
+    from dispute_ops.spend_ledger import SpendLedger
+
+    ledger = SpendLedger("postgresql://nobody@127.0.0.1:1/none?connect_timeout=1", "demo")  # does not raise
+    b = Budget(10.0, ledger=ledger)
+    assert b.exhausted() and b.status()["exhausted"]

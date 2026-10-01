@@ -47,7 +47,8 @@ class Budget:
         self.clock = clock or (lambda: datetime.now().astimezone())
         self.spent_usd = 0.0
         self.by_day: dict[str, float] = {}
-        self.failed = False  # ledger unreachable: closed until the process restarts
+        self.failed = False  # ledger unreachable: closed, retried after REOPEN_SECONDS
+        self._failed_at = 0.0
 
     def child(self, limit_usd: float | None) -> Budget:
         """A per-workspace cap that also counts against this budget."""
@@ -56,13 +57,16 @@ class Budget:
     def _today(self) -> str:
         return self.clock().date().isoformat()
 
+    REOPEN_SECONDS = 30.0
+
     def _ledger_call(self, fn: Callable[[], None]) -> None:
         from dispute_ops.spend_ledger import LedgerError
 
         try:
             fn()
+            self.failed = False
         except LedgerError:
-            self.failed = True
+            self.failed, self._failed_at = True, time.monotonic()
 
     def add(self, cost_usd: float) -> None:
         if cost_usd <= 0:
@@ -83,9 +87,9 @@ class Budget:
         return self.ledger.total_source, self.ledger.today_source, self.ledger.total_all
 
     def exhausted(self) -> bool:
-        if self.failed:
+        if self.failed and time.monotonic() - self._failed_at < self.REOPEN_SECONDS:
             return True
-        source, today, everyone = self._totals()
+        source, today, everyone = self._totals()  # with a ledger, a successful read reopens the budget
         if self.failed:
             return True
         if self.limit_usd is not None and source >= self.limit_usd:

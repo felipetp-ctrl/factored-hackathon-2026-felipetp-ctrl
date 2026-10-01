@@ -89,14 +89,9 @@ def make_budget(settings: Settings, source: str) -> Budget:
     """The process-wide budget: durable and shared when a ledger URL is set, fail-closed if it cannot connect."""
     ledger = None
     if settings.llm_ledger_url:
-        from dispute_ops.spend_ledger import LedgerError, SpendLedger
+        from dispute_ops.spend_ledger import SpendLedger
 
-        try:
-            ledger = SpendLedger(settings.llm_ledger_url, source)
-        except LedgerError:
-            closed = Budget(settings.llm_budget_usd)
-            closed.failed = True
-            return closed
+        ledger = SpendLedger(settings.llm_ledger_url, source)  # unreachable now: closed until a read succeeds
     return Budget(settings.llm_budget_usd, daily_limit_usd=settings.llm_daily_budget_usd,
                   global_limit_usd=settings.llm_global_budget_usd, ledger=ledger)
 
