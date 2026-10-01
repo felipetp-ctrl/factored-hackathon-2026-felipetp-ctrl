@@ -14,7 +14,7 @@ Start with the [project README](../README.md); this page lists every document by
 | Document | What it answers |
 |---|---|
 | [evaluation.md](evaluation.md) | Every evaluation set, its method, results and caveats; the ML work |
-| [model_card_intent-v2.md](model_card_intent-v2.md) | The deployed intent classifier: data, metrics, limits, monitoring |
+| [model_card_intent-v3.md](model_card_intent-v3.md) | The deployed intent classifier: data, metrics, limits, monitoring |
 | [analysis/uncertainty.md](analysis/uncertainty.md) | 95% intervals for the headline numbers |
 | [analysis/hard-v1-disparity.md](analysis/hard-v1-disparity.md) | Why hard-v1 results differ by country |
 | [analysis/operating-insights.md](analysis/operating-insights.md) | Tested operating insights and the decision each one changes |

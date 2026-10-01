@@ -75,7 +75,7 @@ By language, deployed reader: es 8/9, pt 9/9.
 
 ## Latency and cost
 
-Whole case, deployed reader, this machine: p50 2.4 ms, p95 5.0 ms. Model cost US$ 0 (no model calls). Excludes network and the bank's real systems.
+Whole case, deployed reader, this machine: p50 2.5 ms, p95 5.1 ms. Model cost US$ 0 (no model calls). Excludes network and the bank's real systems.
 
 ## Limitations
 

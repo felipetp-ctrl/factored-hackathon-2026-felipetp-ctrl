@@ -106,7 +106,8 @@ Offline simulations on held-out cases; nothing here is a production measurement.
 | Same blind set on the real API, 2 runs each (`hard-v1` API) | 36 × 2 | 65/72 correct, **4/72 unsafe** (two fixed since, ADR-027) | Plain AI chatbot: 49/72, **11/72 unsafe** |
 | Written complaints (`channels-v1`) | 24 | 23/24 correct, 0 unsafe | Keyword rules 19/24; everything to a person 12/24 |
 | Fraud-alert answers (`channels-v1`) | 18 | 17/18 correct, 0 unsafe | Keyword rules 17/18 |
-| Reading the dispute reason, another author, blind labels (`independent-v1`) | 525 | trained classifier 94.1% | Keyword rules 45.7% |
+| Reading the dispute reason, another author, blind labels (`independent-v1`) | 525 | trained classifier 93.5% | Keyword rules 45.7% |
+| **Real customer speech**: should this call start a dispute? (MInDS-14, topics never trained on) | 872 calls | intent-v3 sends 7.9% of non-disputes to the dispute intake | intent-v2 31.1%, keyword rules 67.3% |
 
 Latency per turn p50 2.1 s / p95 3.1 s with Claude (test-v2); cost per safe resolution US$ 0.013 vs US$ 0.033 for the
 chatbot. 95% intervals for all of these: [uncertainty](docs/analysis/uncertainty.md). Failures are listed in every report, including the bugs the hard sets found. On the real API
@@ -117,8 +118,12 @@ conversations does not prove zero risk); intent labels come from models, checked
 
 ![Vague-memory test before and after fixes](docs/figures/hard_v1_before_after.png)
 
-**Machine learning.** A trained reason classifier (TF-IDF + logistic regression, ES/PT, 0.2 ms, pure Python) powers
+**Machine learning.** A trained reason classifier (TF-IDF + logistic regression, ES/PT, 0.15 ms, pure Python) powers
 the free reader; it lost to keywords in its first version and that result is kept ([ADR-019](docs/decisions/ADR-019-learned-intent-classifier.md)).
+Tested on **real people** (1,090 bank calls, MInDS-14), intent-v2 started a dispute conversation for 31% of unrelated
+requests; intent-v3 adds real out-of-scope calls, spoken-style and mixed-topic training copies and a dispute guard chosen
+on a dev half: 7.9% on topics it never saw, at the cost of 7 of 44 real disputes needing one more turn
+([ADR-030](docs/decisions/ADR-030-real-speech-and-intent-v3.md)).
 There is no fraud model on purpose: the fraud labels have no learnable signal (ROC-AUC 0.50), so the alert threshold was
 recalibrated instead ([ADR-020](docs/decisions/ADR-020-fraud-label-audit.md)); a scan of nine other targets found the same
 ([ADR-021](docs/decisions/ADR-021-learnability-scan.md)). MLflow registry, model card, CI regression gate and drift
@@ -137,6 +142,7 @@ written complaint identifies the charge only 15.8% of the time ([problem analysi
 | The model reads, code decides | Permissions and policy outside model prose; write tools never reachable by the model | Fewer phrasings handled than a free agent | [004](docs/decisions/ADR-004-hybrid-orchestration.md), [010](docs/decisions/ADR-010-llm-interprets-templates-speak.md) |
 | Versioned YAML policy with rule ids | Every decision explainable by a rule, not by model reasoning | Rules must be maintained | [008](docs/decisions/ADR-008-policy-order.md), [013](docs/decisions/ADR-013-policy-v2-calibration.md) |
 | Free fallback reader with a trained classifier | Works when the model is down or over budget, US$ 0 | Understands less than Claude | [017](docs/decisions/ADR-017-rule-fallback-nlu.md), [019](docs/decisions/ADR-019-learned-intent-classifier.md) |
+| Test the classifier on real speech; retrain with a dispute guard | Every other text was LLM-written; real calls exposed 31% wrong routing | More disputes need one more turn (7/44 vs 2/44) | [030](docs/decisions/ADR-030-real-speech-and-intent-v3.md) |
 | No fraud model | Labels have no learnable signal (AUC 0.50); threshold recalibrated instead | No fraud ML showcase | [020](docs/decisions/ADR-020-fraud-label-audit.md) |
 | Three channels, one case engine | Half of disputes are written; the bank can ask first | More surface to evaluate (done: channels-v1) | [023](docs/decisions/ADR-023-case-system-framing.md), [025](docs/decisions/ADR-025-channels-evaluation.md) |
 | Bank-first UI, no chat window | A case system, not a chatbot | The conversation is one click away | [024](docs/decisions/ADR-024-bank-first-no-chat.md) |
@@ -151,15 +157,15 @@ written complaint identifies the charge only 15.8% of the time ([problem analysi
 ├── backend/                  Python 3.12 service (uv, FastAPI) — deployed to Render from render.yaml
 │   ├── src/dispute_ops/      domain, store, auth, flow, channels, tools, API
 │   │   ├── policy/           versioned dispute policy (disputes_v2.yaml) and its engine
-│   │   ├── language/         gateway, Claude NLU, rule fallback, intent-v2 model, reply templates
+│   │   ├── language/         gateway, Claude NLU, rule fallback, intent-v3 model, reply templates
 │   │   ├── pipeline/         bronze → silver → gold, contracts, quality gates, catalog, figures
 │   │   ├── evaluation/       simulator, oracle, baselines, metrics
-│   │   └── ml/               training, calibration, fraud audit, learnability scan
+│   │   └── ml/               training, calibration, real-speech test, fraud audit, learnability scan
 │   ├── tests/                offline tests and the labelled synthetic fixture
 │   └── demo_data/            gold sample served by the public demo
 ├── frontend/                 Next.js web app (bank console + customer app) — deployed to Vercel
 ├── eval/                     frozen evaluation sets and every run's report (index: eval/README.md)
-├── ml/                       intent corpora and ML reports (index: ml/README.md)
+├── ml/                       intent corpora, external real speech and ML reports (index: ml/README.md)
 ├── docs/                     problem, evaluation, data, operations; decisions/ holds the ADRs (index: docs/README.md)
 ├── .github/workflows/        CI (lint, tests, pipeline on the fixture, typecheck, build) and keep-warm ping
 ├── Makefile                  every command — run `make` to list them

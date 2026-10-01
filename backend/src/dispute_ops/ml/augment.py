@@ -12,6 +12,7 @@ a sentence in the same fold."""
 from __future__ import annotations
 
 import random
+import re
 
 from dispute_ops.ml.corpus import Example
 
@@ -79,3 +80,54 @@ def augment(corpus: list[Example], per_sentence: int = 2, seed: int = 11) -> tup
             out.append(Example(text=" ".join(text.split()), label=ex.label, language=lang, source="augmented"))
             groups.append(gid)
     return out, groups
+
+
+# Spoken-style variants (intent-v3, ADR-030). Real out-of-scope speech is lower-case, unpunctuated and opens with a
+# call greeting; if only the out-of-scope class looked like that, the model would learn "sounds like a phone call →
+# out of scope" (it did: 33 of 44 real disputes sent away on the first intent-v3 fit). Giving every label the same
+# style removes the shortcut. Openers are generic call phrases, not taken from any evaluation message.
+_CALL_OPENERS = {
+    "es": ["hola buenos días llamaba porque", "hola buenas mira te llamo porque", "sí hola buenas tardes",
+           "buenos días soy cliente del banco y", "hola qué tal mire", "buenas tardes es que", ""],
+    "pt": ["bom dia estou a ligar porque", "olá boa tarde", "bom dia eu queria dizer que", "boa tarde liguei porque",
+           "oi bom dia é que", "olá tudo bem olha", ""],
+}
+_CALL_CLOSERS = {"es": ["", "", "gracias", "muchas gracias", "por favor"],
+                 "pt": ["", "", "obrigado", "obrigada", "se faz favor", "por favor"]}
+_PUNCT = re.compile(r"[^\w\s$€%/,]")
+
+
+def speech_style(examples: list[Example], groups: list[int], seed: int = 17) -> tuple[list[Example], list[int]]:
+    """One spoken-style copy of every example (same label and group): lower case, no punctuation, call phrases."""
+    rng = random.Random(seed)
+    out, out_groups = [], []
+    for ex, gid in zip(examples, groups):
+        lang = ex.language if ex.language in _CALL_OPENERS else "es"
+        body = _PUNCT.sub(" ", ex.text.lower()).replace(",", " ")
+        text = " ".join(f"{rng.choice(_CALL_OPENERS[lang])} {body} {rng.choice(_CALL_CLOSERS[lang])}".split())
+        out.append(Example(text=text, label=ex.label, language=ex.language, source="spoken"))
+        out_groups.append(gid)
+    return examples + out, groups + out_groups
+
+
+_JOINS = {"es": ["y además", "y también", "porque", "es que", "y"], "pt": ["e também", "porque", "é que", "e além disso", "e"]}
+REASONS = {"FRAUD_CNP", "FRAUD_CP", "DUPLICATE", "INCORRECT_AMOUNT", "NOT_RECEIVED", "CANCELLED_RECURRING", "DISPUTE_NO_REASON"}
+
+
+def compound(examples: list[Example], groups: list[int], seed: int = 19) -> tuple[list[Example], list[int]]:
+    """An out-of-scope request followed by a dispute keeps the dispute's label (intent-v3, ADR-030).
+
+    Callers mix topics ("show me my latest transactions, there is a payment I don't recognise"); a one-label model
+    trained only on single-topic messages lets the out-of-scope half win, and the dispute is turned away. Both
+    halves come from the training corpus."""
+    rng = random.Random(seed)
+    oos = {lang: [e.text for e in examples if e.label == "OUT_OF_SCOPE" and e.language == lang and e.source == "corpus"]
+           for lang in ("es", "pt")}
+    out, out_groups = [], []
+    for ex, gid in zip(examples, groups):
+        if ex.label in REASONS and ex.source == "corpus" and oos.get(ex.language):
+            first = rng.choice(oos[ex.language]).rstrip(".!?")
+            text = f"{first} {rng.choice(_JOINS[ex.language])} {_lower_first(ex.text)}"
+            out.append(Example(text=" ".join(text.split()), label=ex.label, language=ex.language, source="compound"))
+            out_groups.append(gid)
+    return examples + out, groups + out_groups

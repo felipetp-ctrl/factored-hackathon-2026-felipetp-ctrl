@@ -12,9 +12,10 @@ The README has the one-table summary; this page keeps every set, its method and 
 | hard-v1 | App conversation, vague memory, blind | 36 | free reader 16 → 30, Claude path 24 → 31 | [ADR-022](decisions/ADR-022-hard-set-and-fuzzy-references.md), [country gap](analysis/hard-v1-disparity.md) |
 | hard-v1 on the API | Same 36 blind scenarios, real Claude Haiku 4.5, 2 runs each, vs a plain AI chatbot | 36 × 2 | 65/72 correct, 4/72 unsafe vs chatbot 49/72, 11/72 unsafe | [below](#hard-v1-on-the-real-api-2026-09-30) |
 | channels-v1 | Written complaints and fraud-alert answers | 24 + 18 | letters 23/24, alerts 17/18, 0 unsafe | [ADR-025](decisions/ADR-025-channels-evaluation.md) |
-| independent-v1 | Reason reading, another author, blind labels | 525 | intent-v2 94.1% vs keyword rules 45.7% | [report](../ml/results/independent-v1.md) |
+| independent-v1 | Reason reading, another author, blind labels | 525 | intent-v2 94.1% (at the time) / intent-v3 93.5% vs keyword rules 45.7% | [report](../ml/results/independent-v1.md) |
+| **MInDS-14 (real speech)** | Should a real call start a dispute? es-ES/pt-PT, ASR | 1,090 | non-disputes to the intake on unseen topics: intent-v3 7.9% vs intent-v2 31.1%, rules 67.3% | [ADR-030](decisions/ADR-030-real-speech-and-intent-v3.md), [report](../ml/results/external-minds14.md) |
 | human-review | The intent labels themselves, one blind human | 90 | 78/85 agree, κ = 0.91; DISPUTE_NO_REASON weakest (4/8) | [report](../ml/results/human-review.md) |
-| calibration | Is the classifier's confidence trustworthy out of sample? | 540 | ECE 0.064, under-confident above 0.6; 0.60 keeps 93.5% at 97.6% | [report](../ml/results/calibration.md) |
+| calibration | Is the classifier's confidence trustworthy out of sample? | 540 | intent-v3: ECE 0.034; 0.60 keeps 96.1% at 96.9% (intent-v2: ECE 0.064) | [report](../ml/results/calibration.md) |
 
 ![hard-v1 before and after](figures/hard_v1_before_after.png)
 ![channels-v1](figures/channels_v1.png)
@@ -166,8 +167,29 @@ reason difference is a keyword false match ("cobrado 243" read as a duplicate) �
 
 The independent set is the strongest evidence: 540 messages written by a different author that never saw our corpus,
 re-labelled blind (κ = 1.0), McNemar p = 8e-69 against the rules ([report](../ml/results/independent-v1.md),
-[model card](model_card_intent-v2.md)). The model is versioned in the MLflow registry, monitored in production
+[model card](model_card_intent-v3.md)). The model is versioned in the MLflow registry, monitored in production
 (`/agent/metrics`: acceptance rate, confidence, PSI drift against training) and guarded in CI by a regression gate.
+
+**1b. Real customer speech and intent-v3** ([ADR-030](decisions/ADR-030-real-speech-and-intent-v3.md),
+[report](../ml/results/external-minds14.md), `make external`). Every text above was written by a language model.
+MInDS-14 (PolyAI, CC BY 4.0) is 1,090 people calling an e-banking line in Spain and Portugal, transcribed by ASR. The
+protocol was frozen first: 11 intents that are never a dispute keep the dataset's labels; 3 mixed intents were read
+one by one (44 disputes, 152 not, 22 unsure) and are never trained on.
+
+| Free reader on real calls | Non-disputes sent to the dispute intake (11 intents; v3: left out of training) | Mixed calls, Portuguese test: disputes turned away · unnecessary questions |
+|---|---|---|
+| Keyword rules | 587/872 (67.3%) | 2/21 · 78/83 |
+| rules + intent-v2 | 271/872 (31.1%) | 2/21 · 47/83 |
+| **rules + intent-v3** | **69/872 (7.9%, CI 6–10%)** — McNemar vs v2: 208 fixed / 6 broken, p = 1e-53 | 4/21 · 24/83 |
+
+What the real calls found: intent-v2 read rambling unrelated requests as disputes; the first intent-v3 fit, trained
+with real out-of-scope calls only, learned "sounds like a phone call → out of scope" and turned away 33 of 44 real
+disputes. Spoken-style copies of every training example, mixed-topic copies (request + dispute = dispute) and a
+dispute guard (an out-of-scope reading needs the dispute labels below 0.2; chosen on the Spanish half at a cost fixed
+beforehand, one dispute turned away = five unnecessary questions) fixed it. Nothing measured before got worse:
+independent set 93.7% → 93.5%, test-v3 and run 3 23/23, hard-v1 replay same 32/36 with unnecessary escalations 5 → 3,
+channels-v1 unchanged, calibration ECE 0.064 → 0.034. Limits: European Spanish and Portuguese voice transcripts, not
+Latin American chat; mixed-intent labels by the coding assistant; the Claude path was not run on this set.
 
 **2. No fraud model, on evidence** ([ADR-020](decisions/ADR-020-fraud-label-audit.md),
 [report](../ml/results/fraud_label_audit.md)). On a temporal split, logistic regression and gradient boosting on

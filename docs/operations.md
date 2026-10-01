@@ -35,7 +35,7 @@ Available now at `GET /agent/metrics` (agent key) and in the Operations view:
 
 Learned classifier (`intent_classifier` in `/agent/metrics`): turns read, share accepted at the 0.60 threshold, mean
 confidence, label mix and PSI of the confidence distribution against the training reference (alarm > 0.2 from 30
-turns). See `docs/model_card_intent-v2.md`.
+turns). See `docs/model_card_intent-v3.md`.
 
 Alerts to add in production:
 

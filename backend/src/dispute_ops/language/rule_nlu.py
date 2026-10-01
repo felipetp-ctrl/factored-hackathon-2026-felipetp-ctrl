@@ -485,7 +485,7 @@ class RuleNlu:
             reason = ReasonCode.FRAUD_CNP
             fields.update(reason_code=reason, reason_confidence=RULE_CONFIDENCE)
             answered = answered or "reason_code" in ctx.ask_for
-        learned_oos = learned is not None and learned.label == "OUT_OF_SCOPE"
+        learned_oos = learned is not None and self.intent_model is not None and self.intent_model.confident_out_of_scope(learned)
         # A merchant name is not a product request: "Super Ahorro" is a shop, not savings (test-v3 finding, post-hoc).
         scope_text = t.replace(_norm(fields["merchant"]), " ") if fields["merchant"] else text
         if (is_out_of_scope(scope_text) or learned_oos) and not answered and fields["transaction_id"] is None:

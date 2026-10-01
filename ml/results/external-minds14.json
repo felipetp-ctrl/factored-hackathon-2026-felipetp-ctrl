@@ -1,0 +1,599 @@
+{
+  "messages": 1090,
+  "scored": 1068,
+  "clean": 872,
+  "mixed": 196,
+  "unsure_excluded": 22,
+  "mixed_labels": {
+    "NOT_DISPUTE": 152,
+    "DISPUTE": 44
+  },
+  "systems": {
+    "keyword rules": {
+      "clean": {
+        "not_dispute_n": 872,
+        "misrouted_to_intake": 587,
+        "dispute_n": 0,
+        "dispute_to_intake": 0,
+        "routes": {
+          "redirect": 267,
+          "intake": 587,
+          "person": 5,
+          "closed": 13
+        },
+        "by_language": {
+          "es": "244/385",
+          "pt": "343/487"
+        }
+      },
+      "mixed": {
+        "not_dispute_n": 152,
+        "misrouted_to_intake": 142,
+        "dispute_n": 44,
+        "dispute_to_intake": 42,
+        "routes": {
+          "intake": 184,
+          "redirect": 12
+        },
+        "by_language": {
+          "es": "64/69",
+          "pt": "78/83"
+        }
+      }
+    },
+    "rules + intent-v2 (before)": {
+      "clean": {
+        "not_dispute_n": 872,
+        "misrouted_to_intake": 271,
+        "dispute_n": 0,
+        "dispute_to_intake": 0,
+        "routes": {
+          "redirect": 583,
+          "intake": 271,
+          "person": 8,
+          "closed": 10
+        },
+        "by_language": {
+          "es": "100/385",
+          "pt": "171/487"
+        }
+      },
+      "mixed": {
+        "not_dispute_n": 152,
+        "misrouted_to_intake": 79,
+        "dispute_n": 44,
+        "dispute_to_intake": 42,
+        "routes": {
+          "person": 1,
+          "intake": 121,
+          "redirect": 74
+        },
+        "by_language": {
+          "es": "32/69",
+          "pt": "47/83"
+        }
+      }
+    },
+    "rules + intent-v3 (after)": {
+      "clean": {
+        "not_dispute_n": 872,
+        "misrouted_to_intake": 0,
+        "dispute_n": 0,
+        "dispute_to_intake": 0,
+        "routes": {
+          "redirect": 867,
+          "person": 5
+        },
+        "by_language": {
+          "es": "0/385",
+          "pt": "0/487"
+        }
+      },
+      "mixed": {
+        "not_dispute_n": 152,
+        "misrouted_to_intake": 41,
+        "dispute_n": 44,
+        "dispute_to_intake": 37,
+        "routes": {
+          "redirect": 118,
+          "intake": 78
+        },
+        "by_language": {
+          "es": "17/69",
+          "pt": "24/83"
+        }
+      }
+    }
+  },
+  "loio": {
+    "abroad": {
+      "n": 120,
+      "v3_unseen_intake": 13,
+      "v2_intake": 62
+    },
+    "address": {
+      "n": 81,
+      "v3_unseen_intake": 2,
+      "v2_intake": 6
+    },
+    "app_error": {
+      "n": 63,
+      "v3_unseen_intake": 4,
+      "v2_intake": 36
+    },
+    "atm_limit": {
+      "n": 83,
+      "v3_unseen_intake": 2,
+      "v2_intake": 3
+    },
+    "balance": {
+      "n": 78,
+      "v3_unseen_intake": 1,
+      "v2_intake": 0
+    },
+    "business_loan": {
+      "n": 79,
+      "v3_unseen_intake": 0,
+      "v2_intake": 1
+    },
+    "card_issues": {
+      "n": 77,
+      "v3_unseen_intake": 21,
+      "v2_intake": 62
+    },
+    "cash_deposit": {
+      "n": 76,
+      "v3_unseen_intake": 0,
+      "v2_intake": 3
+    },
+    "high_value_payment": {
+      "n": 67,
+      "v3_unseen_intake": 22,
+      "v2_intake": 53
+    },
+    "joint_account": {
+      "n": 80,
+      "v3_unseen_intake": 0,
+      "v2_intake": 18
+    },
+    "pay_bill": {
+      "n": 68,
+      "v3_unseen_intake": 4,
+      "v2_intake": 27
+    }
+  },
+  "loio_misrouted": 69,
+  "loio_ci": [
+    0.06300180713267457,
+    0.0989471114845731
+  ],
+  "v2_misrouted": 271,
+  "v2_ci": [
+    0.28094725134349613,
+    0.3422722897242037
+  ],
+  "mcnemar_loio_v3_vs_v2": {
+    "only_first_correct": 208,
+    "only_second_correct": 6,
+    "p_value": 9.719454513718525e-54
+  },
+  "errors_v3_mixed": [
+    {
+      "intent": "freeze",
+      "lang": "es",
+      "text": "por favor quiero bloquear mi tarjeta",
+      "route": "intake"
+    },
+    {
+      "intent": "freeze",
+      "lang": "es",
+      "text": "hola buenos días me gustaría congelar mi tarjeta ya que últimamente he estado que han estado realizando unos pagos en mi nombre que no son míos",
+      "route": "redirect"
+    },
+    {
+      "intent": "freeze",
+      "lang": "es",
+      "text": "necesito que me bloqueen mi tarjeta",
+      "route": "intake"
+    },
+    {
+      "intent": "freeze",
+      "lang": "es",
+      "text": "necesito que tener todas las transacciones de mi tarjeta dejarla bloqueada",
+      "route": "intake"
+    },
+    {
+      "intent": "freeze",
+      "lang": "es",
+      "text": "hola buenos días es que me gustaría cancelar la tarjeta terminada en 47 porque es que me acaban de robar pero quiero darla de baja quiero cancelarlo ahora mismo",
+      "route": "intake"
+    },
+    {
+      "intent": "freeze",
+      "lang": "es",
+      "text": "buenos días he perdido la cartera y que me gustará congelar mi tarjeta por favor",
+      "route": "intake"
+    },
+    {
+      "intent": "freeze",
+      "lang": "es",
+      "text": "he tenido un problema con mi tarjeta no la encuentro y quiero bloquear todas las transacciones",
+      "route": "intake"
+    },
+    {
+      "intent": "freeze",
+      "lang": "es",
+      "text": "hola buenos días mira te ha llamado porque tenía un problema y me han robado la cartera y me gustaría bloquear todas mis tarjetas",
+      "route": "intake"
+    },
+    {
+      "intent": "freeze",
+      "lang": "es",
+      "text": "hola buenos días nada yo me voy porque tuve un problema con mi tarjeta y que la extravié y quería bloquear totalmente las transacciones que se pueden realizar c",
+      "route": "intake"
+    },
+    {
+      "intent": "freeze",
+      "lang": "es",
+      "text": "quería que pudieran caer congelar mi tarjeta a ser posible bastante pronto porque he perdido la cartera y tenía toda mi tenía mi tarjeta quiero congelarlas para",
+      "route": "intake"
+    },
+    {
+      "intent": "freeze",
+      "lang": "es",
+      "text": "quiero detener todas las transacciones en mi tarjeta",
+      "route": "intake"
+    },
+    {
+      "intent": "freeze",
+      "lang": "es",
+      "text": "hola buenos días llamaba porque quiero bloquear mi tarjeta ya que no quiero volver a usar muchas gracias",
+      "route": "intake"
+    },
+    {
+      "intent": "freeze",
+      "lang": "es",
+      "text": "detener todas las sangres en mi tarjeta de vida robo de la misma",
+      "route": "intake"
+    },
+    {
+      "intent": "freeze",
+      "lang": "es",
+      "text": "mira acabo de perder mi tarjeta en la calle y quiero congelar para que no curres mucho",
+      "route": "intake"
+    },
+    {
+      "intent": "freeze",
+      "lang": "es",
+      "text": "tarjeta me bloquea favor por tarjeta me congelar tarjeta las",
+      "route": "intake"
+    },
+    {
+      "intent": "direct_debit",
+      "lang": "es",
+      "text": "hola buenos días me ha llegado en la aplicación del móvil una notificación de una domiciliación bancaria y realmente no sé qué y me gustaría que me pudiera guia",
+      "route": "redirect"
+    },
+    {
+      "intent": "latest_transactions",
+      "lang": "es",
+      "text": "hola m llamado porque quería saber mis últimas transacciones con la con la tarjeta gracias",
+      "route": "intake"
+    },
+    {
+      "intent": "latest_transactions",
+      "lang": "es",
+      "text": "muéstrame mis últimos movimientos mi últimas transacciones",
+      "route": "intake"
+    },
+    {
+      "intent": "latest_transactions",
+      "lang": "es",
+      "text": "quiero ver mis últimas transacciones",
+      "route": "intake"
+    },
+    {
+      "intent": "latest_transactions",
+      "lang": "es",
+      "text": "hola muy buenas he recibido un poco que no reconozco me gustaría ver las últimas acciones que están en mi cuenta",
+      "route": "redirect"
+    },
+    {
+      "intent": "latest_transactions",
+      "lang": "pt",
+      "text": "mostra-me as minhas últimas transações",
+      "route": "intake"
+    },
+    {
+      "intent": "latest_transactions",
+      "lang": "pt",
+      "text": "quando eu tento levantar um extrato da minha conta aparece uma operação não autorizada",
+      "route": "redirect"
+    },
+    {
+      "intent": "latest_transactions",
+      "lang": "pt",
+      "text": "Boa tarde eu sou ligar porque tenho aqui falta de informação sobre uma das minhas últimas transações que fiz",
+      "route": "intake"
+    },
+    {
+      "intent": "latest_transactions",
+      "lang": "pt",
+      "text": "mostra-me as minhas últimas transações por favor",
+      "route": "intake"
+    },
+    {
+      "intent": "latest_transactions",
+      "lang": "pt",
+      "text": "Boa tarde sou ligar porquê gostaria de ser as minhas transações recentes poderíamos mostrar e Sim eu conheço",
+      "route": "intake"
+    },
+    {
+      "intent": "latest_transactions",
+      "lang": "pt",
+      "text": "por favor mostra-me as minhas últimas transações",
+      "route": "intake"
+    },
+    {
+      "intent": "latest_transactions",
+      "lang": "pt",
+      "text": "Bom dia eu estou a ligar para saber se podiam podiam Mostrar nas transações ou lideram instalações as últimas a um uma transferência uma transferência de dinhei",
+      "route": "redirect"
+    },
+    {
+      "intent": "latest_transactions",
+      "lang": "pt",
+      "text": "eu gostaria que me mostrassem as últimas transações efetuadas na minha conta Por favor",
+      "route": "intake"
+    },
+    {
+      "intent": "latest_transactions",
+      "lang": "pt",
+      "text": "Quero ver as transações correntes",
+      "route": "intake"
+    },
+    {
+      "intent": "latest_transactions",
+      "lang": "pt",
+      "text": "Bom dia Gostaria de mostrar as minhas últimas transações acredito que exista um pagamento que não conheço e gostaria de saber de onde é que veio",
+      "route": "redirect"
+    },
+    {
+      "intent": "latest_transactions",
+      "lang": "pt",
+      "text": "queria mostrar as minhas últimas transações por favor",
+      "route": "intake"
+    },
+    {
+      "intent": "latest_transactions",
+      "lang": "pt",
+      "text": "queria mostrar as últimas transações feitas com o meu cartão por favor",
+      "route": "intake"
+    },
+    {
+      "intent": "direct_debit",
+      "lang": "pt",
+      "text": "Bom dia Olha eu queria aceder aos débitos diretos da minha conta Está a haver um problema Eu acho que tu me estão a tirar dinheiro indevidamente",
+      "route": "redirect"
+    },
+    {
+      "intent": "direct_debit",
+      "lang": "pt",
+      "text": "Olá boa tarde sábado vou ver um débito direto é",
+      "route": "intake"
+    },
+    {
+      "intent": "freeze",
+      "lang": "pt",
+      "text": "eu queria te contar todas as transações do meu cartão em casa",
+      "route": "intake"
+    },
+    {
+      "intent": "freeze",
+      "lang": "pt",
+      "text": "congelar o meu cartão a interromper todas as transações com o cartão foi roubado Então queria cancelar o cartão",
+      "route": "intake"
+    },
+    {
+      "intent": "freeze",
+      "lang": "pt",
+      "text": "estou a ligar porque queria bloquear no cartão sempre que razão é que ele foi roubado e portanto que eu bloquear porque não pudesse ser feita qualquer tipo de t",
+      "route": "intake"
+    },
+    {
+      "intent": "freeze",
+      "lang": "pt",
+      "text": "temos competições no meu cartão ou seja bloquear o cartão congelar",
+      "route": "intake"
+    },
+    {
+      "intent": "freeze",
+      "lang": "pt",
+      "text": "Boa tarde preciso de cancelar o meu cartão por favor",
+      "route": "intake"
+    },
+    {
+      "intent": "freeze",
+      "lang": "pt",
+      "text": "assim eu gostava de descongelar o meu cartão e por favor e aquele para bloquear o cartão porque foi roubado e percebo que eu desativei que é para eu não perder ",
+      "route": "intake"
+    },
+    {
+      "intent": "freeze",
+      "lang": "pt",
+      "text": "o cenário é é congelar o cartão por exemplo interromper todas as Nações do cartão ou do roubado tens que me bloqueie ao gênero",
+      "route": "intake"
+    },
+    {
+      "intent": "freeze",
+      "lang": "pt",
+      "text": "Por favor quero congelar o meu cartão",
+      "route": "intake"
+    },
+    {
+      "intent": "freeze",
+      "lang": "pt",
+      "text": "quero cancelar o meu cartão",
+      "route": "intake"
+    },
+    {
+      "intent": "freeze",
+      "lang": "pt",
+      "text": "quero congelar o meu cartão",
+      "route": "intake"
+    },
+    {
+      "intent": "freeze",
+      "lang": "pt",
+      "text": "Bom dia gostaria de cancelar o meu cartão de débito se faz favor obrigado",
+      "route": "intake"
+    },
+    {
+      "intent": "freeze",
+      "lang": "pt",
+      "text": "as minhas transações do cartão eu queria cancelar o meu cartão por favor eu quero cancelar o meu cartão por favor",
+      "route": "intake"
+    },
+    {
+      "intent": "freeze",
+      "lang": "pt",
+      "text": "interromper todas as transações do meu cartão",
+      "route": "intake"
+    },
+    {
+      "intent": "freeze",
+      "lang": "pt",
+      "text": "congelar meu cartão",
+      "route": "intake"
+    }
+  ],
+  "guard": 0.2,
+  "guard_curve": [
+    {
+      "guard": 1.0,
+      "loio_misrouted": 33,
+      "es": {
+        "missed_disputes": 9,
+        "disputes": 23,
+        "extra_questions": 9,
+        "not_disputes": 69,
+        "cost": 54
+      },
+      "pt": {
+        "missed_disputes": 7,
+        "disputes": 21,
+        "extra_questions": 15,
+        "not_disputes": 83,
+        "cost": 50
+      }
+    },
+    {
+      "guard": 0.3,
+      "loio_misrouted": 47,
+      "es": {
+        "missed_disputes": 8,
+        "disputes": 23,
+        "extra_questions": 9,
+        "not_disputes": 69,
+        "cost": 49
+      },
+      "pt": {
+        "missed_disputes": 5,
+        "disputes": 21,
+        "extra_questions": 20,
+        "not_disputes": 83,
+        "cost": 45
+      }
+    },
+    {
+      "guard": 0.2,
+      "loio_misrouted": 69,
+      "es": {
+        "missed_disputes": 3,
+        "disputes": 23,
+        "extra_questions": 17,
+        "not_disputes": 69,
+        "cost": 32
+      },
+      "pt": {
+        "missed_disputes": 4,
+        "disputes": 21,
+        "extra_questions": 24,
+        "not_disputes": 83,
+        "cost": 44
+      }
+    },
+    {
+      "guard": 0.15,
+      "loio_misrouted": 94,
+      "es": {
+        "missed_disputes": 3,
+        "disputes": 23,
+        "extra_questions": 19,
+        "not_disputes": 69,
+        "cost": 34
+      },
+      "pt": {
+        "missed_disputes": 3,
+        "disputes": 21,
+        "extra_questions": 28,
+        "not_disputes": 83,
+        "cost": 43
+      }
+    },
+    {
+      "guard": 0.1,
+      "loio_misrouted": 133,
+      "es": {
+        "missed_disputes": 2,
+        "disputes": 23,
+        "extra_questions": 23,
+        "not_disputes": 69,
+        "cost": 33
+      },
+      "pt": {
+        "missed_disputes": 3,
+        "disputes": 21,
+        "extra_questions": 33,
+        "not_disputes": 83,
+        "cost": 48
+      }
+    },
+    {
+      "guard": 0.07,
+      "loio_misrouted": 159,
+      "es": {
+        "missed_disputes": 1,
+        "disputes": 23,
+        "extra_questions": 29,
+        "not_disputes": 69,
+        "cost": 34
+      },
+      "pt": {
+        "missed_disputes": 3,
+        "disputes": 21,
+        "extra_questions": 39,
+        "not_disputes": 83,
+        "cost": 54
+      }
+    },
+    {
+      "guard": 0.05,
+      "loio_misrouted": 190,
+      "es": {
+        "missed_disputes": 1,
+        "disputes": 23,
+        "extra_questions": 33,
+        "not_disputes": 69,
+        "cost": 38
+      },
+      "pt": {
+        "missed_disputes": 3,
+        "disputes": 21,
+        "extra_questions": 40,
+        "not_disputes": 83,
+        "cost": 55
+      }
+    }
+  ]
+}

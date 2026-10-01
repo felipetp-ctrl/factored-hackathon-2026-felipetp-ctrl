@@ -33,7 +33,9 @@ from dispute_ops.ml.augment import augment
 VERSIONS = {  # version -> compositional augmentation per corpus sentence (0 = none)
     "intent-v1": 0,
     "intent-v2": 2,
+    "intent-v3": 2,  # + real out-of-scope speech (MInDS-14, ADR-030)
 }
+WITH_EXTERNAL = {"intent-v3"}
 SEED = 42
 TARGET_ACCEPTED_ACCURACY = 0.95
 POLICY_MIN_CONFIDENCE = 0.6  # policy R-HO-LOWCONF hands off below this
@@ -149,7 +151,7 @@ def choose_threshold(conf: np.ndarray, correct: np.ndarray) -> tuple[float, list
 
 
 def export(version: str, kinds: str, c: float, x: list[str], y: list[str], threshold: float, path: Path,
-           reference_conf: np.ndarray | None = None) -> dict:
+           reference_conf: np.ndarray | None = None, extra: dict | None = None) -> dict:
     vec = TfidfVectorizer(analyzer=partial(features, kinds=kinds), sublinear_tf=True, min_df=2)
     clf = LogisticRegression(C=c, max_iter=5000).fit(vec.fit_transform(x), y)
     vocab = {k: int(v) for k, v in vec.vocabulary_.items()}
@@ -158,7 +160,7 @@ def export(version: str, kinds: str, c: float, x: list[str], y: list[str], thres
         "vocabulary": vocab, "idf": [round(float(v), 6) for v in vec.idf_],
         "coef": [[round(float(v), 5) for v in row] for row in clf.coef_],
         "intercept": [round(float(v), 5) for v in clf.intercept_],
-        "trained_on": {"examples": len(x), "labels": dict(Counter(y))}, "C": c,
+        "trained_on": {"examples": len(x), "labels": dict(Counter(y))}, "C": c, **(extra or {}),
     }
     if reference_conf is not None:  # drift reference for production monitoring (PSI over 10 bins)
         spec["reference_confidence_hist"] = np.histogram(np.clip(reference_conf, 0, 1 - 1e-9), bins=10, range=(0, 1))[0].tolist()
@@ -219,6 +221,12 @@ def run(version: str = "intent-v2", with_embeddings: bool = False, tracking_uri:
     raw = C.load_corpus()
     base, dropped = C.drop_near_duplicates(raw, C.eval_messages())
     data, groups = augment(base, VERSIONS[version]) if VERSIONS[version] else (base, list(range(len(base))))
+    if version in WITH_EXTERNAL:  # spoken style for every label + real out-of-scope speech, one group per intent (ADR-030)
+        from dispute_ops.ml.augment import compound, speech_style
+        from dispute_ops.ml.external import training_rows
+        data, groups = speech_style(*compound(data, groups))
+        ext = training_rows()
+        data, groups = data + [e for e, _ in ext], groups + [g for _, g in ext]
     x, y = [e.text for e in data], [e.label for e in data]
     results = []
     for cand in candidates(with_embeddings):
@@ -239,7 +247,11 @@ def run(version: str = "intent-v2", with_embeddings: bool = False, tracking_uri:
     learned = [r for r in results if r["name"] != "keyword-baseline" and not r["name"].startswith("e5")]
     best = max(learned, key=lambda r: (round(r["macro_f1"], 4), -r["params"]["C"]))
     threshold, curve = choose_threshold(best["conf"], best["correct"])
-    spec = export(version, best["params"]["feature_kinds"], best["params"]["C"], x, y, threshold, model_path, best["conf"])
+    extra = None
+    if version in WITH_EXTERNAL:
+        from dispute_ops.ml.external import OOS_DISPUTE_GUARD
+        extra = {"oos_dispute_guard": OOS_DISPUTE_GUARD}
+    spec = export(version, best["params"]["feature_kinds"], best["params"]["C"], x, y, threshold, model_path, best["conf"], extra)
     model = IntentModel.load(model_path)
     started = time.perf_counter()
     for t in x:
@@ -296,7 +308,10 @@ def markdown(s: dict) -> str:
         f"- Corpus: {s['corpus']['examples']} messages (ES/PT), {s['corpus']['used']} used after dropping "
         f"{len(s['corpus']['dropped_near_duplicates'])} near-duplicate(s) of evaluation messages (char 3-gram Jaccard ≥ 0.6); "
         f"{s['corpus']['training_examples']} training examples after compositional augmentation "
-        f"({s['augmentation_per_sentence']} per sentence).",
+        f"({s['augmentation_per_sentence']} per sentence)"
+        + (", plus one compound copy of every reason sentence (an out-of-scope request followed by the dispute), one "
+           "spoken-style copy of every example, and 872 real out-of-scope calls from MInDS-14 (11 intents, one CV group "
+           "per intent; ADR-030)." if s["version"] in WITH_EXTERNAL else "."),
         f"- Labels: `{s['corpus']['labels']}`", "",
         "## Model selection — 5-fold stratified cross-validation on the corpus, grouped by source sentence", "",
         "| Candidate | Accuracy | Macro-F1 | ECE | CV time (s) |", "|---|---|---|---|---|",

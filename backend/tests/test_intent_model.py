@@ -27,6 +27,9 @@ class StubModel:
         self.calls += 1
         return self.prediction
 
+    confident_out_of_scope = IntentModel.confident_out_of_scope
+    oos_dispute_guard = 1.0
+
 
 def read(model, text, state="START", ask_for=()):
     return RuleNlu(["Amazon MX"], intent_model=model).interpret(text, NluContext(state=state, ask_for=list(ask_for)))
@@ -39,8 +42,8 @@ def model():
     return IntentModel.load(DEFAULT_PATH)
 
 
-def test_bundled_model_is_intent_v2_with_all_labels(model):
-    assert model.version == "intent-v2"
+def test_bundled_model_is_intent_v3_with_all_labels(model):
+    assert model.version == "intent-v3"
     assert set(model.labels) == set(LABELS)
     assert model.threshold >= 0.6  # never below the policy's hand-off floor
 
@@ -147,7 +150,7 @@ def test_rules_model_names_are_recognised_with_or_without_the_classifier():
 
 def test_rule_nlu_reports_the_classifier_reading(model):
     out = RuleNlu([], intent_model=model).interpret("me cobraron dos veces", NluContext(state="START"))
-    assert out.classifier["version"] == "intent-v2" and out.classifier["label"] == "DUPLICATE" and out.classifier["accepted"]
+    assert out.classifier["version"] == "intent-v3" and out.classifier["label"] == "DUPLICATE" and out.classifier["accepted"]
     assert RuleNlu([]).interpret("me cobraron dos veces", NluContext(state="START")).classifier is None
 
 
@@ -177,6 +180,22 @@ def test_rules_mode_turns_are_labelled_rules_and_not_counted_as_llm_calls():
     c = Container.build(Settings(session_secret="s", agent_api_key="k", nlu_mode="rules"))
     cid = c.conversations.start("es")
     r = c.conversations.send(cid, c.sessions.issue("CUST001"), "me cobraron dos veces en Netflix")
-    assert r.nlu_mode == "rules" and r.usage.model == "rules+intent-v2"
+    assert r.nlu_mode == "rules" and r.usage.model == "rules+intent-v3"
     m = TestClient(create_app(c)).get("/agent/metrics", headers={"X-Agent-Key": "k"}).json()
     assert m["llm_calls"] == 0 and m["rule_nlu_turns"] == 1 and m["intent_classifier"]["turns"] == 1
+
+
+def test_dispute_guard_keeps_a_mixed_request_in_the_intake(model):
+    """A request mixed with an unrecognised payment is not turned away (MInDS-14, ADR-030)."""
+    text = "hola me gustaría ver mis últimas transacciones porque hay un pago que no reconozco"
+    assert read(model, text).result.intent != "out_of_scope"
+    assert read(model, "hola buenos días quería saber mi saldo por favor").result.intent == "out_of_scope"
+
+
+def test_dispute_guard_rejects_an_out_of_scope_reading_with_dispute_mass():
+    stub = StubModel("OUT_OF_SCOPE", 0.7)
+    stub.prediction = Prediction("OUT_OF_SCOPE", 0.7, {"OUT_OF_SCOPE": 0.7, "FRAUD_CNP": 0.3})
+    stub.oos_dispute_guard = 0.2
+    assert not stub.confident_out_of_scope(stub.prediction)
+    stub.oos_dispute_guard = 0.35
+    assert stub.confident_out_of_scope(stub.prediction)

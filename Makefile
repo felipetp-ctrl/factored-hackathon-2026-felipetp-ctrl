@@ -5,7 +5,7 @@ MLFLOW := MLFLOW_DISABLE_AGENT_HINT=1
 .PHONY: help install test lint typecheck check api web \
         eval eval-channels uncertainty calibration figures \
         data data-proof catalog insights \
-        train fraud-audit learnability mlflow-ui
+        train external fraud-audit learnability mlflow-ui
 
 help: ## List the commands
 	@awk 'BEGIN {FS = ":.*## "} /^##@/ {printf "\n%s\n", substr($$0, 5)} /^[a-z-]+:.*## / {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -50,6 +50,8 @@ insights: ## Operating insights (docs/analysis, Insights tab)
 ##@ Machine learning
 train: ## Train the intent classifier (MLflow run)
 	cd backend && $(MLFLOW) uv run --group ml python -m dispute_ops.ml train $(ARGS)
+external: ## Real customer speech (MInDS-14): routing before/after, leave one intent out
+	cd backend && $(MLFLOW) uv run --group ml python -m dispute_ops.ml external
 fraud-audit: ## Fraud label learnability audit
 	cd backend && $(MLFLOW) uv run --group ml python -m dispute_ops.ml fraud-audit
 learnability: ## Learnability scan of nine targets

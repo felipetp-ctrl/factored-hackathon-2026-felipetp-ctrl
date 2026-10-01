@@ -1,7 +1,7 @@
 # Machine learning: corpora and reports
 
 Code lives in `backend/src/dispute_ops/ml/`; the deployed model is exported to
-`backend/src/dispute_ops/language/models/intent-v2.json`. Commands: `make train`, `make calibration`,
+`backend/src/dispute_ops/language/models/intent-v3.json` (intent-v2 kept beside it). Commands: `make train ARGS="--version intent-v3"`, `make external`, `make calibration`,
 `make fraud-audit`, `make learnability`, `make mlflow-ui`. Summary: [docs/evaluation.md](../docs/evaluation.md#machine-learning).
 
 ## `corpus/` — labelled text (team-generated or independent; no customer data)
@@ -14,10 +14,18 @@ Code lives in `backend/src/dispute_ops/ml/`; the deployed model is exported to
 | `independent-v1.annotator-haiku-discarded.tsv` | A weaker annotation discarded at κ = 0.48; kept for the record |
 | `human-review.tsv` | 90 messages labelled blind by a human reviewer |
 
+## `external/` — real customer speech
+
+| File | What it is |
+|---|---|
+| [`minds14-es-pt.tsv`](external/README.md) | MInDS-14 (PolyAI, CC BY 4.0): 1,090 es-ES/pt-PT calls to an e-banking line, with the dataset's intents and our dispute labels for three mixed intents |
+
 ## `results/` — reports (`.md` to read, `.json` with the numbers)
 
 | Report | What it answers |
 |---|---|
+| [external-minds14](results/external-minds14.md) | Real customer speech: wrong routing 31% (intent-v2) → 8% (intent-v3) on topics never trained on ([ADR-030](../docs/decisions/ADR-030-real-speech-and-intent-v3.md)) |
+| [intent-v3](results/intent-v3.md) | Model selection of the deployed classifier |
 | [intent-v1](results/intent-v1.md) · [intent-v2](results/intent-v2.md) | Model selection and held-out results; v1 lost to keywords and is kept ([ADR-019](../docs/decisions/ADR-019-learned-intent-classifier.md)) |
 | [independent-v1](results/independent-v1.md) | intent-v2 on the independent set: 94.1% vs keyword rules 45.7% |
 | [human-review](results/human-review.md) | Agreement of the labels with a blind human reviewer (κ = 0.91) |

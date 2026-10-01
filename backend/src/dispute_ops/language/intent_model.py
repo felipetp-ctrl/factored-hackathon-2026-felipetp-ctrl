@@ -18,7 +18,7 @@ from pathlib import Path
 from dispute_ops.language.keywords import _norm
 
 MODELS_DIR = Path(__file__).parent / "models"
-DEFAULT_PATH = MODELS_DIR / "intent-v2.json"
+DEFAULT_PATH = MODELS_DIR / "intent-v3.json"
 REASON_LABELS = ("FRAUD_CNP", "FRAUD_CP", "DUPLICATE", "INCORRECT_AMOUNT", "NOT_RECEIVED", "CANCELLED_RECURRING")
 LABELS = (*REASON_LABELS, "OUT_OF_SCOPE", "HUMAN", "DISPUTE_NO_REASON")
 
@@ -61,6 +61,9 @@ class IntentModel:
         self.intercept: list[float] = spec["intercept"]
         # Out-of-fold confidence histogram from training (10 bins over [0, 1]): the drift reference.
         self.reference_confidence: list[float] | None = spec.get("reference_confidence_hist")
+        # An out-of-scope reading is trusted only while the dispute labels together stay below this (intent-v3,
+        # ADR-030): a caller who mixes a request with "there is a payment I don't recognise" must not be turned away.
+        self.oos_dispute_guard: float = spec.get("oos_dispute_guard", 1.0)
 
     @classmethod
     def load(cls, path: Path = DEFAULT_PATH) -> IntentModel:
@@ -86,6 +89,10 @@ class IntentModel:
         probs = {label: e / total for label, e in zip(self.labels, exp)}
         label = max(probs, key=probs.__getitem__)
         return Prediction(label=label, probability=probs[label], probabilities=probs)
+
+    def confident_out_of_scope(self, p: Prediction) -> bool:
+        dispute_mass = 1.0 - p.probabilities.get("OUT_OF_SCOPE", 0.0) - p.probabilities.get("HUMAN", 0.0)
+        return p.label == "OUT_OF_SCOPE" and p.probability >= self.threshold and dispute_mass < self.oos_dispute_guard
 
 
 def psi(reference: list[float], observed: list[float], eps: float = 1e-4) -> float:

@@ -1,4 +1,4 @@
-"""Is intent-v2's confidence trustworthy on text it never saw? Calibration and the 0.60 threshold, checked on the
+"""Is the deployed classifier's confidence trustworthy on text it never saw? Calibration and the 0.60 threshold, checked on the
 independent set (another author, blind labels; ml/results/independent-v1.md).
 
 The threshold was chosen on out-of-fold predictions of the team-written corpus. This re-checks it out of sample:
@@ -88,16 +88,18 @@ def figure(r: dict, path: Path) -> None:
     a2.set_xlabel("confidence threshold")
     a2.set_title("Coverage against accuracy", fontsize=11)
     a2.legend(frameon=False, fontsize=9, loc="lower left")
-    fig.suptitle("intent-v2 on the independent set (another author, blind labels)", x=0.02, ha="left", fontweight="bold")
+    fig.suptitle(f"{r['model']} on the independent set (another author, blind labels)", x=0.02, ha="left", fontweight="bold")
     _save(fig, path.parent, path.name, f"n = {r['n']} messages never seen in training; model unchanged.")
 
 
 def main() -> None:
-    r = evaluate(IntentModel.load(Path(DEFAULT_PATH)), load())
+    model = IntentModel.load(Path(DEFAULT_PATH))
+    r = evaluate(model, load())
+    r["model"] = model.version
     out = ROOT / "ml/results"
     (out / "calibration.json").write_text(json.dumps(r, indent=1))
     at = next(c for c in r["curve"] if c["threshold"] == THRESHOLD)
-    lines = ["# intent-v2: calibration and threshold, out of sample", "",
+    lines = [f"# {r['model']}: calibration and threshold, out of sample", "",
              f"Independent set, n = {r['n']} (another author; labels re-checked blind, κ = 1.0; "
              "[independent-v1](independent-v1.md)). Model unchanged; script `dispute_ops.ml.calibration`.", "",
              f"- Accuracy (model alone, no rules): **{r['accuracy']:.1%}**; multi-class Brier score {r['brier']:.3f}.",

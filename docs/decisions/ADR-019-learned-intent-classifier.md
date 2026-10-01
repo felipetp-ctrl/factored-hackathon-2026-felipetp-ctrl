@@ -64,7 +64,7 @@ blind by a second Sonnet instance (κ = 1.0; a Haiku annotation was discarded at
 reasons as "no reason"); 15 near-duplicates of the corpus removed → 525 gold. Inside the fallback NLU:
 **94.1% with intent-v2 vs 45.7% with rules only** (McNemar p = 8e-69); intent-v2 alone 95.6%; ES 243/261, PT 251/264.
 Cross-author: our corpus → their set 95.6%, their set → our corpus 85.5%. Report: `ml/results/independent-v1.md`;
-model card: `docs/model_card_intent-v2.md`.
+model card: `docs/model_card_intent-v3.md` (intent-v3 replaced intent-v2 on 2026-10-01, ADR-030).
 
 ### Fine-tuned transformer
 multilingual-e5-small fine-tuned (3 epochs, one seed, no search) on the same 2,808 examples: independent set 93.0% vs
