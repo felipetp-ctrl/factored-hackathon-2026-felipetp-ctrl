@@ -15,6 +15,11 @@ MAX_SILVER_DROP = 0.01  # a run may not lose more than 1% of a table's rows agai
 MAX_USD_MISSING = 0.01  # card transactions without a USD amount: the policy thresholds are in USD
 MAX_QUARANTINE_SHARE = 0.05
 CORE_GOLD = ("card_transactions", "card_products", "customer_dim")
+# Column profile (ADR-032): a delivery whose column is suddenly emptier than the history is an upstream break (a
+# renamed field, a failed join in the source system) that row counts and contracts do not see.
+NULL_JUMP_BLOCK = 0.20  # percentage points of extra nulls in the rows this run brought, against the reference
+NULL_JUMP_WARN = 0.05
+MIN_PROFILE_ROWS = 200  # below this a share is too noisy to judge
 
 
 def gold_audit(con: duckdb.DuckDBPyConnection, staging: Path) -> dict[str, Any]:
@@ -26,6 +31,27 @@ def gold_audit(con: duckdb.DuckDBPyConnection, staging: Path) -> dict[str, Any]:
             f"FROM read_parquet('{f}')").fetchone()
         out["card_transactions"] = {"rows": total, "usd_missing": missing, "duplicate_ids": dup}
     return out
+
+
+def _profile_gates(name: str, p: dict[str, Any], previous: dict[str, Any] | None) -> list[dict[str, Any]]:
+    """Rows this run recomputed against the rows it kept; in a full rebuild, against the last published run."""
+    if p.get("run_rows", 0) < MIN_PROFILE_ROWS:
+        return []
+    if p.get("kept_rows", 0) >= MIN_PROFILE_ROWS:
+        reference, against = p["kept_null"], f"{p['kept_rows']:,} kept rows"
+    elif previous and previous.get("null_share", {}).get(name):
+        reference, against = previous["null_share"][name], f"run {previous['run_id']}"
+    else:
+        return []
+    jumps = {col: p["run_null"][col] - reference[col] for col in p["run_null"] if col in reference}
+    worst = max(jumps, key=jumps.__getitem__, default=None)
+    if worst is None:
+        return []
+    jump = jumps[worst]
+    detail = (f"worst column {worst}: {p['run_null'][worst]:.1%} null in {p['run_rows']:,} rows of this run vs "
+              f"{reference[worst]:.1%} in {against} ({jump:+.1%})")
+    return [_gate(f"{name}: column profile", "block", jump <= NULL_JUMP_BLOCK, detail),
+            _gate(f"{name}: column profile drift", "warn", jump <= NULL_JUMP_WARN, detail)]
 
 
 def _gate(gate: str, severity: str, ok: bool, detail: str) -> dict[str, Any]:
@@ -54,6 +80,7 @@ def evaluate_gates(tables: dict[str, dict], gold_rows: dict[str, int], audit: di
             drop = (before - t["silver_rows"]) / before if before else 0.0
             gates.append(_gate(f"{name}: volume", "block", drop <= MAX_SILVER_DROP,
                                f"{before:,} -> {t['silver_rows']:,} rows ({-drop:+.2%}) since run {previous['run_id']}"))
+        gates.extend(_profile_gates(name, t.get("profile") or {}, previous))
     for name in CORE_GOLD:
         if name in gold_rows:  # a gold table this run's inputs could build
             gates.append(_gate(f"gold {name}: not empty", "block", gold_rows.get(name, 0) > 0,

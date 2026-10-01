@@ -1,6 +1,6 @@
 # Data catalog
 
-Generated from `pipeline/contracts.py` and the last published run (`20261001T015611-adc025`).
+Generated from `pipeline/contracts.py` and the last published run (`20261001T034257-6618d1`).
 
 Owner: dispute operations data (hackathon team) · Refresh: daily batch after each `process_date` closes · Freshness SLA: newest partition at most 2 days behind · Publication: write-audit-publish with quality gates (row conservation, volume drop ≤ 1%, USD amount missing ≤ 1%, quarantine ≤ 5% as a warning) · Lineage: [ADR-012](decisions/ADR-012-data-pipeline.md), [ADR-028](decisions/ADR-028-incremental-silver-and-gates.md)
 

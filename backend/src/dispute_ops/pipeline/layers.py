@@ -73,6 +73,9 @@ class TableReport:
     distinct_keys: int = 0
     mode: str = ""
     skipped: str | None = None
+    # Column profile (ADR-032): null share of every contracted column in the rows this run recomputed, the rows it
+    # kept, and the whole table; the gates compare the first with the second (or with the last published run).
+    profile: dict[str, Any] = field(default_factory=dict)
 
 
 # ---------------------------------------------------------------------------------------------- bronze
@@ -247,6 +250,7 @@ def run_silver(con: duckdb.DuckDBPyConnection, c: Contract, paths: Paths, report
                        f"FROM (SELECT {tkey} FROM _bronze) k").fetchone()
     report.pk_null_rows, report.distinct_keys = keys[0], keys[1]
     report.duplicate_rows_removed = report.bronze_rows_total - report.pk_null_rows - report.distinct_keys
+    report.profile = _profile(con, c, pk_cols)
     for col, spec in c.columns.items():
         if spec.required and col not in c.fks:  # a dangling optional FK is reported once, as a nulled FK
             n = con.execute(f"SELECT count(*) FROM _final WHERE {_q(col)} IS NULL").fetchone()[0]
@@ -269,6 +273,22 @@ def run_silver(con: duckdb.DuckDBPyConnection, c: Contract, paths: Paths, report
             n = con.execute(f"SELECT count(*) FROM _final WHERE {' OR '.join(conds)}").fetchone()[0]
             if n:
                 report.range_violations[col] = n
+
+
+def _profile(con: duckdb.DuckDBPyConnection, c: Contract, pk_cols: str) -> dict[str, Any]:
+    cols = list(c.columns)
+    counts = ", ".join(f"count({_q(col)})" for col in cols)
+    in_run = f"({pk_cols}) IN (SELECT {pk_cols} FROM {_aff(c.name)})"
+
+    def shares(where: str) -> tuple[int, dict[str, float]]:
+        row = con.execute(f"SELECT count(*), {counts} FROM _final WHERE {where}").fetchone()
+        return row[0], ({col: round(1 - n / row[0], 4) for col, n in zip(cols, row[1:])} if row[0] else {})
+
+    run_rows, run_null = shares(in_run)
+    kept_rows, kept_null = shares(f"NOT {in_run}")
+    all_rows, all_null = shares("TRUE")
+    return {"run_rows": run_rows, "run_null": run_null, "kept_rows": kept_rows, "kept_null": kept_null,
+            "null": all_null}
 
 
 # ---------------------------------------------------------------------------------------------- gold
@@ -402,6 +422,7 @@ def run_pipeline(raw: Path, out: Path, as_of: datetime, tables: list[str] | None
     with history.open("a") as fh:
         fh.write(json.dumps({"run_id": run_id, "status": status, "mode": manifest["mode"], "as_of": manifest["as_of"],
                              "silver_rows": {k: v.silver_rows for k, v in reports.items() if not v.skipped},
+                             "null_share": {k: v.profile.get("null", {}) for k, v in reports.items() if not v.skipped},
                              "gold_rows": gold, "seconds": timings,
                              "gates_failed": [g["gate"] for g in gates if g["status"] == "fail"]}) + "\n")
     return manifest

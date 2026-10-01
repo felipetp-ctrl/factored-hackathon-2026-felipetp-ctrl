@@ -303,3 +303,39 @@ def test_operating_insights_from_committed_results():
     b = business_sensitivity()
     assert b["bars"][0]["assumption"].startswith("back-office")  # the widest bar is the unmeasured assumption
     assert all(min(x["low"], x["high"]) <= b["base_saving"] <= max(x["low"], x["high"]) for x in b["bars"])
+
+
+def test_a_delivery_with_an_emptied_column_is_blocked(raw, tmp_path, monkeypatch):
+    """A new day whose merchant names are all missing: row counts and contracts pass, the column profile does not."""
+    from dispute_ops.pipeline import gates
+    monkeypatch.setattr(gates, "MIN_PROFILE_ROWS", 1)
+    out = tmp_path / "out"
+    run_pipeline(raw, out, AS_OF)
+    gold_before = {p.name: p.read_bytes() for p in (out / "gold").glob("*.parquet")}
+    src = next((raw / "transactions").rglob("*.csv"))
+    header, *rows = src.read_text().splitlines()
+    cols = header.split(",")
+    new = []
+    for i, line in enumerate(rows):
+        v = line.split(",")
+        if len(v) != len(cols):  # the fixture has malformed lines on purpose
+            continue
+        v[cols.index("transaction_id")] = f"TX-NEW-{i}"
+        v[cols.index("merchant_name")] = ""
+        new.append(",".join(v))
+    day = raw / "transactions/year=2026/month=06/day=17"
+    day.mkdir(parents=True)
+    (day / "transactions_20260617.csv").write_text("\n".join([header, *new]) + "\n")
+    m = run_pipeline(raw, out, AS_OF)
+    failed = {g["gate"]: g["detail"] for g in m["gates"] if g["status"] == "fail" and g["severity"] == "block"}
+    assert m["status"] == "blocked" and "transactions: column profile" in failed
+    assert "merchant_name" in failed["transactions: column profile"]
+    assert {p.name: p.read_bytes() for p in (out / "gold").glob("*.parquet")} == gold_before
+
+
+def test_an_ordinary_delivery_passes_the_column_profile(raw, tmp_path, monkeypatch):
+    from dispute_ops.pipeline import gates
+    monkeypatch.setattr(gates, "MIN_PROFILE_ROWS", 1)
+    m = run_pipeline(raw, tmp_path / "out", AS_OF)
+    assert m["status"] == "published"
+    assert all(g["status"] == "pass" for g in m["gates"] if g["gate"].endswith("column profile"))
