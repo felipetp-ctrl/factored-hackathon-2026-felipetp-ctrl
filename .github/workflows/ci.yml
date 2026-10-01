@@ -14,6 +14,8 @@ jobs:
       - run: uv sync --frozen
       - run: uvx ruff check --select F,E9 src tests
       - run: uv run pytest -q   # offline: live-LLM tests are skipped without RUN_LIVE_LLM
+      - name: data pipeline on the labelled fixture (write-audit-publish must publish)
+        run: uv run python -m dispute_ops.pipeline --raw tests/fixtures/raw_mini --out /tmp/pipeline-out --report /tmp/quality.md --demo-customers 5
   frontend:
     runs-on: ubuntu-latest
     defaults:

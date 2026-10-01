@@ -1,4 +1,6 @@
 # ADR-012 — Data pipeline: SQL contracts in DuckDB, incremental ingestion, recomputed silver
+> Extended by [ADR-028](ADR-028-incremental-silver-and-gates.md): silver is now recomputed per touched key (proven equal to a rebuild), and gold is published only after quality gates.
+
 - **Status:** accepted · **Date:** 2026-09-26 · supersedes the Pandera part of ADR-006
 
 ## Context

@@ -1,6 +1,6 @@
-# Data quality report — run `20260929T085224-e808a9`
+# Data quality report — run `20261001T015611-adc025`
 
-As of 2026-06-17T12:00:00+00:00 · contracts dictionary-v1.0.0/contracts-v1
+As of 2026-06-17T12:00:00+00:00 · contracts dictionary-v1.0.0/contracts-v1 · **published** (full run; write-audit-publish, ADR-028)
 
 | Table | new files | bronze rows | rejected lines | duplicates removed | silver rows | quarantined | identity conflicts | nulled FKs |
 |---|---|---|---|---|---|---|---|---|
@@ -30,6 +30,55 @@ Policy: daily batch; the newest partition may lag the run by at most 2 days (ADR
 | transactions | 2026-06-17 | 0 | fresh | 0 |
 | complaints | 2026-06-17 | 0 | fresh | 0 |
 | call_center_interactions | 2026-06-17 | 0 | fresh | 0 |
+
+## Quality gates
+
+Gold is staged, audited, then published; a failed **block** gate keeps the previous gold.
+
+| Gate | Severity | Result | Detail |
+|---|---|---|---|
+| branches: row conservation | block | ✅ pass | bronze 350 = no key 0 + superseded 0 + silver 350 + quarantined 0 |
+| branches: quarantine share | warn | ✅ pass | 0.00% of keys quarantined (limit 5%) |
+| branches: volume | block | ✅ pass | 350 -> 350 rows (-0.00%) since run 20261001T015547-9294f2 |
+| customers: row conservation | block | ✅ pass | bronze 150,000 = no key 0 + superseded 0 + silver 150,000 + quarantined 0 |
+| customers: quarantine share | warn | ✅ pass | 0.00% of keys quarantined (limit 5%) |
+| customers: volume | block | ✅ pass | 150,000 -> 150,000 rows (-0.00%) since run 20261001T015547-9294f2 |
+| products: row conservation | block | ✅ pass | bronze 400,000 = no key 0 + superseded 0 + silver 400,000 + quarantined 0 |
+| products: quarantine share | warn | ✅ pass | 0.00% of keys quarantined (limit 5%) |
+| products: volume | block | ✅ pass | 400,000 -> 400,000 rows (-0.00%) since run 20261001T015547-9294f2 |
+| transactions: row conservation | block | ✅ pass | bronze 4,425,008 = no key 0 + superseded 0 + silver 4,425,008 + quarantined 0 |
+| transactions: quarantine share | warn | ✅ pass | 0.00% of keys quarantined (limit 5%) |
+| transactions: volume | block | ✅ pass | 4,425,008 -> 4,425,008 rows (-0.00%) since run 20261001T015547-9294f2 |
+| complaints: row conservation | block | ✅ pass | bronze 67,095 = no key 0 + superseded 0 + silver 67,095 + quarantined 0 |
+| complaints: quarantine share | warn | ✅ pass | 0.00% of keys quarantined (limit 5%) |
+| complaints: volume | block | ✅ pass | 67,095 -> 67,095 rows (-0.00%) since run 20261001T015547-9294f2 |
+| call_center_interactions: row conservation | block | ✅ pass | bronze 686,296 = no key 0 + superseded 0 + silver 686,296 + quarantined 0 |
+| call_center_interactions: quarantine share | warn | ✅ pass | 0.00% of keys quarantined (limit 5%) |
+| call_center_interactions: volume | block | ✅ pass | 686,296 -> 686,296 rows (-0.00%) since run 20261001T015547-9294f2 |
+| daily_exchange_rates: row conservation | block | ✅ pass | bronze 13,164 = no key 0 + superseded 0 + silver 13,164 + quarantined 0 |
+| daily_exchange_rates: quarantine share | warn | ✅ pass | 0.00% of keys quarantined (limit 5%) |
+| daily_exchange_rates: volume | block | ✅ pass | 13,164 -> 13,164 rows (-0.00%) since run 20261001T015547-9294f2 |
+| gold card_transactions: not empty | block | ✅ pass | 1,547,432 rows |
+| gold card_products: not empty | block | ✅ pass | 140,040 rows |
+| gold customer_dim: not empty | block | ✅ pass | 150,000 rows |
+| gold card_transactions: USD amount present | block | ✅ pass | 13 of 1,547,432 without amount_usd (0.00%) |
+| gold card_transactions: unique ids | block | ✅ pass | 0 duplicate ids |
+| transactions: freshness | warn | ✅ pass | newest 2026-06-17, lag 0 days |
+| complaints: freshness | warn | ✅ pass | newest 2026-06-17, lag 0 days |
+| call_center_interactions: freshness | warn | ✅ pass | newest 2026-06-17, lag 0 days |
+
+## Run
+
+| Step | Mode | Seconds |
+|---|---|---|
+| branches | full | 0.01 |
+| customers | full | 0.58 |
+| products | full | 0.46 |
+| transactions | full | 4.82 |
+| complaints | full | 0.38 |
+| call_center_interactions | full | 0.88 |
+| daily_exchange_rates | full | 0.03 |
+| gold | - | 0.48 |
 
 ## Gold
 

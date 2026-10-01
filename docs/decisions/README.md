@@ -31,3 +31,4 @@ Every significant decision in the project, with the alternatives considered and 
 | [025](ADR-025-channels-evaluation.md) | channels-v1: held-out evaluation of written complaints and fraud-alert answers | accepted |
 | [026](ADR-026-judging-spend-caps.md) | Spend caps for the judging window: durable ledger shared by the demo and evaluation runs; all-sources, per-source, daily and per-workspace caps | accepted |
 | [027](ADR-027-explicit-human-request.md) | An explicit request for a person outranks the model's reading (found by the hard-v1 API run) | accepted |
+| [028](ADR-028-incremental-silver-and-gates.md) | Incremental silver proven equal to a rebuild; quality gates before publishing gold; generated catalog | accepted |

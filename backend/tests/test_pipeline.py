@@ -189,3 +189,104 @@ def test_freshness_is_reported_per_fact_table(raw, tmp_path):
     f = run_pipeline(raw, tmp_path / "out", AS_OF)["freshness"]
     assert f["transactions"]["status"] in ("fresh", "stale") and f["transactions"]["lag_days"] is not None
     assert "late_rows" in f["transactions"]
+
+
+# ---- ADR-028: incremental silver, quality gates, write-audit-publish ------------------------------------------------
+
+CUST_C = ("CLI-C,D3,CURP,Carla,Ruiz,1985-02-02,F,,,,,CDMX,CDMX,Mexico,,mexican,Basic,650,15000,,,,2024-01-01 10:00:00,"
+          "SUC-1,Active,2026-06-10 00:00:00,True")
+
+
+def _snapshot(out):
+    """Every silver and quarantine table, as a set of rows."""
+    files = sorted(p.relative_to(out / "silver") for p in (out / "silver").rglob("*.parquet"))
+    return {str(f): sorted(map(repr, duckdb.sql(f"SELECT COLUMNS(*)::VARCHAR FROM read_parquet('{out / 'silver' / f}')").fetchall()))
+            for f in files}
+
+
+def _deliver_2(raw):
+    late = raw / "transactions/year=2026/month=06/day=15"
+    late.mkdir(parents=True)
+    (late / "transactions_20260615.csv").write_text(
+        TXN_HEADER + "\n"
+        "TX-1,2026-06-16 10:00:00,2026-06-18,PRD-A1,CLI-A,Purchase,Other,1250.0,MXN,68.5,POS,,Amazon MX,Other,Mexico,CDMX,Reversed,00,False,12.0,19.4,-99.1\n"
+        "TX-6,2026-06-15 09:00:00,2026-06-15,PRD-A1,CLI-A,Purchase,Other,99.0,MXN,5.4,POS,,Oxxo,Food,Mexico,CDMX,Approved,00,False,2.0,19.4,-99.1\n"
+        "TX-8,2026-06-15 11:00:00,2026-06-15,PRD-C1,CLI-C,Purchase,Other,40.0,USD,40.0,Online,,Netflix,Entertainment,Mexico,CDMX,Approved,00,False,3.0,19.4,-99.1\n"
+    )
+    header = (raw / "complaints/year=2026/month=06/day=16/complaints_20260616.csv").read_text().splitlines()
+    day17 = raw / "complaints/year=2026/month=06/day=17"
+    day17.mkdir(parents=True)
+    row = header[1].replace("Q-1,", "Q-9,", 1).replace("2026-06-16 13:00:00,2026-06-16,CLI-A", "2026-06-17 09:00:00,2026-06-17,CLI-B").replace("PRD-A1", "PRD-C1")
+    (day17 / "complaints_20260617.csv").write_text(header[0] + "\n" + row + "\n")
+
+
+def _deliver_3(raw):
+    # The parents of TX-8 and Q-9 arrive late; PRD-A1 is re-delivered with another owner (identity conflict).
+    with open(raw / "customers.csv", "a") as f:
+        f.write(CUST_C + "\n")
+    with open(raw / "products.csv", "a") as f:
+        f.write("PRD-C1,CLI-C,Credit Card,7000,USD,0,1000,30,2026-01-01,,SUC-1,Active,App,True,0,,2026-06-10 00:00:00\n")
+        f.write("PRD-A1,CLI-B,Credit Card,4000,MXN,100.0,5000,40,2022-01-01,,SUC-1,Active,App,True,0,,2026-06-20 00:00:00\n")
+
+
+def test_incremental_silver_equals_a_full_rebuild_of_the_same_bronze(raw, tmp_path):
+    out = tmp_path / "out"
+    run_pipeline(raw, out, AS_OF)
+    _deliver_2(raw)
+    m2 = run_pipeline(raw, out, AS_OF)["tables"]
+    assert m2["transactions"]["mode"].startswith("incremental") and m2["transactions"]["orphans_quarantined"]["customer_id"] == 2
+    _deliver_3(raw)
+    m3 = run_pipeline(raw, out, AS_OF)
+    tx = dict(q(out / "silver/transactions.parquet", "SELECT transaction_id, product_id FROM T"))
+    assert "TX-8" in tx                                  # its parents arrived: recomputed through the FK
+    assert not any(p == "PRD-A1" for p in tx.values())   # its card changed owner: card and its charges quarantined
+    assert q(out / "silver/complaints.parquet", "SELECT affected_product_id FROM T WHERE complaint_id='Q-9'") == [("PRD-C1",)]
+    assert m3["tables"]["products"]["immutable_conflicts"] == {"customer_id": 1}
+    incremental = _snapshot(out)
+    full = run_pipeline(raw, out, AS_OF, full=True)
+    assert all(t["mode"] == "full" for t in full["tables"].values() if not t["skipped"])
+    assert _snapshot(out) == incremental
+
+
+def test_a_run_without_new_files_recomputes_nothing(raw, tmp_path):
+    out = tmp_path / "out"
+    run_pipeline(raw, out, AS_OF)
+    before = _snapshot(out)
+    m = run_pipeline(raw, out, AS_OF)
+    assert m["tables"]["transactions"]["mode"] == "incremental (0 keys recomputed)" and _snapshot(out) == before
+
+
+def test_rows_are_conserved_and_the_run_is_published(raw, tmp_path):
+    m = run_pipeline(raw, tmp_path / "out", AS_OF)
+    assert m["status"] == "published"
+    conservation = [g for g in m["gates"] if g["gate"].endswith("row conservation")]
+    assert conservation and all(g["status"] == "pass" for g in conservation)
+    history = (tmp_path / "out/_state/runs.jsonl").read_text().splitlines()
+    assert len(history) == 1 and '"status": "published"' in history[0]
+
+
+def test_a_failing_gate_keeps_the_previous_gold(raw, tmp_path):
+    out = tmp_path / "out"
+    run_pipeline(raw, out, AS_OF)
+    gold_before = {p.name: p.read_bytes() for p in (out / "gold").glob("*.parquet")}
+    # A re-delivery that hands every card to another customer: all products are quarantined, silver loses them.
+    lines = (raw / "products.csv").read_text().splitlines()
+    moved = [lines[0]] + [ln.replace(",CLI-A,", ",CLI-X,").replace(",CLI-B,", ",CLI-A,").replace(",CLI-X,", ",CLI-B,")
+                          .rsplit(",", 1)[0] + ",2026-06-30 00:00:00" for ln in lines[1:]]
+    (raw / "products.csv").write_text("\n".join(lines + moved[1:]) + "\n")
+    m = run_pipeline(raw, out, AS_OF)
+    assert m["status"] == "blocked"
+    failed = {g["gate"] for g in m["gates"] if g["status"] == "fail" and g["severity"] == "block"}
+    assert "products: volume" in failed
+    assert {p.name: p.read_bytes() for p in (out / "gold").glob("*.parquet")} == gold_before
+    assert not (out / "gold.__staging__").exists()
+
+
+def test_catalog_documents_every_contract_column(raw, tmp_path):
+    from dispute_ops.pipeline.catalog import render
+
+    text = render(run_pipeline(raw, tmp_path / "out", AS_OF))
+    for c in CONTRACTS.values():
+        assert f"### `{c.name}`" in text
+        assert all(f"| `{col}` |" in text for col in c.columns)
+    assert "orphan quarantined" in text and "`card_transactions`" in text
