@@ -22,7 +22,7 @@ Status: ✅ met · 🟡 partial (gap stated) · ⬜ not yet.
 | Contact reasons | ✅ | Call-center reasons, FCR and handle time; complaint categories ([problem_analysis §1–2](problem_analysis.md)) |
 | Demand patterns | ✅ | 377 disputes/month, flat 2023–2026 (figure in problem_analysis); channel mix; every pattern tested before it is used — weekday effect real (χ² p < 0.001), hours flat, no trend, channel mix stable, same dispute rate in every country and segment ([operating insights](analysis/operating-insights.md)); fraud-alert capacity curve; product funnel from the API run; business-case sensitivity; shown to the bank in the app's **Insights** tab |
 | Data quality | ✅ | [data_quality_report.md](data_quality_report.md) + defects found: USD amounts missing for Mexico, foreign product references, orphan branches, no duplicates (verified by id and by full content, [ADR-012 addendum](decisions/ADR-012-data-pipeline.md)); tables left out and why (same ADR) |
-| Operational constraints | ✅ | 69.5% backlog, 37 h first response, 20% SLA breaches, intake gaps; PQR backtest (84% not matchable, figure) |
+| Operational constraints | ✅ | 37 h first response, 15-day resolution, 20% SLA breaches, intake gaps; the status field's "69.5% open" tested and rejected as a backlog (insight 7); PQR backtest (84% not matchable, figure) |
 | Prioritise the workflow with this evidence | ✅ | [ADR-001](decisions/ADR-001-workflow.md), problem_analysis |
 | Intended customer and business outcomes | ✅ | problem_analysis §3–4: projection labelled as such, now at the conservative hard-v1 automation share (63%), with a cost-versus-automation figure |
 

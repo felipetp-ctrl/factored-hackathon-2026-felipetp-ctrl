@@ -129,16 +129,16 @@ recalibrated instead ([ADR-020](docs/decisions/ADR-020-fraud-label-audit.md)); a
 ([ADR-021](docs/decisions/ADR-021-learnability-scan.md)). MLflow registry, model card, CI regression gate and drift
 monitoring: [docs/evaluation.md](docs/evaluation.md#machine-learning).
 
-**The problem in data.** About 380 unrecognised-charge complaints a month, 70% still open, 15 days to resolve, and a
+**The problem in data.** About 380 unrecognised-charge complaints a month, 37 hours to a first answer, 15 days to resolve, and a
 written complaint identifies the charge only 15.8% of the time ([problem analysis](docs/problem_analysis.md)).
 
-**Operating insights, tested.** Disputes follow the working week (χ² p < 0.001) but not the hour; volume and channel mix are flat; every country and segment disputes at the same rate (p = 0.91 / 0.71), so no group needs its own rule; 45% of labelled fraud has no usable score, so the fraud-alert lever is coverage, not the threshold; conversations are lost at finding the charge, not at reading the reason; the projected saving depends most on unmeasured back-office time. Each comes with the decision it changes ([operating insights](docs/analysis/operating-insights.md)) and is in the app's **Insights** tab.
+**Operating insights, tested.** Disputes follow the working week (χ² p < 0.001) but not the hour; volume and channel mix are flat; every country and segment disputes at the same rate (p = 0.91 / 0.71), so no group needs its own rule; 45% of labelled fraud has no usable score, so the fraud-alert lever is coverage, not the threshold; conversations are lost at finding the charge, not at reading the reason; the projected saving depends most on unmeasured back-office time; and the complaint status is a label, not a lifecycle (a two-year-old complaint is as "open" as last month's), so the "70% open" backlog this project first cited does not exist. Each comes with the decision it changes ([operating insights](docs/analysis/operating-insights.md)) and is in the app's **Insights** tab.
 
 ## Decisions at a glance
 
 | Decision | Why | Trade-off | ADR |
 |---|---|---|---|
-| One workflow: card-charge disputes | 20% of complaints, 70% open, 15 days to resolve; the intake is where it breaks | No other workflows | [001](docs/decisions/ADR-001-workflow.md) |
+| One workflow: card-charge disputes | 20% of complaints, 37 h to a first answer, 15 days to resolve; the intake is where it breaks | No other workflows | [001](docs/decisions/ADR-001-workflow.md) |
 | The model reads, code decides | Permissions and policy outside model prose; write tools never reachable by the model | Fewer phrasings handled than a free agent | [004](docs/decisions/ADR-004-hybrid-orchestration.md), [010](docs/decisions/ADR-010-llm-interprets-templates-speak.md) |
 | Versioned YAML policy with rule ids | Every decision explainable by a rule, not by model reasoning | Rules must be maintained | [008](docs/decisions/ADR-008-policy-order.md), [013](docs/decisions/ADR-013-policy-v2-calibration.md) |
 | Free fallback reader with a trained classifier | Works when the model is down or over budget, US$ 0 | Understands less than Claude | [017](docs/decisions/ADR-017-rule-fallback-nlu.md), [019](docs/decisions/ADR-019-learned-intent-classifier.md) |

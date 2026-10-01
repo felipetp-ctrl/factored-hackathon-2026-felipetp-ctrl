@@ -61,6 +61,45 @@ def weekday_and_trend(silver: Path) -> dict:
     }
 
 
+OPEN_STATUSES = ("Open", "In Process", "Escalated")
+AGE_BUCKETS = [(0, 30, "< 1 month"), (30, 90, "1–3 months"), (90, 365, "3–12 months"), (365, 730, "1–2 years"),
+               (730, 10_000, "> 2 years")]
+
+
+def status_lifecycle(silver: Path) -> dict:
+    """Does the 'open' status behave like a backlog? In a real queue the share still open falls with age."""
+    f = f"'{silver}/complaints.parquet'"
+    snapshot = _q(f"SELECT max(creation_date) FROM {f}")[0][0]
+    rows = _q(f"""SELECT date_diff('day', creation_date, TIMESTAMP '{snapshot}') AS age,
+                         status IN {OPEN_STATUSES} AS open, resolution_days
+                  FROM {f} WHERE category = 'Transactions'""")
+    durations = sorted(d for _, _, d in rows if d is not None)
+
+    def still_open(age: int) -> float:  # share of the recorded resolution times longer than this age
+        return sum(d > age for d in durations) / len(durations)
+
+    buckets = []
+    for lo, hi, label in AGE_BUCKETS:
+        ages = [a for a, _, _ in rows if lo <= a < hi]
+        part = [o for a, o, _ in rows if lo <= a < hi]
+        k, n = sum(part), len(part)
+        implied = sum(still_open(a) for a in ages) / n
+        buckets.append({"age": label, "n": n, "open": k, "share": k / n, "ci": wilson(k, n), "implied": implied})
+    table = [[b["open"], b["n"] - b["open"]] for b in buckets]
+    chi = stats.chi2_contingency(table)
+    # Trend: change in the probability of being open per year of age (linear probability model, slope and 95% CI).
+    trend = stats.linregress([a / 365 for a, _, _ in rows], [1.0 if o else 0.0 for _, o, _ in rows])
+    resolved = [(a, d) for a, _, d in rows if d is not None]
+    rho = stats.spearmanr([a for a, _ in resolved], [d for _, d in resolved])
+    k_all, n_all = sum(o for _, o, _ in rows), len(rows)
+    return {"snapshot": str(snapshot)[:10], "buckets": buckets, "chi2": round(chi.statistic, 1), "p": chi.pvalue,
+            "dof": chi.dof, "open_share": k_all / n_all, "n": n_all,
+            "trend_per_year": trend.slope, "trend_ci": [trend.slope - 1.96 * trend.stderr, trend.slope + 1.96 * trend.stderr],
+            "trend_p": trend.pvalue,
+            "resolution_age_rho": round(rho.statistic, 3), "resolution_age_p": rho.pvalue,
+            "resolution_days_median": float(sorted(d for _, d in resolved)[len(resolved) // 2])}
+
+
 def rates_by_group(gold: Path) -> dict:
     out = {}
     for col in ("country", "segment"):
@@ -202,6 +241,26 @@ def fig_funnel(p: dict, out: Path) -> None:
           f"Median {p['turns_median']} customer messages to a case.")
 
 
+def fig_lifecycle(s: dict, out: Path) -> None:
+    fig, ax = plt.subplots(figsize=(7.2, 3.4))
+    labels = [b["age"] for b in s["buckets"]]
+    shares = [b["share"] for b in s["buckets"]]
+    err = [[b["share"] - b["ci"][0] for b in s["buckets"]], [b["ci"][1] - b["share"] for b in s["buckets"]]]
+    ax.bar(labels, shares, color=GRAY, yerr=err, capsize=3, ecolor=MUTED)
+    implied = [b["implied"] for b in s["buckets"]]
+    ax.plot(labels, implied, color=PURPLE, marker="o", lw=1.5,
+            label="still open if cases took the resolution times the data records")
+    for i, v in enumerate(shares):
+        ax.text(i + 0.22, v + 0.03, f"{v:.0%}", ha="center", color=INK, fontsize=9)
+    ax.set_ylim(0, 1.05)
+    ax.set_ylabel("share still open")
+    ax.set_xlabel("age of the complaint at the data snapshot")
+    ax.legend(frameon=False, fontsize=8, loc="upper right")
+    ax.set_title("'Open' does not age: a 2-year-old dispute is as open as last month's", fontsize=11, loc="left")
+    _save(fig, out, "status_does_not_age.png",
+          f"Card-charge complaints, n = {s['n']:,}; trend {s['trend_per_year']:+.1%} per year of age (p {_p(s['trend_p'])}). Bars: 95% intervals.")
+
+
 def fig_tornado(b: dict, out: Path) -> None:
     fig, ax = plt.subplots(figsize=(9.6, 3.2))
     base = b["base_saving"]
@@ -228,7 +287,7 @@ def _p(p: float) -> str:
     return "< 0.001" if p < 0.001 else f"{p:.2f}"
 
 
-def render(w: dict, r: dict, f: dict, p: dict, b: dict) -> str:
+def render(w: dict, r: dict, f: dict, p: dict, b: dict, s: dict) -> str:
     cur = f["at_current"]
     lines = [
         "# Operating insights — what is real, what is noise, what it changes", "",
@@ -242,7 +301,13 @@ def render(w: dict, r: dict, f: dict, p: dict, b: dict) -> str:
         f"| 4 | **The fraud-alert threshold is not the lever; coverage is.** {f['fraud_without_score']:,} of {f['fraud']:,} labelled frauds ({f['fraud_without_score'] / f['fraud']:.0%}) have no usable score ({f['fraud_null_score']} null, the rest below 30 among {f['legit_below_30']:,} legitimate transactions), so no workable threshold alerts on them. At the current threshold ({f['current']}) the bank sends {cur['alerts_per_day']} alerts a day at {cur['precision']:.0%} precision and catches {cur['recall']:.0%} of fraud; the best any threshold does at ≥ 50% precision is {f['max_recall_at_half_precision']:.0%}. | approved card transactions over {f['days']:,} days ([figure](../figures/fraud_threshold_capacity.png)) | The alert channel costs almost no agent time; the next investment is scoring the unscored transactions, and the customer-initiated dispute path remains the safety net for the other half |",
         f"| 5 | **The service loses conversations at the charge, not at the reason.** Of {p['steps'][0][1]} conversations that should end in a case, {p['steps'][1][1]} found the right charge from vague memory, {p['steps'][2][1]} opened and verified a case, {p['steps'][3][1]} were fully right. A case takes a median of {p['turns_median']} customer messages ({p['turns_range'][0]}–{p['turns_range'][1]}). | hard-v1 on the real API ([figure](../figures/product_funnel.png)) | Improve charge search (amount and date tolerance, merchant aliases) before the reader; a registered case in about four messages replaces a 37-hour wait for a first answer |",
         f"| 6 | **The business case depends most on back-office time, which nobody has measured.** Base projection ≈ US$ {b['base_saving']:,} a year at the observed volume. | one-at-a-time sensitivity ([figure](../figures/saving_sensitivity.png)); automation share {b['automation_share']:.0%} (95% interval {b['automation_ci'][0]:.0%}–{b['automation_ci'][1]:.0%}, hard-v1 API, n = {b['n']}) | Measure the back-office minutes per case in the pilot before promising savings |",
+        f"| 7 | **The complaint status is a label, not a lifecycle: the '{s['open_share']:.0%} still open' backlog does not exist.** A complaint older than two years is as likely to be open ({s['buckets'][-1]['share']:.0%}) as one from the last month ({s['buckets'][0]['share']:.0%}); the resolution times recorded on the same complaints (median {s['resolution_days_median']:.0f} days) imply that {s['buckets'][0]['implied']:.0%} of last month's and {s['buckets'][-1]['implied']:.0%} of the two-year-old ones would still be open. Resolution time does not depend on age either. | change in the open share per year of age {s['trend_per_year']:+.1%} (95% CI {s['trend_ci'][0]:+.1%} to {s['trend_ci'][1]:+.1%}, p {_p(s['trend_p'])}); age buckets χ² = {s['chi2']} ({s['dof']} df, p {_p(s['p'])}: small differences, no decline); resolution days vs age Spearman ρ = {s['resolution_age_rho']} ([figure](../figures/status_does_not_age.png)) | The status field cannot measure the backlog or the service level; this project stopped citing it as one. The case system records its own lifecycle (opened, verified, handed off, resolved, with timestamps in the audit log), which is what a pilot should measure |",
         "", "## Details", "",
+        "### Complaint status by age", "",
+        f"Snapshot {s['snapshot']}, card-charge complaints. Open = {', '.join(OPEN_STATUSES)}.", "",
+        "| Age at snapshot | Complaints | Still open | Share (95% interval) | Implied by the recorded resolution times |", "|---|---|---|---|---|",
+        *[f"| {x['age']} | {x['n']:,} | {x['open']:,} | {x['share']:.1%} ({x['ci'][0]:.1%}–{x['ci'][1]:.1%}) | {x['implied']:.1%} |" for x in s["buckets"]], "",
+        "![Status does not age](../figures/status_does_not_age.png)", "",
         "### Dispute rate by group", "",
         "| Group | Customers | Disputes | Per 1,000 | 95% interval |", "|---|---|---|---|---|",
     ]
@@ -265,7 +330,7 @@ def render(w: dict, r: dict, f: dict, p: dict, b: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
-def app_json(w: dict, r: dict, f: dict, p: dict, b: dict) -> dict:
+def app_json(w: dict, r: dict, f: dict, p: dict, b: dict, s: dict) -> dict:
     """The few numbers the bank's Insights tab shows (frontend/lib/insights.json)."""
     cur = f["at_current"]
     return {
@@ -277,6 +342,7 @@ def app_json(w: dict, r: dict, f: dict, p: dict, b: dict) -> dict:
                   "alerts_per_day": cur["alerts_per_day"], "precision": cur["precision"], "recall": cur["recall"],
                   "threshold": f["current"], "max_recall": f["max_recall_at_half_precision"]},
         "funnel": {"steps": [{"label": s, "n": n} for s, n in p["steps"]], "turns_median": p["turns_median"]},
+        "status": {"buckets": [{"age": x["age"], "share": round(x["share"], 3)} for x in s["buckets"]], "p": s["p"]},
         "saving": {"base": b["base_saving"], "top_driver": b["bars"][0]["assumption"],
                    "range": [min(b["bars"][0]["low"], b["bars"][0]["high"]), max(b["bars"][0]["low"], b["bars"][0]["high"])]},
     }
@@ -285,14 +351,15 @@ def app_json(w: dict, r: dict, f: dict, p: dict, b: dict) -> dict:
 def main() -> None:
     silver, gold, figs = ROOT / "data" / "silver", ROOT / "data" / "gold", ROOT / "docs" / "figures"
     w, r, f = weekday_and_trend(silver), rates_by_group(gold), fraud_threshold(gold)
-    p, b = product_funnel(), business_sensitivity()
+    p, b, s = product_funnel(), business_sensitivity(), status_lifecycle(silver)
+    fig_lifecycle(s, figs)
     fig_fraud(f, figs)
     fig_rates(r, figs)
     fig_funnel(p, figs)
     fig_tornado(b, figs)
-    (ROOT / "docs" / "analysis" / "operating-insights.md").write_text(render(w, r, f, p, b))
-    (ROOT / "frontend" / "lib" / "insights.json").write_text(json.dumps(app_json(w, r, f, p, b), indent=1) + "\n")
-    print(render(w, r, f, p, b))
+    (ROOT / "docs" / "analysis" / "operating-insights.md").write_text(render(w, r, f, p, b, s))
+    (ROOT / "frontend" / "lib" / "insights.json").write_text(json.dumps(app_json(w, r, f, p, b, s), indent=1) + "\n")
+    print(render(w, r, f, p, b, s))
 
 
 if __name__ == "__main__":

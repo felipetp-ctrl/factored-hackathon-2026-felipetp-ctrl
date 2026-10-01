@@ -77,6 +77,31 @@
   ],
   "turns_median": 4
  },
+ "status": {
+  "buckets": [
+   {
+    "age": "< 1 month",
+    "share": 0.781
+   },
+   {
+    "age": "1\u20133 months",
+    "share": 0.701
+   },
+   {
+    "age": "3\u201312 months",
+    "share": 0.75
+   },
+   {
+    "age": "1\u20132 years",
+    "share": 0.744
+   },
+   {
+    "age": "> 2 years",
+    "share": 0.749
+   }
+  ],
+  "p": 0.030162461279051898
+ },
  "saving": {
   "base": 9768,
   "top_driver": "back-office minutes to rebuild a case (assumed)",

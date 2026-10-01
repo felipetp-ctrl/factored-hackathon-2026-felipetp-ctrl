@@ -13,7 +13,7 @@ Business figures in the last section are **projections from stated assumptions**
 | Monthly volume | 335–424, mean **377 per month**, flat across 2023–2026 |
 | Rate | ~30 disputes per 1,000 customers per year |
 | How they arrive | Call center 50.4 % · email 19.4 % · web 14.8 % · app 10.4 % · branch 3.9 % · **regulator 1.1 %** |
-| Current state | Open 29.7 % + In process 39.8 % = **69.5 % not resolved**; escalated 5.0 %; resolved/closed 24.6 %; rejected 0.9 % |
+| Current state | Status field: open 29.7 % + in process 39.8 % = 69.5 % not resolved; escalated 5.0 %; resolved/closed 24.6 %; rejected 0.9 %. **Not a backlog:** the open share does not fall with age (75 % of two-year-old complaints are still "open", while the recorded resolution times imply 0 %), so the status is a generator label, not a lifecycle ([insight 7](analysis/operating-insights.md)); it is not used as evidence here |
 | First response | median **37 h**, p90 58 h |
 | Time to resolution (resolved cases) | median **15 days**, p90 27 days |
 | SLA breached | **~20 %** in every status |
