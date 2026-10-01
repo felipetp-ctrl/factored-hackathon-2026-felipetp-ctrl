@@ -37,3 +37,11 @@ packages = ["src/dispute_ops"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["tests"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+# Correctness only (undefined names, unused imports, syntax errors); style is not enforced.
+select = ["F", "E9"]

@@ -11,7 +11,7 @@ A deterministic core decides; the language model only interprets.
    click a case. Or read the [walkthrough with screenshots](docs/demo.md).
 2. Results in one table: [Results](#results). Every requirement of the challenge → where it is met:
    [traceability](docs/requirements_traceability.md).
-3. Why it is built this way: [decisions at a glance](#decisions-at-a-glance), 28 ADRs in [docs/decisions](docs/decisions/).
+3. Why it is built this way: [decisions at a glance](#decisions-at-a-glance), 29 ADRs in [docs/decisions](docs/decisions/).
 
 ```
 chat / PQR / fraud alert
@@ -147,16 +147,29 @@ written complaint identifies the charge only 15.8% of the time ([problem analysi
 
 ## Repository
 
-| Path | What |
-|---|---|
-| `backend/src/dispute_ops/` | domain, store, auth, policy, tools, flow, channels, language layer, API, evaluation |
-| `backend/src/dispute_ops/policy/disputes_v2.yaml` | the synthetic dispute policy (versioned) |
-| `frontend/` | Next.js: bank case board and drawer, written complaints, fraud alerts, results; customer app with a guided dispute form |
-| `docs/decisions/` | architecture decision records (why each choice, alternatives, trade-offs) |
-| `docs/requirements_traceability.md` | every challenge requirement → evidence → how to verify |
-| `docs/problem_analysis.md` · `docs/data_quality_report.md` · `docs/operations.md` | the problem in numbers · data quality · running it |
-| `eval/results/` · `docs/evaluation.md` | evaluation reports · every set explained |
-| `ml/` | intent corpus (team-generated), training and audit reports; code in `backend/src/dispute_ops/ml/` |
+```
+├── backend/                  Python 3.12 service (uv, FastAPI) — deployed to Render from render.yaml
+│   ├── src/dispute_ops/      domain, store, auth, flow, channels, tools, API
+│   │   ├── policy/           versioned dispute policy (disputes_v2.yaml) and its engine
+│   │   ├── language/         gateway, Claude NLU, rule fallback, intent-v2 model, reply templates
+│   │   ├── pipeline/         bronze → silver → gold, contracts, quality gates, catalog, figures
+│   │   ├── evaluation/       simulator, oracle, baselines, metrics
+│   │   └── ml/               training, calibration, fraud audit, learnability scan
+│   ├── tests/                offline tests and the labelled synthetic fixture
+│   └── demo_data/            gold sample served by the public demo
+├── frontend/                 Next.js web app (bank console + customer app) — deployed to Vercel
+├── eval/                     frozen evaluation sets and every run's report (index: eval/README.md)
+├── ml/                       intent corpora and ML reports (index: ml/README.md)
+├── docs/                     problem, evaluation, data, operations; decisions/ holds the ADRs (index: docs/README.md)
+├── .github/workflows/        CI (lint, tests, pipeline on the fixture, typecheck, build) and keep-warm ping
+├── Makefile                  every command — run `make` to list them
+├── docker-compose.yml        API + web locally
+└── render.yaml               API deploy blueprint
+```
+
+Generated files (`uv.lock`, `pnpm-lock.yaml`, `docs/data_catalog.md`, `docs/data_quality_report.md`, `eval/results/`)
+are marked in `.gitattributes`; local data (`data/`, `mlruns/`) is never committed.
+Conventions: [ADR-029](docs/decisions/ADR-029-repository-layout.md). License: [MIT](LICENSE).
 
 ## Data
 

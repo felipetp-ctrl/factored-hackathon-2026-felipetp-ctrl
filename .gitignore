@@ -1,16 +1,29 @@
+# OS / editors
 .DS_Store
+.idea/
+.vscode/
+
+# Python
 .venv/
 __pycache__/
-*.db
-.env
-data/
-mlruns/
+.pytest_cache/
+.ruff_cache/
+
+# Node / Next.js (frontend/.gitignore has the rest)
 node_modules/
 
-# local working notes (not part of the submission)
-docs/superpowers/
-HACKATHON_GUIDE.md
-RESUMO.md
+# Secrets — copy .env.example instead
+.env
+.env.*
+!.env.example
+
+# Local data and experiment tracking (organizer data is never committed; see README › Data)
+data/
+mlruns/
+*.db
 !backend/demo_data/dispute_ops.db
-REVISAO_*.md
+
+# Local working notes and tool state (not part of the submission)
+notes/
+docs/superpowers/
 .superpowers/

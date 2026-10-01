@@ -1,0 +1,14 @@
+* text=auto eol=lf
+
+# Binary artifacts
+*.db  binary
+*.png binary
+
+# Generated files: collapsed in diffs, excluded from language stats
+backend/uv.lock          linguist-generated
+frontend/pnpm-lock.yaml  linguist-generated
+frontend/lib/insights.json linguist-generated
+docs/data_catalog.md     linguist-generated
+docs/data_quality_report.md linguist-generated
+eval/results/**          linguist-generated
+ml/results/*.json        linguist-generated
