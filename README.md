@@ -20,7 +20,7 @@ chat / PQR / fraud alert
         │
   Claude Haiku 4.5 ── free text → validated structured fields (never decides, never writes to the customer)
         │               └ fallback when the model is down or over budget (same fields, US$ 0): rules + our trained
-        │                 intent classifier intent-v2 (TF-IDF + logistic regression, ES/PT, 0.2 ms, pure Python)
+        │                 intent classifier intent-v3 (TF-IDF + logistic regression, ES/PT, 0.15 ms, pure Python)
         │
   state machine ── identify transaction → reason → evidence → policy → confirm → act → verify
         │                                   │
@@ -182,19 +182,25 @@ Conventions: [ADR-029](docs/decisions/ADR-029-repository-layout.md). License: [M
 The organizer dataset (LATAM Bank, synthetic, ~19M rows) is read from S3 and never committed. The public demo runs on
 a gold sample of it (`backend/demo_data/dispute_ops.db`); unit tests also use a small **team-generated synthetic
 fixture** (`backend/tests/fixtures/seed.json`) shaped after the data dictionary. The intent corpus (`ml/corpus/`) is
-team-generated too.
+team-generated too. Real customer speech comes from a public dataset, MInDS-14 (PolyAI, CC BY 4.0;
+[`ml/external/`](ml/external/README.md)).
 Findings from the dataset so far: the dispute workflow is backed by the data ("Cargo no reconocido" is the only
 sub-category of 20% of complaints), while free text in complaints and transcripts is templated — see the limitations.
 
 ## Known limitations
 
-- Portuguese does not exist in the dataset; Portuguese behaviour is evaluated only through simulated customers.
+- Portuguese does not exist in the dataset; Portuguese behaviour is evaluated through simulated customers and, for
+  the first routing decision only, European Portuguese call transcripts (MInDS-14).
 - The policy is synthetic; its amount threshold is calibrated on the data's value distribution (ADR-013), not on
   real dispute outcomes.
 - Conversation state, rate limiting, idempotency and demo workspaces live in one process's memory (a restart resets them).
 - Demo mode opens the bank-side views without a key (synthetic data only); production mode keeps the agent key.
-- The fallback NLU understands fewer phrasings than Claude; its learned classifier was trained on team-written text
-  and evaluated on LLM-simulated customers only. A confident wrong reason reaches the confirmation summary, where the
-  customer sees the reason before confirming (ADR-019).
+- The fallback NLU understands fewer phrasings than Claude; its learned classifier is trained on team-written text plus
+  real out-of-scope calls, and tested on real speech only for routing (ADR-030). A confident wrong reason reaches the
+  confirmation summary, where the customer sees the reason before confirming (ADR-019).
+- The Claude path's last API measurement (hard-v1, 65/72) predates ADR-031: about one conversation in six now asks
+  where the card is; the conversation-level effect is unit-tested and replayed, not re-measured on the API.
+- The complaint status in the organizer data is a label, not a lifecycle (insight 7), so the current backlog and
+  service level cannot be measured from it.
 - Identity is a test provider (`POST /auth/session`), standing in for the bank's real login.
 - Name detection is not part of PII masking; structured identifiers (cards, emails, phones, national ids) are.

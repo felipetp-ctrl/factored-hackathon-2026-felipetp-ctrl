@@ -11,7 +11,7 @@ Everything measured here is an offline measurement on a laptop or a simulation; 
 | Conversation state, rate limit, idempotency cache | In process memory | Redis (TTL = session TTL) or Postgres |
 | Operational store + audit log | SQLite (fixture or gold sample copy) | Postgres; audit table append-only via permissions + triggers, partitioned by month |
 | Language model | Claude Haiku 4.5, one structured call per customer turn | Unchanged; add prompt caching once the system prompt passes the model's minimum cacheable length |
-| Fallback NLU | Rules + trained intent classifier `intent-v2` (1.5 MB JSON, 0.2 ms, pure Python; `INTENT_MODEL=off` disables) | Retrain with `make train` on real, consented messages; version recorded on every turn (`rules+intent-v2`) |
+| Fallback NLU | Rules + trained intent classifier `intent-v3` (2.1 MB JSON, 0.15 ms, pure Python; `INTENT_MODEL=off` disables; ADR-030) | Retrain with `make train` on real, consented messages; version recorded on every turn (`rules+intent-v2`) |
 | Data pipeline | DuckDB batch, full dataset in ~20 s on a laptop | Same code on a scheduled job; switch silver to per-partition MERGE past ~100M rows |
 
 ## Capacity (estimates, labelled as such)

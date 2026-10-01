@@ -37,6 +37,8 @@ add `config.json`, `messages.json` and `nlu_cache.json` so they can be replayed 
 | `hard-v1-discarded` | hard-v1 | Scripted customer answers discarded after audit (ADR-022) |
 | `hard-v1-replay-0929` | hard-v1 test | Regression replay after the channels-v1 fixes: identical outcomes |
 | `hard-v1-replay-1001` | hard-v1 test | Regression replay after ADR-027 |
+| `hard-v1-replay-intent-v3` | hard-v1 test | Regression replay with intent-v3 in the free reader (ADR-030): same 32/36, unnecessary escalations 5 → 3 |
+| `hard-v1-replay-grounding` | hard-v1 test | Partial replay after ADR-031: 66/72 identical, 6 Claude-path conversations now ask where the card is (see its README) |
 | `hard-v1-api/` | hard-v1 test | **Headline** — real API (Claude Haiku 4.5 reader, Sonnet 5 customers), 2 runs per system, one folder per launch |
 | `hard-v1-api-posthoc/` | hard-v1 test | Post-hoc re-run of the two human-request scenarios after ADR-027 |
 | `channels-v1-dev-before` · `channels-v1-dev-after` | channels-v1 dev | Before and after the fixes made on the dev split |
