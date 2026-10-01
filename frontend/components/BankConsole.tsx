@@ -1,9 +1,10 @@
 "use client";
+import INSIGHTS from "@/lib/insights.json";
 import { Fragment, useEffect, useState } from "react";
 import { api, type Alert, type CaseRow, type NluStatus, type PqrLetter, type PqrResult, type QueueItem, type TraceEvent } from "@/lib/api";
 import { dayTime, money } from "@/lib/format";
 
-export type BankTab = "cases" | "letters" | "alerts" | "numbers";
+export type BankTab = "cases" | "letters" | "alerts" | "insights" | "numbers";
 
 const REASONS = ["FRAUD_CNP", "FRAUD_CP", "DUPLICATE", "INCORRECT_AMOUNT", "NOT_RECEIVED", "CANCELLED_RECURRING"];
 const REASON_EN: Record<string, string> = {
@@ -377,6 +378,57 @@ function Alerts({ onOpenCustomer }: { onOpenCustomer: (id: string) => void }) {
   );
 }
 
+// ---- insights -----------------------------------------------------------------------------------------
+// Numbers computed by `python -m dispute_ops.pipeline.insights` from the organizer data and the evaluation results.
+function Bars({ rows, max, unit = "" }: { rows: { label: string; value: number; strong?: boolean }[]; max: number; unit?: string }) {
+  return (
+    <div className="ibars">
+      {rows.map((r) => (
+        <div key={r.label} className="ibar" title={`${r.label}: ${r.value.toLocaleString("en-US")}${unit}`}>
+          <span className="ibar-label">{r.label}</span>
+          <span className="ibar-track"><i style={{ width: `${Math.max(2, (100 * r.value) / max)}%` }} data-strong={r.strong || undefined} /></span>
+          <span className="ibar-value">{r.value.toLocaleString("en-US")}{unit}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Insights() {
+  const d = INSIGHTS;
+  const week = Object.entries(d.weekday.counts).map(([label, value]) => ({ label, value: value as number }));
+  const pct = (x: number) => `${Math.round(100 * x)}%`;
+  const items: { k: string; headline: string; figure: string; body: React.ReactNode; action: string }[] = [
+    { k: "week", headline: "Disputes follow the working week, not the hour", figure: `${d.weekday.ratio}× Sunday`,
+      body: <Bars rows={week} max={Math.max(...week.map((w) => w.value))} />,
+      action: "Staff the human queue on a weekly curve: Tuesday to Friday. Hours of the day are flat (tested)." },
+    { k: "rate", headline: "Every country and segment disputes at the same rate", figure: "~90 per 1,000",
+      body: <Bars rows={[...d.rates.country, ...d.rates.segment].map((g) => ({ label: g.group, value: g.per_1000 }))} max={100} />,
+      action: `No group needs its own risk rule (country p = ${d.rates.p_country}, segment p = ${d.rates.p_segment}). One amount rule in US$ for everyone.` },
+    { k: "fraud", headline: "Fraud alerts: coverage is the lever, not the threshold", figure: `${pct(d.fraud.no_score_share)} unscored`,
+      body: <Bars rows={[{ label: "score 30 or more", value: Math.round(d.fraud.fraud * (1 - d.fraud.no_score_share)), strong: true }, { label: "no usable score", value: Math.round(d.fraud.fraud * d.fraud.no_score_share) }]} max={d.fraud.fraud} />,
+      action: `At threshold ${d.fraud.threshold}: ${d.fraud.alerts_per_day} alerts a day, ${pct(d.fraud.precision)} are fraud, ${pct(d.fraud.recall)} of fraud caught; no threshold beats ${pct(d.fraud.max_recall)}. Score the unscored; the customer's own dispute catches the rest.` },
+    { k: "funnel", headline: "Conversations are lost at the charge, not at the reason", figure: `${d.funnel.turns_median} messages to a case`,
+      body: <Bars rows={d.funnel.steps.map((s, i) => ({ label: s.label, value: s.n, strong: i === d.funnel.steps.length - 1 }))} max={d.funnel.steps[0].n} />,
+      action: "Improve charge search (amount and date tolerance, merchant aliases) before the language reader. Without the service, the first answer takes 37 hours." },
+    { k: "saving", headline: "The saving depends most on back-office time, which nobody has measured", figure: `≈ US$ ${d.saving.base.toLocaleString("en-US")} a year`,
+      body: <p className="muted small">Projection, not a measurement. Moving “{d.saving.top_driver}” across its range moves the saving from US$ {d.saving.range[0].toLocaleString("en-US")} to US$ {d.saving.range[1].toLocaleString("en-US")}.</p>,
+      action: "Measure back-office minutes per case in a pilot before promising savings." },
+  ];
+  return (
+    <div className="insights">
+      <p className="muted small">What the bank&apos;s data says about running this service. Each pattern is tested before it is trusted; open one to see the numbers.</p>
+      {items.map((it) => (
+        <details key={it.k} className="insight">
+          <summary><span>{it.headline}</span><strong>{it.figure}</strong></summary>
+          <div className="insight-body">{it.body}<p className="insight-action">{it.action}</p></div>
+        </details>
+      ))}
+      <p className="muted small">Organizer data (synthetic, 3 years) and offline tests; details in docs/analysis/operating-insights.md.</p>
+    </div>
+  );
+}
+
 // ---- results ------------------------------------------------------------------------------------------
 function Operations({ nlu }: { nlu: NluStatus | null }) {
   const [m, setM] = useState<Record<string, any> | null>(null);
@@ -394,14 +446,16 @@ function Operations({ nlu }: { nlu: NluStatus | null }) {
       </section>
       <section>
         <h3>Offline tests: where it breaks</h3>
-        <p className="muted small">36 held-out customers who remember a charge vaguely (“about 90 thousand”, “last week”). Simulated, not production.</p>
+        <p className="muted small">36 held-out customers who remember a charge vaguely (“about 90 thousand”, “last week”), run twice on the real Claude API. Simulated customers, not production.</p>
         <table className="eval-table">
-          <thead><tr><th /><th>Before fixes</th><th>After fixes</th></tr></thead>
+          <thead><tr><th /><th>AI chatbot</th><th>This system</th></tr></thead>
           <tbody>
-            <tr><th>Correct outcome, AI reader</th><td>24 of 36</td><td><strong>31 of 36</strong></td></tr>
-            <tr><th>Correct outcome, free reader</th><td>16 of 36</td><td><strong>30 of 36</strong></td></tr>
+            <tr><th>Correct outcome</th><td>49 of 72</td><td><strong>65 of 72</strong></td></tr>
+            <tr><th>Unsafe outcomes</th><td>11 of 72</td><td><strong>4 of 72</strong></td></tr>
+            <tr><th>Correct outcome, free reader (no AI)</th><td>—</td><td><strong>30 of 36</strong></td></tr>
           </tbody>
         </table>
+        <p className="muted small">Two of the four unsafe outcomes were one bug (“yes, but I want a real person” opened the case); fixed since.</p>
         <p className="muted small">Written complaints and fraud-alert answers, held out, no AI calls:</p>
         <table className="eval-table">
           <thead><tr><th /><th>Keyword rules</th><th>This system</th></tr></thead>
@@ -438,7 +492,7 @@ export function BankConsole(props: {
   onTour: (id: string) => void;
 }) {
   const waiting = props.cases.filter((c) => c.outcome === "person").length;
-  const tabs: [BankTab, string][] = [["cases", "Cases"], ["letters", "Written complaints"], ["alerts", "Fraud alerts"], ["numbers", "Results"]];
+  const tabs: [BankTab, string][] = [["cases", "Cases"], ["letters", "Written complaints"], ["alerts", "Fraud alerts"], ["insights", "Insights"], ["numbers", "Results"]];
   return (
     <div className="console">
       <nav className="tabs" role="tablist">
@@ -451,6 +505,7 @@ export function BankConsole(props: {
       {props.tab === "cases" && <Board cases={props.cases} queue={props.queue} selected={props.selected} onSelect={props.onSelect} onChanged={props.onQueueChanged} onTour={props.onTour} />}
       {props.tab === "letters" && <Letters results={props.pqr} setResults={props.onPqr} onProcessed={props.onQueueChanged} onSeeCases={() => props.onTab("cases")} />}
       {props.tab === "alerts" && <Alerts onOpenCustomer={props.onOpenCustomer} />}
+      {props.tab === "insights" && <Insights />}
       {props.tab === "numbers" && <Operations nlu={props.nlu} />}
     </div>
   );

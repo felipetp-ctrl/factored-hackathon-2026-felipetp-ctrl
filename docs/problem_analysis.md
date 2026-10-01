@@ -108,6 +108,9 @@ resolved group.
 per case (7.2 min measured contact + 15 min assumed back-office), that is about 2 agent-hours on a peak day, down from
 about 5. Assumptions as in §4; not a measured production figure.
 
+> Which of these patterns survive a statistical test, the fraud-alert capacity curve, the product funnel and the
+> business-case sensitivity: [operating insights](analysis/operating-insights.md).
+
 ## 4. Customer and business outcomes (projection — assumptions stated)
 
 Assumptions, all adjustable:

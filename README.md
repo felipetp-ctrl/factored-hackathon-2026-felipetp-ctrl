@@ -127,6 +127,8 @@ monitoring: [docs/evaluation.md](docs/evaluation.md#machine-learning).
 **The problem in data.** About 380 unrecognised-charge complaints a month, 70% still open, 15 days to resolve, and a
 written complaint identifies the charge only 15.8% of the time ([problem analysis](docs/problem_analysis.md)).
 
+**Operating insights, tested.** Disputes follow the working week (χ² p < 0.001) but not the hour; volume and channel mix are flat; every country and segment disputes at the same rate (p = 0.91 / 0.71), so no group needs its own rule; 45% of labelled fraud has no usable score, so the fraud-alert lever is coverage, not the threshold; conversations are lost at finding the charge, not at reading the reason; the projected saving depends most on unmeasured back-office time. Each comes with the decision it changes ([operating insights](docs/analysis/operating-insights.md)) and is in the app's **Insights** tab.
+
 ## Decisions at a glance
 
 | Decision | Why | Trade-off | ADR |

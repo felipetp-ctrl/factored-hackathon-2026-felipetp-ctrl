@@ -1,4 +1,4 @@
-.PHONY: install test lint api eval eval-channels figures calibration uncertainty web data data-proof catalog train fraud-audit learnability mlflow-ui
+.PHONY: install test lint api eval eval-channels figures calibration uncertainty web data data-proof catalog insights train fraud-audit learnability mlflow-ui
 install:
 	cd backend && uv sync
 test:
@@ -25,6 +25,8 @@ data-proof:
 	cd backend && uv run python -m dispute_ops.pipeline.incremental_proof --work /tmp/dispute-ops-proof
 catalog:
 	cd backend && uv run python -m dispute_ops.pipeline.catalog
+insights:
+	cd backend && uv run --group ml python -m dispute_ops.pipeline.insights
 train:
 	cd backend && MLFLOW_DISABLE_AGENT_HINT=1 uv run --group ml python -m dispute_ops.ml train $(ARGS)
 fraud-audit:

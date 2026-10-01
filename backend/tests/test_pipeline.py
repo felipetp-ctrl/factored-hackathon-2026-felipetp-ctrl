@@ -290,3 +290,16 @@ def test_catalog_documents_every_contract_column(raw, tmp_path):
         assert f"### `{c.name}`" in text
         assert all(f"| `{col}` |" in text for col in c.columns)
     assert "orphan quarantined" in text and "`card_transactions`" in text
+
+
+def test_operating_insights_from_committed_results():
+    pytest.importorskip("scipy")
+    pytest.importorskip("matplotlib")
+    from dispute_ops.pipeline.insights import business_sensitivity, product_funnel
+
+    p = product_funnel()
+    counts = [n for _, n in p["steps"]]
+    assert counts == sorted(counts, reverse=True) and counts[0] == 48 and counts[-1] == 43
+    b = business_sensitivity()
+    assert b["bars"][0]["assumption"].startswith("back-office")  # the widest bar is the unmeasured assumption
+    assert all(min(x["low"], x["high"]) <= b["base_saving"] <= max(x["low"], x["high"]) for x in b["bars"])

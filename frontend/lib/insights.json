@@ -1,0 +1,88 @@
+{
+ "weekday": {
+  "counts": {
+   "Sun": 1129,
+   "Mon": 1843,
+   "Tue": 2212,
+   "Wed": 2279,
+   "Thu": 2277,
+   "Fri": 2270,
+   "Sat": 1570
+  },
+  "ratio": 2.02
+ },
+ "rates": {
+  "country": [
+   {
+    "group": "Argentina",
+    "per_1000": 90.5
+   },
+   {
+    "group": "Colombia",
+    "per_1000": 91.0
+   },
+   {
+    "group": "Mexico",
+    "per_1000": 90.2
+   }
+  ],
+  "segment": [
+   {
+    "group": "Basic",
+    "per_1000": 91.0
+   },
+   {
+    "group": "Plus",
+    "per_1000": 89.2
+   },
+   {
+    "group": "Premium",
+    "per_1000": 89.7
+   },
+   {
+    "group": "Student",
+    "per_1000": 92.5
+   }
+  ],
+  "p_country": 0.91,
+  "p_segment": 0.71
+ },
+ "fraud": {
+  "no_score_share": 0.447,
+  "fraud": 1443,
+  "alerts_per_day": 0.69,
+  "precision": 1.0,
+  "recall": 0.521,
+  "threshold": 35,
+  "max_recall": 0.553
+ },
+ "funnel": {
+  "steps": [
+   {
+    "label": "Conversations where the right ending is an opened case",
+    "n": 48
+   },
+   {
+    "label": "Right charge found (from vague memory)",
+    "n": 45
+   },
+   {
+    "label": "Case opened and read back",
+    "n": 45
+   },
+   {
+    "label": "Right charge, right reason, card handled as asked",
+    "n": 43
+   }
+  ],
+  "turns_median": 4
+ },
+ "saving": {
+  "base": 9768,
+  "top_driver": "back-office minutes to rebuild a case (assumed)",
+  "range": [
+   5338,
+   16412
+  ]
+ }
+}
