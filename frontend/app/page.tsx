@@ -29,6 +29,7 @@ export default function Demo() {
   const [lang, setLang] = useState<Lang>("es");
   const [health, setHealth] = useState<Health | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [waking, setWaking] = useState(false);  // the free API sleeps when idle; say so instead of a blank page
 
   const [token, setToken] = useState<string | null>(null);
   const [me, setMe] = useState<Me | null>(null);
@@ -85,15 +86,25 @@ export default function Demo() {
   };
 
   useEffect(() => {
+    const slow = setTimeout(() => setWaking(true), 3000);
     (async () => {
-      try {
-        const [sc, cs] = await Promise.all([api.scenarios(), api.customers()]);
-        setScenarios(sc); setCustomers(cs); refreshHealth(); refreshBank();
-        const first = sc.find((x) => x.id === "normal") ?? sc[0];
-        if (first) await openCustomer(first.customer_id, first.language);
-        else if (cs[0]) await openCustomer(cs[0].customer_id, "es");
-      } catch (e) { fail(e); }
+      // A sleeping free-plan API can drop the first request while it starts; try a few times before giving up.
+      for (let attempt = 1; ; attempt++) {
+        try {
+          const [sc, cs] = await Promise.all([api.scenarios(), api.customers()]);
+          clearTimeout(slow); setWaking(false); setError(null);
+          setScenarios(sc); setCustomers(cs); refreshHealth(); refreshBank();
+          const first = sc.find((x) => x.id === "normal") ?? sc[0];
+          if (first) await openCustomer(first.customer_id, first.language);
+          else if (cs[0]) await openCustomer(cs[0].customer_id, "es");
+          return;
+        } catch (e) {
+          if (e instanceof TypeError && attempt < 6) { await new Promise((r) => setTimeout(r, 10000)); continue; }
+          clearTimeout(slow); setWaking(false); fail(e); return;
+        }
+      }
     })();
+    return () => clearTimeout(slow);
   }, [openCustomer, refreshHealth, refreshBank]);
 
   useEffect(() => {  // cases arrive from every channel; keep the board fresh
@@ -224,6 +235,7 @@ export default function Demo() {
           <button className="icon-btn" aria-label="End tour" onClick={() => setScenario(null)}>×</button>
         </div>
       )}
+      {waking && !error && <p className="banner-info" role="status">Starting the demo server (free plan, idle servers sleep). The first load takes about 30 seconds; the page fills in by itself.</p>}
       {error && <p className="banner-error" role="alert">{error}</p>}
 
       <div className="mobile-switch" role="group" aria-label="Side">

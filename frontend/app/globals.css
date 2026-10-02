@@ -72,6 +72,7 @@ p { margin: 0; }
 .hint { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; background: var(--guide-2); border-radius: 10px; padding: 9px 14px; font-size: 13.5px; }
 .hint-k { display: inline-block; min-width: 52px; font: 500 11px var(--font-mono); text-transform: uppercase; letter-spacing: .08em; color: #9ce3cf; margin-right: 6px; }
 .banner-error { background: var(--risk-soft); color: var(--risk); padding: 8px 12px; border-radius: 8px; font-size: 13.5px; }
+.banner-info { background: var(--brand-soft); color: var(--brand-ink); padding: 8px 12px; border-radius: 8px; font-size: 13.5px; }
 
 /* ---- split ---- */
 .split { display: grid; grid-template-columns: minmax(360px, 440px) 1fr; gap: 20px; padding: 18px 20px 28px; align-items: start; }
