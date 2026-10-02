@@ -41,7 +41,7 @@ Contact reasons are coarse (`contact_reason` equals `reason_category`, six value
 from other complaints at intake.
 
 **Problem statement.** Customers who do not recognise a card charge wait a day and a half for a first answer and about two
-weeks for a resolution, while seven in ten cases sit open. The root cause visible in the data is an intake that captures
+weeks for a resolution. The root cause visible in the data is an intake that captures
 neither the transaction, nor the reason, nor the evidence — so every case needs a person to reconstruct it.
 
 ### Backtest: can written complaints alone be tied to a transaction?
