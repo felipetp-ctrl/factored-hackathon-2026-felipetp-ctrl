@@ -77,6 +77,13 @@ Scenarios have a persona for an LLM-simulated customer (Claude Sonnet 5) and an 
 the policy**. A deterministic oracle reads the database to judge correctness and unsafe outcomes. Reports land in
 `eval/results/<timestamp>/` (`report.md`, `summary.json`, `results.jsonl` with full transcripts).
 
+**What this proves and what it does not.** The oracle's expected outcomes come from the policy this project wrote, so
+these sets measure whether the system *keeps* that policy under hard customers, not whether the policy is right. The
+chatbot baseline receives the same policy as text and the same bank tools, so the gap between them is the effect of
+keeping the policy in code. Inputs from outside the project: the blind sets' personas (an independent model author,
+frozen before any fix), the MInDS-14 real calls, and one blind human review of 90 intent labels. Whether the policy
+itself is right needs real dispute outcomes from a pilot.
+
 **Where it fails: `hard-v1`** ([ADR-022](decisions/ADR-022-hard-set-and-fuzzy-references.md)) — the sets below
 all scored 100% because the simulated customer knew each charge to the cent. `hard-v1` gives the customer the memory
 people have (a rounded amount, "last week", one word of the merchant, numbers in words, the reason buried in a story,

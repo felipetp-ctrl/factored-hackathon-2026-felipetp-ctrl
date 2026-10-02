@@ -11,7 +11,9 @@ A deterministic core decides; the language model only interprets.
    click a case. Or read the [walkthrough with screenshots](docs/demo.md).
 2. Results in one table: [Results](#results). Every requirement of the challenge → where it is met:
    [traceability](docs/requirements_traceability.md).
-3. Why it is built this way: [decisions at a glance](#decisions-at-a-glance), 29 ADRs in [docs/decisions](docs/decisions/).
+3. Machine learning in one paragraph — why no model is trained on the bank's data and what is trained instead:
+   [Machine learning](#machine-learning).
+4. Why it is built this way: [decisions at a glance](#decisions-at-a-glance), 32 ADRs in [docs/decisions](docs/decisions/).
 
 ```
 chat / PQR / fraud alert
@@ -109,25 +111,38 @@ Offline simulations on held-out cases; nothing here is a production measurement.
 | Reading the dispute reason, another author, blind labels (`independent-v1`) | 525 | trained classifier 93.5% | Keyword rules 45.7% |
 | **Real customer speech**: should this call start a dispute? (MInDS-14, topics never trained on) | 872 calls | intent-v3 sends 7.9% of non-disputes to the dispute intake | intent-v2 31.1%, keyword rules 67.3% |
 
-Latency per turn p50 2.1 s / p95 3.1 s with Claude (test-v2); cost per safe resolution US$ 0.013 vs US$ 0.033 for the
-chatbot. 95% intervals for all of these: [uncertainty](docs/analysis/uncertainty.md). Failures are listed in every report, including the bugs the hard sets found. On the real API
-(hard-v1, 2 runs): p50 3.1 s / p95 4.3 s per turn, US$ 0.020 vs US$ 0.033 per safe resolution
-([details and the four unsafe cases](docs/evaluation.md#hard-v1-on-the-real-api-2026-09-30)). Limits: sets are small (zero unsafe in 84
-conversations does not prove zero risk); intent labels come from models, checked by one blind human reviewer on 90 messages (κ = 0.91,
-[review](ml/results/human-review.md)).
+**What these numbers measure.** Whether the system keeps its written policy when customers are vague, wrong or
+hostile. The expected outcome of every conversation is derived from that policy, which this project wrote, and the
+customers are played by Claude Sonnet 5; the chatbot baseline gets the same policy as text and the same bank tools, so
+the comparison is fair, but no number here shows that the policy itself is right — that needs real disputes in a pilot.
+What does not come from this project: the personas of the blind sets (an independent model author, frozen before any
+fix), the real bank calls (MInDS-14) and one blind human review of 90 intent labels (κ = 0.91,
+[review](ml/results/human-review.md)). Sets are small: zero unsafe in 84 conversations does not prove zero risk.
+
+On the real API (hard-v1, 2 runs): p50 3.1 s / p95 4.3 s per turn, US$ 0.020 per safe resolution vs US$ 0.033 for the
+chatbot ([details and the four unsafe cases](docs/evaluation.md#hard-v1-on-the-real-api-2026-09-30)). 95% intervals for
+every number: [uncertainty](docs/analysis/uncertainty.md). Failures are listed in every report.
 
 ![Vague-memory test before and after fixes](docs/figures/hard_v1_before_after.png)
 
-**Machine learning.** A trained reason classifier (TF-IDF + logistic regression, ES/PT, 0.15 ms, pure Python) powers
-the free reader; it lost to keywords in its first version and that result is kept ([ADR-019](docs/decisions/ADR-019-learned-intent-classifier.md)).
-Tested on **real people** (1,090 bank calls, MInDS-14), intent-v2 started a dispute conversation for 31% of unrelated
-requests; intent-v3 adds real out-of-scope calls, spoken-style and mixed-topic training copies and a dispute guard chosen
-on a dev half: 7.9% on topics it never saw, at the cost of 7 of 44 real disputes needing one more turn
-([ADR-030](docs/decisions/ADR-030-real-speech-and-intent-v3.md)).
-There is no fraud model on purpose: the fraud labels have no learnable signal (ROC-AUC 0.50), so the alert threshold was
-recalibrated instead ([ADR-020](docs/decisions/ADR-020-fraud-label-audit.md)); a scan of nine other targets found the same
-([ADR-021](docs/decisions/ADR-021-learnability-scan.md)). MLflow registry, model card, CI regression gate and drift
+### Machine learning
+
+**No model on the bank's data, on evidence.** Ten targets were tested with the same protocol (temporal split,
+permuted-label control, one-column lookup baseline): fraud has no learnable signal beyond the generator's own score
+(ROC-AUC 0.50), six outcomes are at chance and three are a single column a lookup table matches
+([ADR-020](docs/decisions/ADR-020-fraud-label-audit.md), [ADR-021](docs/decisions/ADR-021-learnability-scan.md)).
+Fitting a model there would have been fitting the generator, so the fraud-alert threshold was recalibrated instead.
+
+**What is trained: the reason reader.** A TF-IDF + logistic-regression classifier (ES/PT, 0.15 ms, pure Python,
+MLflow-tracked) powers the free reader that runs when Claude is down or over budget. Its first version lost to keywords
+and that result is kept ([ADR-019](docs/decisions/ADR-019-learned-intent-classifier.md)); the current one reads the
+reason at 93.5% vs 45.7% for keyword rules on 525 blind messages by another author; a fine-tuned multilingual-e5-small
+scored lower than the TF-IDF model when they were compared (93.0% vs 95.6%) and stayed out. Tested on **real people** (1,090 bank calls, MInDS-14), it sends 7.9% of unrelated calls
+to the dispute intake (31.1% before; 7 of 44 real disputes need one more turn)
+([ADR-030](docs/decisions/ADR-030-real-speech-and-intent-v3.md)). Calibration, model card, CI regression gate and drift
 monitoring: [docs/evaluation.md](docs/evaluation.md#machine-learning).
+
+### Data analytics
 
 **The problem in data.** About 380 unrecognised-charge complaints a month, 37 hours to a first answer, 15 days to resolve, and a
 written complaint identifies the charge only 15.8% of the time ([problem analysis](docs/problem_analysis.md)).
@@ -198,6 +213,9 @@ sub-category of 20% of complaints), while free text in complaints and transcript
 - The fallback NLU understands fewer phrasings than Claude; its learned classifier is trained on team-written text plus
   real out-of-scope calls, and tested on real speech only for routing (ADR-030). A confident wrong reason reaches the
   confirmation summary, where the customer sees the reason before confirming (ADR-019).
+- A subscription the customer forgot and calls "não reconheço" can be opened as card-not-present fraud instead of a
+  cancelled subscription (`subscription-01-pt`, hard-v1 API run). The fix needs a new question in the model's schema,
+  which cannot be measured without spending the credit kept for judges (ADR-031).
 - The Claude path's full API measurement (hard-v1, 65/72) predates ADR-031; only the 7 scenarios it affects were re-run
   on the API (14/14 correct, 0 unsafe, post-hoc). About one conversation in six now asks where the card is.
 - The complaint status in the organizer data is a label, not a lifecycle (insight 7), so the current backlog and
