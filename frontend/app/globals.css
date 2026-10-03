@@ -239,6 +239,11 @@ p { margin: 0; }
 .menu-tour button { display: grid; grid-template-columns: 22px 1fr; gap: 0 6px; }
 .menu-tour button::before { content: counter(tour); grid-row: span 2; color: var(--muted); font-variant-numeric: tabular-nums; }
 .menu-tour span { color: var(--muted); font-size: 12.5px; }
+.menu-tour .menu-note { counter-increment: none; padding: 8px 10px; color: var(--muted); font-size: 12.5px; }
+@media (max-width: 860px) {  /* anchor menus to the header, not the button, so they stay on screen */
+  .top .pop { position: static; }
+  .top .menu { left: 16px; right: 16px; min-width: 0; max-height: calc(100dvh - 120px); overflow-y: auto; }
+}
 .menu-more .field { padding: 6px 10px 10px; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
 .tourbar { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; background: var(--brand-soft); color: var(--brand-ink); padding: 10px 20px; font-size: 14px; }
 .tourbar .tour-k { font-weight: 600; }

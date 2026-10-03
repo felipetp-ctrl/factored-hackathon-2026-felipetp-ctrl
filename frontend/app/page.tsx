@@ -184,7 +184,7 @@ export default function Demo() {
   const outage = health?.nlu.reason === "simulated_outage";
   const nluLabel = health ? (health.nlu.mode === "claude" ? "AI: Claude" : "AI: rules fallback") : "AI: …";
 
-  const allScenarios = scenarios.length ? [PQR_SCENARIO, ...scenarios] : [];
+  const allScenarios = [PQR_SCENARIO, ...scenarios];  // the letters step needs no scenario list, so the tour is never empty
   const tour = (id: string) => { const s = allScenarios.find((x) => x.id === id); if (s) { chooseScenario(s); setMenu(null); } };
   const aiDown = health?.nlu.mode === "rules" && health.nlu.fallback !== false;
 
@@ -202,6 +202,7 @@ export default function Demo() {
                   <li key={s.id}><button onClick={() => tour(s.id)} aria-current={scenario?.id === s.id}>
                     <strong>{s.label}</strong><span>{TOUR_SUB[s.id] ?? ""}</span></button></li>
                 ))}
+                {!scenarios.length && <li className="menu-note">{error ? "The other steps could not load. Reload the page." : "Loading the other steps while the server starts…"}</li>}
               </ol>
             )}
           </div>
