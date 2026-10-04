@@ -383,8 +383,13 @@ class ConversationService:
         if nlu.intent == "human":
             conv.proactive_txn = None
             return self._reply(conv, conv.flow.handle(Turn(token=token, human_requested=True)), started, **base)
-        if nlu.intent == "confirm" or nlu.recognizes_merchant == "yes":
+        # The stated fact outranks the intent: the model read "Não fui eu" as intent "confirm" (confirming the no)
+        # with recognizes_merchant "no" on the deployed API, and the alert was closed as recognised.
+        recognized = nlu.recognizes_merchant == "yes" or (
+            nlu.recognizes_merchant is None and nlu.intent == "confirm")
+        if recognized:
             conv.proactive_txn = None
+            conv.flow.txn, conv.flow.customer_id = txn, txn.customer_id  # the closed case shows the charge
             result = conv.flow.close("transaction_recognized")
             return self._reply(conv, result, started, text_key="recognized", **base)
         if nlu.intent in ("decline", "dispute") or nlu.recognizes_merchant == "no":

@@ -27,7 +27,7 @@ PRICES_PER_MTOK = {  # USD (input, output), Anthropic first-party list prices
     "claude-haiku-4-5": (1.00, 5.00),
     "claude-sonnet-5": (2.00, 10.00),
 }
-PROMPT_VERSION = "nlu-v4"
+PROMPT_VERSION = "nlu-v5"
 
 YesNo = Literal["yes", "no"]
 
@@ -117,6 +117,9 @@ intent:
 - confirm / decline: the customer accepts / rejects the summary they were asked to confirm
   (only when state is CONFIRM). Refusing the card block is not a decline: "confirmo, mas não quero
   bloqueio" is confirm with wants_block_card false.
+  When state is PROACTIVE_CONFIRM the bank asked "was this purchase you?" about a flagged charge: "sim, fui eu"
+  is confirm with recognizes_merchant yes; "não fui eu" / "no fui yo" / "não reconheço" is decline with
+  recognizes_merchant no (a "no" to the question is never confirm).
 - out_of_scope: any other banking request (balance, credit, loans, limits, transfers, app help...). If the
   message ALSO asks to contest a card charge, the intent is dispute (the other request is ignored).
 - human: the customer explicitly asks for a person / human agent.

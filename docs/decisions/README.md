@@ -36,3 +36,4 @@ Every significant decision in the project, with the alternatives considered and 
 | [030](ADR-030-real-speech-and-intent-v3.md) | Real customer speech (MInDS-14) as an external test; intent-v3 with a dispute guard (misroutes 31% → 8% on unseen topics) | accepted |
 | [031](ADR-031-grounded-evidence.md) | A fact the policy relies on must have been said (card possession grounding); a contradicted summary is corrected, not opened | accepted |
 | [032](ADR-032-column-profile-gate.md) | Column-profile gate: a delivery whose column is suddenly emptier than the history is blocked | accepted |
+| [033](ADR-033-proactive-answer-precedence.md) | A "no" to the fraud alert is read from the stated fact, not the intent; prompt nlu-v5 describes the alert answer | accepted |

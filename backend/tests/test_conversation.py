@@ -122,6 +122,17 @@ def test_proactive_recognized_closes(tools, store, clock, token):
     cid, _ = svc.start_proactive(token, "TXN007", language="pt")
     r = svc.send(cid, token, "Sim, fui eu")
     assert r.action == "cancelled" and "Obrigado por confirmar" in r.text
+    assert svc.get(cid).flow.txn.transaction_id == "TXN007"  # the closed case shows the charge it was about
+
+
+def test_proactive_not_me_read_as_confirm_still_disputes(tools, store, clock, token):
+    # The model answered "Não fui eu" with intent "confirm" (confirming the no) and recognizes_merchant "no"
+    # (seen on the deployed API); the stated fact wins and the charge is disputed, not closed as recognised.
+    nlu = ScriptedNlu(nlu_result(intent="confirm", language="pt", recognizes_merchant="no"))
+    svc = make_service(tools, store, clock, nlu)
+    cid, _ = svc.start_proactive(token, "TXN007", language="pt")
+    r = svc.send(cid, token, "Não fui eu")
+    assert r.state != State.CANCELLED and r.ask_for == ["card_in_possession"]
 
 
 # ---- v0.0.2: sticky language and closing conversations that need nothing -----------------------------
