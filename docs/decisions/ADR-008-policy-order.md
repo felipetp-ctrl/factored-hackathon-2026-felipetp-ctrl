@@ -10,7 +10,7 @@ Evaluation order:
 2. Dispute already open (`R-DUP-OPEN`).
 3. Ineligible status (`R-TXN-STATUS`).
 4. Outside the window (`R-WINDOW`).
-5. Handoff triggers, all reported together: `R-HO-AMOUNT`, `R-HO-REPEAT`, `R-HO-VELOCITY`, `R-HO-ATO`, `R-HO-SENTIMENT`, `R-HO-REGULATOR`, `R-HO-LOWCONF`.
+5. Handoff triggers, all reported together: `R-HO-AMOUNT`, `R-HO-REPEAT`, `R-HO-VELOCITY`, `R-HO-ATO`, `R-HO-SENTIMENT`, `R-HO-REGULATOR`, `R-HO-LOWCONF`. After the evidence is complete: `R-HO-AMOUNT-GAP` (ADR-036).
 6. Eligible (`R-ELIGIBLE`), with `missing_evidence`.
 
 - A human request comes first, out of respect for the customer's autonomy.

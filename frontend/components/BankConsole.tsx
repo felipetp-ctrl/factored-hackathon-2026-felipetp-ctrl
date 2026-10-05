@@ -14,6 +14,7 @@ const REASON_EN: Record<string, string> = {
 const HANDOFF_EN: Record<string, string> = {
   amount_above_threshold: "Amount above US$ 450", repeat_complainer: "Repeat complainer", dispute_velocity: "Many disputes in 30 days",
   very_negative_sentiment: "Very upset customer", regulatory_or_legal_threat: "Regulator or legal threat",
+  implausible_amount_claim: "Correct amount under half the charge",
   low_classifier_confidence: "Unclear reason", customer_requested_human: "Asked for a person",
   suspicious_access: "Asked for another customer's charge", invalid_transaction_references: "Invalid references",
   clarification_exhausted: "Could not clarify in 2 tries", tool_failure: "Bank system failed", verification_failed: "Action not verified",

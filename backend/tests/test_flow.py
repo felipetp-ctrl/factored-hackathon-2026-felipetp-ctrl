@@ -261,6 +261,15 @@ def test_wrong_amount_needs_a_correct_amount_below_the_charge(flow, token, expec
     assert flow.handle(Turn(token=token, evidence={"expected_amount": "1000.00"})).action == "confirm"
 
 
+def test_wrong_amount_far_below_the_charge_goes_to_a_person(flow, token, store):
+    # "Deveria ter custado no máximo 5 reais" for a supermarket charge: a claim to almost all the money back is not
+    # opened automatically (ADR-036).
+    flow.handle(Turn(token=token, transaction_id="TXN001", reason_code=ReasonCode.INCORRECT_AMOUNT))
+    r = flow.handle(Turn(token=token, evidence={"expected_amount": "5.00"}))
+    assert r.action == "handoff" and r.handoff.reason_for_handoff == ["implausible_amount_claim"]
+    assert store.find_open_dispute("TXN001") is None
+
+
 def test_not_received_before_the_delivery_date_is_not_disputable_yet(flow, token):
     flow.handle(Turn(token=token, transaction_id="TXN001", reason_code=ReasonCode.NOT_RECEIVED))
     r = flow.handle(Turn(token=token, evidence={"expected_delivery_date": "2026-07-01", "contacted_merchant": "yes"}))

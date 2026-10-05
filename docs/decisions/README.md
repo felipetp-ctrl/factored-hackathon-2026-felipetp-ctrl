@@ -39,3 +39,4 @@ Every significant decision in the project, with the alternatives considered and 
 | [033](ADR-033-proactive-answer-precedence.md) | A "no" to the fraud alert is read from the stated fact, not the intent; prompt nlu-v5 describes the alert answer | accepted |
 | [034](ADR-034-duplicate-other-charge.md) | A duplicate is answered by picking the other charge from the same merchant; with none, the reason is asked again (found on the demo) | accepted |
 | [035](ADR-035-evidence-fits-the-reason.md) | Policy review: the evidence must fit the reason (amount, delivery date, cancellation date), lost card is FRAUD_CP, the customer can correct the reason | accepted |
+| [036](ADR-036-amount-gap-handoff.md) | A wrong-amount claim below half the charge goes to a person (customer asked 5 reais back on ARS 91,558, found on the demo) | accepted |

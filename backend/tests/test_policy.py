@@ -102,3 +102,14 @@ def test_human_review_clears_handoff_triggers_but_keeps_ineligibility(policy, st
     assert high.inputs["overridden_rules"] == ["R-HO-AMOUNT"]
     old = policy.evaluate_human_review(ctx(store, "TXN004"))  # outside the window
     assert old.decision == "ineligible" and old.rule_ids == ["R-WINDOW"]
+
+
+@pytest.mark.parametrize(("expected", "decision"), [("4.99", "handoff"), ("5.00", "eligible"), ("9.00", "eligible")])
+def test_correct_amount_below_half_the_charge_is_a_persons_call(policy, store, expected, decision):
+    txn = store.get_transaction("TXN001").model_copy(update={"amount": 10, "amount_usd": 10})
+    d = policy.evaluate(PolicyContext(transaction=txn, customer=store.get_customer(txn.customer_id),
+                                      reason_code=ReasonCode.INCORRECT_AMOUNT, now=NOW,
+                                      evidence={"expected_amount": expected}))
+    assert d.decision == decision
+    if decision == "handoff":
+        assert d.rule_ids == ["R-HO-AMOUNT-GAP"] and d.handoff_reasons == ["implausible_amount_claim"]

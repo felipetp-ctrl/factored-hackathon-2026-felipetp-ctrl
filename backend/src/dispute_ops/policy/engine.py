@@ -114,6 +114,11 @@ class PolicyEngine:
                     inputs["expected_amount"] = ev["expected_amount"]
                     return decide("eligible", ["R-AMOUNT-CHECK"], missing_evidence=["expected_amount"],
                                   invalid_evidence=["expected_amount"])
+                ratio = Decimal(str(h["min_expected_amount_ratio"]))
+                if expected < txn.amount * ratio:
+                    inputs["expected_amount"] = ev["expected_amount"]
+                    inputs["min_expected_amount_ratio"] = str(ratio)
+                    return decide("handoff", ["R-HO-AMOUNT-GAP"], handoff_reasons=["implausible_amount_claim"])
             if reason == ReasonCode.NOT_RECEIVED and (due := _iso(ev["expected_delivery_date"])) and due > ctx.now.date():
                 inputs["expected_delivery_date"] = due.isoformat()
                 return decide("ineligible", ["R-NOT-DUE"])
