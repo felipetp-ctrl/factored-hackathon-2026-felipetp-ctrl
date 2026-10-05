@@ -19,7 +19,7 @@ from dispute_ops.handoff import HandoffPackage
 from dispute_ops.language import responses
 from dispute_ops.language.breaker import CircuitBreaker
 from dispute_ops.language.keywords import _norm
-from dispute_ops.language.rule_nlu import POSSESSION_CUES, is_rules_model
+from dispute_ops.language.rule_nlu import _TXN_ID, POSSESSION_CUES, is_rules_model
 from dispute_ops.language.gateway import detect_human_request, detect_injection, detect_language, redact_pii
 from dispute_ops.language.nlu import LlmUsage, NluContext, NluOutcome, NluResult, NluUnavailable
 from dispute_ops.policy.engine import PolicyEngine
@@ -328,6 +328,12 @@ class ConversationService:
 
         if conv.proactive_txn is not None:
             return self._proactive_turn(conv, token, nlu, started, base)
+        if nlu.transaction_id is None and flow.state in {State.START, State.IDENTIFY_TXN} and (typed := _TXN_ID.findall(text)):
+            # An id the customer typed goes to the tools, which check who owns it. The model leaves it out when it is
+            # not among the candidates, so another customer's id never reached the check and repeated attempts were
+            # not handed off as suspicious (demo, 2026-10-05).
+            self._audit(conv, "typed_reference", transaction_id=typed[0].upper())
+            nlu = nlu.model_copy(update={"transaction_id": typed[0].upper()})
         if nlu.intent == "out_of_scope":
             conv.out_of_scope_streak += 1
             if conv.out_of_scope_streak >= 2:  # a second unrelated request: redirect and end instead of looping

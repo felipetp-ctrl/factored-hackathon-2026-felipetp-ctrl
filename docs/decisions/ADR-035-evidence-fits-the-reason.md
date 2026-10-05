@@ -15,6 +15,7 @@ The policy engine only checked that each required field was **present**. Probing
 | CANCELLED_RECURRING | A cancellation **after** the charge opened a dispute (the charge predates the cancellation) | not disputable |
 | CANCELLED_RECURRING, NOT_RECEIVED | The free reader stored "não lembro" as the date | wrong evidence |
 | any (summary with the block offer) | The summary ends with "do you want the card blocked?"; a typed bare "não" (meant for the block) cancelled the whole dispute. The buttons were unambiguous; typing was not | stuck |
+| any (Claude path) | A transaction id the customer typed was dropped by the model when it was not among the candidates, so another customer's id never reached the ownership check: nothing leaked, but repeated attempts were not handed off as suspicious (found preparing the demo video, 2026-10-05). The typed id now goes to the tools, which check the owner | missed security signal |
 | FRAUD_CP | "Card with me now" was left as is: the question is in the present tense, so a recovered card is consistent | no change |
 | FRAUD_CNP | "I recognise the merchant" was left as is: fraud at a known merchant is plausible | no change |
 
@@ -51,4 +52,4 @@ now opened with the correct amount.
 
 ## Evidence
 - Unit tests for every row marked as a problem above, plus "a short answer keeps the reason" and "cancelled before
-  the charge is still disputable". Full suite 392 passed.
+  the charge is still disputable". Full suite 393 passed.
