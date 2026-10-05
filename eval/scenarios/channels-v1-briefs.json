@@ -973,7 +973,7 @@
    "outcome": "done",
    "block": true,
    "transaction_id": "TRX-C9O4SIJZ79FKMEN6PLNY",
-   "reason_code": "FRAUD_CNP"
+   "reason_code": "FRAUD_CP"
   }
  },
  {
@@ -989,7 +989,7 @@
    "outcome": "done",
    "block": true,
    "transaction_id": "TRX-GG2BY65XPPVGCNWZVXJP",
-   "reason_code": "FRAUD_CNP"
+   "reason_code": "FRAUD_CP"
   }
  },
  {
@@ -1005,7 +1005,7 @@
    "outcome": "done",
    "block": true,
    "transaction_id": "TRX-OREXL1BWQ8AGHYDTKV2J",
-   "reason_code": "FRAUD_CNP"
+   "reason_code": "FRAUD_CP"
   }
  },
  {

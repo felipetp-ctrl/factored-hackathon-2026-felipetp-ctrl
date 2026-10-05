@@ -13,7 +13,7 @@ A deterministic core decides; the language model only interprets.
    [traceability](docs/requirements_traceability.md).
 3. Machine learning in one paragraph — why no model is trained on the bank's data and what is trained instead:
    [Machine learning](#machine-learning).
-4. Why it is built this way: [decisions at a glance](#decisions-at-a-glance), 33 ADRs in [docs/decisions](docs/decisions/).
+4. Why it is built this way: [decisions at a glance](#decisions-at-a-glance), 35 ADRs in [docs/decisions](docs/decisions/).
 
 ```
 chat / PQR / fraud alert

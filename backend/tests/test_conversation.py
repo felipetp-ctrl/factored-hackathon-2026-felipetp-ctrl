@@ -340,3 +340,46 @@ def test_a_stolen_card_said_at_the_summary_corrects_it_instead_of_opening(tools,
     r3 = svc.send(cid, token, "sim")
     assert r3.state == State.DONE and r3.card_status == "Blocked"
     assert store.get_dispute(r3.case_id).reason_code == ReasonCode.FRAUD_CP
+
+
+def test_picking_the_other_charge_read_as_transaction_id_counts_as_the_duplicate(tools, store, clock, token):
+    # The app's pick buttons send "É a compra TXN002"; the model may fill transaction_id instead of the duplicate field.
+    nlu = ScriptedNlu(
+        nlu_result(intent="provide_info", language="pt", reason_code=ReasonCode.DUPLICATE, reason_confidence=0.9),
+        nlu_result(intent="provide_info", language="pt", transaction_id="TXN002"),
+    )
+    svc = make_service(tools, store, clock, nlu)
+    cid = svc.start_from_purchase(token, "TXN003", "pt").conversation_id
+    r = svc.send(cid, token, "foi cobrado duas vezes")
+    assert r.ask_for == ["duplicate_transaction_id"] and [c["transaction_id"] for c in r.candidates] == ["TXN002"]
+    r = svc.send(cid, token, "É a compra TXN002")
+    assert r.action == "confirm" and svc.get(cid).flow.txn.transaction_id == "TXN003"
+
+
+def test_a_bare_no_after_the_block_offer_asks_what_it_refers_to(tools, store, clock, token):
+    # The summary ends with "Quer bloqueá-lo?"; a typed "não" answered the block question but cancelled the dispute.
+    nlu = ScriptedNlu(
+        nlu_result(intent="dispute", language="pt", transaction_id="TXN001", reason_code=ReasonCode.FRAUD_CNP,
+                   reason_confidence=0.9, card_in_possession="yes", recognizes_merchant="no"),
+        nlu_result(intent="decline", language="pt"),
+        nlu_result(intent="confirm", language="pt", wants_block_card=False),
+    )
+    svc = make_service(tools, store, clock, nlu)
+    cid = svc.start("pt")
+    assert svc.send(cid, token, "não reconheço a TXN001, o cartão está comigo e não conheço a loja").offer_block_card
+    r = svc.send(cid, token, "não")
+    assert r.state == State.CONFIRM and "contestação" in r.text.splitlines()[0]
+    r = svc.send(cid, token, "sim, abra a contestação, sem bloquear")
+    assert r.state == State.DONE and r.card_status is None
+
+
+def test_cancel_in_words_after_the_block_offer_still_cancels(tools, store, clock, token):
+    nlu = ScriptedNlu(
+        nlu_result(intent="dispute", language="pt", transaction_id="TXN001", reason_code=ReasonCode.FRAUD_CNP,
+                   reason_confidence=0.9, card_in_possession="yes", recognizes_merchant="no"),
+        nlu_result(intent="decline", language="pt"),
+    )
+    svc = make_service(tools, store, clock, nlu)
+    cid = svc.start("pt")
+    svc.send(cid, token, "não reconheço a TXN001, o cartão está comigo e não conheço a loja")
+    assert svc.send(cid, token, "Não, cancelar").state == State.CANCELLED

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import time
 import uuid
 from collections.abc import Callable
@@ -24,6 +25,8 @@ from dispute_ops.language.nlu import LlmUsage, NluContext, NluOutcome, NluResult
 from dispute_ops.policy.engine import PolicyEngine
 from dispute_ops.store import Store
 from dispute_ops.tools import BankingTools
+
+BARE_NO = re.compile(r"(no|nao|nop|no gracias|nao obrigad[oa])")
 
 
 class Nlu(Protocol):
@@ -143,6 +146,7 @@ class Conversation:
     proactive_txn: Transaction | None = None
     candidates: list[dict[str, str]] = field(default_factory=list)
     last_ask: list[str] = field(default_factory=list)
+    block_offered: bool = False  # the last summary also asked whether to block the card
     history: list[str] = field(default_factory=list)
     usages: list[LlmUsage] = field(default_factory=list)
     customer_turns: int = 0
@@ -341,6 +345,13 @@ class ConversationService:
             return self._reply(conv, flow.close("customer_has_nothing_to_dispute"), started, text_key="goodbye", **base)
         if nlu.intent == "greeting" and flow.state == State.START:
             return self._text_reply(conv, "greeting", started, **base)
+        if (flow.state == State.CONFIRM and conv.block_offered and nlu.intent == "decline"
+                and BARE_NO.fullmatch(_norm(text).strip(" .!"))):
+            # The summary ends with "do you want the card blocked?": a bare "no" may answer only that. Ask, bounded
+            # like any unclear answer to the summary; "não, cancelar" or the buttons still cancel.
+            self._audit(conv, "ambiguous_no")
+            return self._reply(conv, flow.handle(Turn(token=token)), started,
+                               prefix=responses.message("ambiguous_no", conv.language), **base)
         return self._reply(conv, flow.handle(self._turn(conv, token, nlu)), started, **base)
 
     # ---- helpers ------------------------------------------------------------------------------
@@ -359,15 +370,21 @@ class ConversationService:
 
     def _turn(self, conv: Conversation, token: str, nlu: NluResult) -> Turn:
         in_confirm = conv.flow.state == State.CONFIRM
+        evidence = nlu.evidence()
+        transaction_id = nlu.transaction_id
+        if ("duplicate_transaction_id" in conv.last_ask and not evidence.get("duplicate_transaction_id")
+                and transaction_id in {c["transaction_id"] for c in conv.candidates}):
+            # The pick buttons send "É a compra <id>"; read as the charge itself, it is the other charge asked for.
+            evidence["duplicate_transaction_id"], transaction_id = transaction_id, None
         return Turn(
             token=token,
             summary=nlu.summary or None,
-            transaction_id=nlu.transaction_id,
+            transaction_id=transaction_id,
             merchant=nlu.merchant,
             amount=None if nlu.amount is None else Decimal(str(nlu.amount)),
             reason_code=nlu.reason_code,
             classifier_confidence=nlu.reason_confidence if nlu.reason_code else None,
-            evidence=nlu.evidence(),
+            evidence=evidence,
             confirm=(True if nlu.intent == "confirm" else False if nlu.intent == "decline" else None) if in_confirm else None,
             block_card=bool(nlu.wants_block_card) if in_confirm else False,
             human_requested=nlu.intent == "human",
@@ -423,6 +440,7 @@ class ConversationService:
             text = f"{prefix}\n{text}"
         conv.candidates = [_candidate(c) for c in result.candidates]
         conv.last_ask = list(result.ask_for)
+        conv.block_offered = result.offer_block_card
         conv.history.append(f"bank: {text}")
         reply = Reply(
             conversation_id=conv.id, text=text, language=conv.language, state=result.state, action=result.action,

@@ -249,9 +249,10 @@ def _to_number(s: str) -> float:
     return float(s)
 
 
-def parse_amount(text: str) -> float | None:
+def parse_amount(text: str, smallest: bool = False) -> float | None:
     """The amount a customer mentions, in any local format. Dates, times and ids are ignored; a number
-    next to a currency wins, otherwise the largest one."""
+    next to a currency wins, otherwise the largest one. `smallest` is for the correct amount of a wrong-amount
+    dispute, which is below the charge: "foi de USD 288,69, mas o combinado era de USD 202,08" means 202.08."""
     t = _TXN_ID.sub(" ", _norm(text))
     for pattern in _NOT_AMOUNTS:
         t = pattern.sub(" ", t)
@@ -265,7 +266,8 @@ def parse_amount(text: str) -> float | None:
     if not found:
         return None
     with_currency = [v for tagged, v in found if tagged]
-    return max(with_currency) if with_currency else max(v for _, v in found)
+    pick = min if smallest else max
+    return pick(with_currency) if with_currency else pick(v for _, v in found)
 
 
 def parse_date(text: str) -> str | None:
@@ -535,11 +537,11 @@ class RuleNlu:
         if len(pending) == 1 and (yes or no) and not other_statement:
             fields[pending[0]] = "yes" if yes else "no"
             answered = True
-        if "expected_amount" in ctx.ask_for and (amount := parse_amount(text)) is not None:
+        if "expected_amount" in ctx.ask_for and (amount := parse_amount(text, smallest=True)) is not None:
             fields["expected_amount"] = amount
             answered = True
         for name in _DATE_FIELDS:
-            if name in ctx.ask_for and text.strip() and not (no and len(t) < 6):
+            if name in ctx.ask_for and text.strip() and not (no and len(t) < 6) and not _UNSURE.search(t):
                 fields[name] = parse_date(text) or text.strip()[:60]
                 answered = True
         if "duplicate_transaction_id" in ctx.ask_for and (other := pick_candidate(text, ctx.candidates)):

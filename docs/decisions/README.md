@@ -37,3 +37,5 @@ Every significant decision in the project, with the alternatives considered and 
 | [031](ADR-031-grounded-evidence.md) | A fact the policy relies on must have been said (card possession grounding); a contradicted summary is corrected, not opened | accepted |
 | [032](ADR-032-column-profile-gate.md) | Column-profile gate: a delivery whose column is suddenly emptier than the history is blocked | accepted |
 | [033](ADR-033-proactive-answer-precedence.md) | A "no" to the fraud alert is read from the stated fact, not the intent; prompt nlu-v5 describes the alert answer | accepted |
+| [034](ADR-034-duplicate-other-charge.md) | A duplicate is answered by picking the other charge from the same merchant; with none, the reason is asked again (found on the demo) | accepted |
+| [035](ADR-035-evidence-fits-the-reason.md) | Policy review: the evidence must fit the reason (amount, delivery date, cancellation date), lost card is FRAUD_CP, the customer can correct the reason | accepted |

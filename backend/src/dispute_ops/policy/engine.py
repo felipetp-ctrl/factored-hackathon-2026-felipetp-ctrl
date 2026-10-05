@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from importlib import resources
 from typing import Any
@@ -9,6 +9,20 @@ from typing import Any
 import yaml
 
 from dispute_ops.domain import FRAUD_CODES, Card, Customer, PolicyDecision, ReasonCode, Transaction
+
+
+def _iso(value: str) -> date | None:
+    try:
+        return date.fromisoformat(value[:10])
+    except ValueError:
+        return None  # a date kept as the customer's words ("semana passada") is left to the agent
+
+
+def _decimal(value: str) -> Decimal | None:
+    try:
+        return Decimal(value)
+    except ArithmeticError:
+        return None
 
 
 @dataclass(frozen=True)
@@ -91,6 +105,23 @@ class PolicyEngine:
             )
 
         missing = [e for e in self.required_evidence(ctx.reason_code) if not ctx.evidence.get(e)]
+        if not missing:
+            # The evidence must fit the reason, not only be present (policy review, 2026-10-04).
+            ev, reason = ctx.evidence, ctx.reason_code
+            if reason == ReasonCode.INCORRECT_AMOUNT:
+                expected = _decimal(ev["expected_amount"])
+                if expected is None or not Decimal("0") < expected < txn.amount:
+                    inputs["expected_amount"] = ev["expected_amount"]
+                    return decide("eligible", ["R-AMOUNT-CHECK"], missing_evidence=["expected_amount"],
+                                  invalid_evidence=["expected_amount"])
+            if reason == ReasonCode.NOT_RECEIVED and (due := _iso(ev["expected_delivery_date"])) and due > ctx.now.date():
+                inputs["expected_delivery_date"] = due.isoformat()
+                return decide("ineligible", ["R-NOT-DUE"])
+            if (reason == ReasonCode.CANCELLED_RECURRING and (cancelled := _iso(ev["cancellation_date"]))
+                    and cancelled > txn.transaction_date.date()):
+                inputs["cancellation_date"] = cancelled.isoformat()
+                inputs["transaction_date"] = txn.transaction_date.date().isoformat()
+                return decide("ineligible", ["R-CANCEL-AFTER"])
         return decide("eligible", ["R-ELIGIBLE"], missing_evidence=missing)
 
     def evaluate_human_review(self, ctx: PolicyContext) -> PolicyDecision:

@@ -71,6 +71,13 @@ T = {
         "candidate_one": "Encontré esta compra:",
         "pick": "¿Cuál de ellas es?",
         "pick_one": "¿Es esta? (sí/no)",
+        "candidates_duplicate": "Estos son sus otros cargos en este comercio:",
+        "pick_duplicate": "¿Cuál es el cargo repetido? Si ninguno lo es, cuénteme qué pasó.",
+        "no_duplicate": "Sin otro cargo igual en este comercio, no es un cobro duplicado.",
+        "ambiguous_no": "¿Su «no» es para la disputa o solo para el bloqueo de la tarjeta? Puede abrir la disputa sin bloquearla.",
+        "invalid_expected_amount": "El monto correcto debe ser menor que el cobrado ({amount} {currency}).",
+        "R-NOT-DUE": "Todavía está dentro del plazo de entrega (hasta el {expected_delivery_date}). Si no llega para esa fecha, puede abrir la disputa.",
+        "R-CANCEL-AFTER": "Este cargo es del {transaction_date}, anterior a la cancelación del {cancellation_date}, así que no se puede disputar como suscripción cancelada.",
         "confirm": "Resumen: abriré una disputa por {reason} de la compra de {amount} {currency} en {merchant} del {date}. ¿Confirma? (sí/no)",
         "offer_block": "Por seguridad, también recomiendo bloquear la tarjeta usada en esta compra para evitar nuevos cargos. ¿Desea bloquearla?",
         "done": "Listo. Su disputa quedó registrada con el número de caso {case_id}.",
@@ -99,6 +106,13 @@ T = {
         "candidate_one": "Encontrei esta compra:",
         "pick": "Qual delas é?",
         "pick_one": "É esta? (sim/não)",
+        "candidates_duplicate": "Estas são as suas outras compras nessa loja:",
+        "pick_duplicate": "Qual delas é a cobrança repetida? Se nenhuma for, me conte o que aconteceu.",
+        "no_duplicate": "Sem outra cobrança igual nessa loja, não é uma cobrança duplicada.",
+        "ambiguous_no": "Seu “não” é para a contestação ou só para o bloqueio do cartão? Dá para abrir a contestação sem bloquear.",
+        "invalid_expected_amount": "O valor correto precisa ser menor que o cobrado ({amount} {currency}).",
+        "R-NOT-DUE": "A entrega ainda está no prazo (até {expected_delivery_date}). Se não chegar até lá, você pode abrir a contestação.",
+        "R-CANCEL-AFTER": "Esta cobrança é de {transaction_date}, antes do cancelamento em {cancellation_date}, então não pode ser contestada como assinatura cancelada.",
         "confirm": "Resumo: vou abrir uma contestação por {reason} da compra de {amount} {currency} em {merchant} do dia {date}. Confirma? (sim/não)",
         "offer_block": "Por segurança, também recomendo bloquear o cartão usado nesta compra para evitar novas cobranças. Quer bloqueá-lo?",
         "done": "Pronto. Sua contestação foi registrada com o protocolo {case_id}.",
@@ -164,15 +178,20 @@ def render(result: FlowResult, lang: str | None, *, transaction: Transaction | N
         lines: list[str] = []
         if result.candidates:
             one = len(result.candidates) == 1
-            header = {"closest": "candidates_closest", "recent": "candidates_recent"}.get(
-                result.candidates_note or "", "candidate_one" if one else "candidates")
+            duplicate = result.candidates_note == "duplicate"
+            header = {"closest": "candidates_closest", "recent": "candidates_recent",
+                      "duplicate": "candidates_duplicate"}.get(result.candidates_note or "", "candidate_one" if one else "candidates")
             lines.append(T[lang][header])
             for i, c in enumerate(result.candidates, 1):
                 f = _txn_fields(c, lang)
                 when = c.transaction_date.strftime("%H:%M")
                 lines.append(f"{i}) {f['merchant']} · {f['amount']} {f['currency']} · {f['date']} {when} ({c.transaction_id})")
-            lines.append(T[lang]["pick_one" if one else "pick"])
+            lines.append(T[lang]["pick_duplicate" if duplicate else "pick_one" if one else "pick"])
         else:
+            if result.candidates_note == "no_duplicate":
+                lines.append(T[lang]["no_duplicate"])
+            elif result.candidates_note == "invalid_expected_amount" and transaction is not None:
+                lines.append(message("invalid_expected_amount", lang, **_txn_fields(transaction, lang)))
             lines.extend(QUESTIONS[lang].get(field, field) for field in result.ask_for)
         return "\n".join(lines)
     if result.action == "confirm":
@@ -187,7 +206,9 @@ def render(result: FlowResult, lang: str | None, *, transaction: Transaction | N
         return text
     if result.action == "ineligible":
         rule = result.policy.rule_ids[0]  # type: ignore[union-attr]
-        return message(rule, lang, **result.policy.inputs)  # type: ignore[union-attr]
+        inputs = {k: (f"{v[8:10]}/{v[5:7]}/{v[:4]}" if k.endswith("_date") and isinstance(v, str) else v)
+                  for k, v in result.policy.inputs.items()}  # type: ignore[union-attr]
+        return message(rule, lang, **inputs)
     if result.action == "handoff":
         return message("handoff", lang, case_ref=result.handoff.case_ref)  # type: ignore[union-attr]
     if result.action == "reauth":

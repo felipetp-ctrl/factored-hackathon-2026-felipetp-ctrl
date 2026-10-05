@@ -75,6 +75,7 @@ class PolicyDecision(BaseModel):
     policy_version: str
     inputs: dict[str, Any]
     missing_evidence: list[str] = Field(default_factory=list)
+    invalid_evidence: list[str] = Field(default_factory=list)  # given, but does not fit the reason: asked again
     handoff_reasons: list[str] = Field(default_factory=list)
 
 

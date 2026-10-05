@@ -154,6 +154,8 @@ class DisputeFlow:
         self.last_candidates: list[Transaction] = []
         self.rejected_transactions: set[str] = set()
         self.block_requested = False  # asked for at a summary that was then corrected (see _on_confirm)
+        self.duplicate_options: list[str] | None = None  # the other charges offered as the duplicate, once asked
+        self.asked: list[str] = []  # the fields the last question asked for
 
     # ---- public API -------------------------------------------------------------------
     def handle(self, turn: Turn) -> FlowResult:
@@ -202,9 +204,22 @@ class DisputeFlow:
             confidence = turn.classifier_confidence if turn.classifier_confidence is not None else 1.0
             # A reason already read is replaced only by an answer to the reason question or a surer reading:
             # a later short answer ("era en el mercado") must not silently change what the customer said.
-            if self.reason_code is None or self.state == State.CLASSIFY or confidence >= self.confidence:
+            # A different reason in a message that answers nothing asked is the customer correcting the reason
+            # ("na verdade não reconheço"), followed if the reading is usable; it is shown in the summary anyway.
+            corrects = (self.state == State.COLLECT_EVIDENCE and turn.reason_code != self.reason_code
+                        and not any(turn.evidence.get(f) for f in self.asked)
+                        and confidence >= self.policy.rules["handoff"]["min_classifier_confidence"])
+            if self.reason_code is None or self.state == State.CLASSIFY or confidence >= self.confidence or corrects:
+                if corrects:
+                    self._audit("reason_corrected", reason_before=self.reason_code and self.reason_code.value,
+                                reason_after=turn.reason_code.value, by="customer")
+                if turn.reason_code != self.reason_code:
+                    self.duplicate_options = None
                 self.reason_code, self.confidence = turn.reason_code, confidence
         self.evidence.update({k: v for k, v in turn.evidence.items() if v})
+        if self.duplicate_options is not None and self.evidence.get("duplicate_transaction_id") not in self.duplicate_options:
+            # Only a charge the customer was shown counts as the other charge (never a guessed or foreign id).
+            self.evidence.pop("duplicate_transaction_id", None)
         self.progress = bool(turn.wrong_transaction)
         for name, value in (("merchant", turn.merchant), ("amount", turn.amount), ("date", turn.purchase_date)):
             if value is not None and value != "" and self.hints.get(name) != value:
@@ -220,6 +235,10 @@ class DisputeFlow:
                 return pending
         if self.reason_code is None:
             return self._clarify(["reason_code"], "reason_code", State.CLASSIFY)
+        if self.reason_code == ReasonCode.FRAUD_CNP and self.evidence.get("card_in_possession") == "no":
+            # Unrecognised with the card still held is FRAUD_CNP; without the card it is a lost or stolen card.
+            self.reason_code = ReasonCode.FRAUD_CP
+            self._audit("reason_corrected", reason_before="FRAUD_CNP", reason_after="FRAUD_CP", by="card_not_in_possession")
         try:
             decision = self._evaluate()
         except ToolUnavailable:
@@ -228,6 +247,13 @@ class DisputeFlow:
             return self._finish(FlowResult(state=State.INELIGIBLE, action="ineligible", policy=decision))
         if decision.decision == "handoff":
             return self._handoff(decision.handoff_reasons, decision)
+        if decision.invalid_evidence:
+            for name in decision.invalid_evidence:
+                self.evidence.pop(name, None)
+            return self._clarify(decision.missing_evidence, "evidence", State.COLLECT_EVIDENCE, policy=decision,
+                                 note="invalid_" + decision.invalid_evidence[0])
+        if "duplicate_transaction_id" in decision.missing_evidence:
+            return self._ask_duplicate(turn, decision)
         if decision.missing_evidence:
             return self._clarify(decision.missing_evidence, "evidence", State.COLLECT_EVIDENCE, policy=decision)
         self.state = State.CONFIRM
@@ -235,6 +261,25 @@ class DisputeFlow:
         return FlowResult(
             state=State.CONFIRM, action="confirm", policy=decision, offer_block_card=self._offer_block(turn.token)
         )
+
+    def _ask_duplicate(self, turn: Turn, decision: PolicyDecision) -> FlowResult:
+        """A duplicate needs the other charge. The customer picks it from their other charges at the same merchant;
+        with none to offer, or none picked, the reason is asked again instead of repeating a question the customer
+        cannot answer (demo, 04/10: "Qual é a outra cobrança idêntica?" with nothing to pick, then a hand-off)."""
+        assert self.txn is not None
+        if self.duplicate_options is None:
+            txn = self.txn
+            others = [t for t in self._retry(lambda: self.tools.search_transactions(turn.token, days=IDENTIFY_LOOKBACK_DAYS))
+                      if t.transaction_id != txn.transaction_id and txn.merchant_name
+                      and merchant_matches(txn.merchant_name, t.merchant_name)[0]]
+            others.sort(key=lambda t: abs(t.transaction_date - txn.transaction_date))
+            if others:
+                self.duplicate_options = [t.transaction_id for t in others[:MAX_CANDIDATES]]
+                return self._clarify(["duplicate_transaction_id"], "evidence", State.COLLECT_EVIDENCE,
+                                     candidates=others[:MAX_CANDIDATES], policy=decision, note="duplicate")
+        self._audit("duplicate_not_found", offered=self.duplicate_options or [])
+        self.reason_code, self.confidence, self.duplicate_options = None, 0.0, None
+        return self._clarify(["reason_code"], "reason_code", State.CLASSIFY, note="no_duplicate")
 
     def _identify(self, turn: Turn) -> FlowResult | None:
         if turn.wrong_transaction and not turn.transaction_id and self.last_candidates:
@@ -450,10 +495,10 @@ class DisputeFlow:
             self.attempts[counter] = self.attempts.get(counter, 0) + 1
         if self.attempts.get(counter, 0) > MAX_CLARIFY or self.attempts["_rounds_" + counter] > MAX_IDENTIFY_ROUNDS:
             return self._handoff(["clarification_exhausted"], policy, open_questions=fields)
-        self.state = state
+        self.state, self.asked = state, list(fields)
         self._audit("clarify", fields=fields, attempt=self.attempts.get(counter, 0), progress=self.progress)
         return FlowResult(state=state, action="ask", ask_for=fields, candidates=candidates or [], policy=policy,
-                          candidates_note=note if candidates else None)
+                          candidates_note=note)
 
     def _handoff(
         self, reasons: list[str], policy: PolicyDecision | None = None, open_questions: list[str] | None = None

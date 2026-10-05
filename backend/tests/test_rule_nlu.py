@@ -150,3 +150,16 @@ def test_stolen_card_letter_is_a_lost_or_stolen_card_dispute():
 def test_pt_regulator_wording():
     r = _Rules([]).interpret("Se não resolverem, vou registrar uma reclamação no órgão regulador bancário.", _Ctx(state="START")).result
     assert r.regulatory_threat
+
+
+@pytest.mark.parametrize("text", ["não lembro", "no me acuerdo", "no sé"])
+def test_dont_remember_is_not_a_date(text):
+    r = read(text, state="COLLECT_EVIDENCE", ask_for=["cancellation_date"])
+    assert r.cancellation_date is None
+
+
+def test_correct_amount_is_the_smaller_one_when_both_are_written():
+    # channels-v1 letter: the charged amount was read as the correct one (found by the amount check, 04/10).
+    r = read("a cobrança foi de USD 288,69, mas o valor combinado era de USD 202,08", state="COLLECT_EVIDENCE",
+             ask_for=["expected_amount"])
+    assert r.expected_amount == 202.08

@@ -16,6 +16,7 @@ import argparse
 import json
 import random
 from datetime import datetime, timedelta
+from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
@@ -50,6 +51,8 @@ def generate(store: Store, as_of: datetime, *, seed: int = 2027) -> list[dict[st
         return rows
 
     def decide(t: Transaction, reason: ReasonCode, evidence: dict[str, str], **flags: Any):
+        if evidence.get("expected_amount") == "x":  # the brief asks for about 70% of the charge
+            evidence = {**evidence, "expected_amount": str((t.amount * Decimal("0.7")).quantize(Decimal("0.01")))}
         return policy.evaluate(PolicyContext(transaction=t, customer=store.get_customer(t.customer_id),
                                              reason_code=reason, now=as_of, evidence=evidence, **flags))
 
@@ -161,7 +164,7 @@ def generate(store: Store, as_of: datetime, *, seed: int = 2027) -> list[dict[st
                         exp = {"outcome": "handoff", "handoff_reasons": d.handoff_reasons}
                 exp.setdefault("transaction_id", t.transaction_id if exp["outcome"] == "done" else None)
                 if exp["outcome"] == "done":
-                    exp["reason_code"] = "FRAUD_CNP"
+                    exp.setdefault("reason_code", "FRAUD_CNP")
                 brief = (f"The bank's app asks the customer ({'Spanish' if lang == 'es' else 'Brazilian Portuguese'}) "
                          f"whether they recognise a card charge of {_money(t)} at “{t.merchant_name}” on "
                          f"{t.transaction_date:%d/%m/%Y}, flagged by the fraud system. {facts}")
@@ -175,8 +178,9 @@ def generate(store: Store, as_of: datetime, *, seed: int = 2027) -> list[dict[st
     alert("was-me", "It was them: they recognise it.", {"outcome": "cancelled"})
     alert("was-me-story", "They recognise it only indirectly, with a short story (e.g. a gift or a family dinner) "
           "without saying “yes” plainly.", {"outcome": "cancelled"})
+    # Lost card: FRAUD_CP, as the reader prompt and ADR-031 define it (label corrected 2026-10-04, ADR-035).
     alert("lost-card", "They did not make it. They lost the card days ago and do not have it. They confirm and want it "
-          "blocked.", {"outcome": "done", "block": True})
+          "blocked.", {"outcome": "done", "block": True, "reason_code": "FRAUD_CP"})
     alert("above-limit", "They did not make it. The card is with them. They confirm.", {"outcome": "handoff_amount"},
           extra="amount_usd > 460")
     alert("wants-person", "They are unsure and prefer to talk to a person at the bank; they say so.",

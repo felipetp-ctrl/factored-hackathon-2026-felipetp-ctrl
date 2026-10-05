@@ -189,3 +189,90 @@ def test_repeated_nonexistent_ids_are_not_labelled_suspicious(flow, token):
     flow.handle(Turn(token=token, transaction_id="TXN998", reason_code=ReasonCode.FRAUD_CNP))
     r = flow.handle(Turn(token=token, transaction_id="TXN999"))
     assert r.handoff.reason_for_handoff == ["invalid_transaction_references"]
+
+
+# ---- duplicate charge: the customer is shown the other charges to pick from -----------------------------------
+
+def test_duplicate_shows_the_other_charges_at_the_same_merchant(flow, token):
+    r = flow.handle(Turn(token=token, transaction_id="TXN003", reason_code=ReasonCode.DUPLICATE))
+    assert (r.action, r.ask_for) == ("ask", ["duplicate_transaction_id"])
+    assert [c.transaction_id for c in r.candidates] == ["TXN002"]  # the disputed charge itself is not offered
+    r = flow.handle(Turn(token=token, evidence={"duplicate_transaction_id": "TXN002"}))
+    assert r.action == "confirm"
+
+
+def test_duplicate_with_no_other_charge_goes_back_to_the_reason(flow, token, store):
+    # Demo, 04/10: "Qual é a outra cobrança idêntica?" was asked with nothing to pick, the customer could not answer
+    # and the case went to a person. With no other charge at that merchant, the reason is asked again.
+    r = flow.handle(Turn(token=token, transaction_id="TXN001", reason_code=ReasonCode.DUPLICATE))
+    assert (r.state, r.ask_for, r.candidates_note) == (State.CLASSIFY, ["reason_code"], "no_duplicate")
+    assert flow.reason_code is None and "duplicate_not_found" in kinds(store)
+    r = flow.handle(Turn(token=token, reason_code=ReasonCode.FRAUD_CNP))
+    assert r.ask_for == ["card_in_possession", "recognizes_merchant"]
+
+
+def test_duplicate_not_picked_goes_back_to_the_reason(flow, token):
+    flow.handle(Turn(token=token, transaction_id="TXN003", reason_code=ReasonCode.DUPLICATE))
+    r = flow.handle(Turn(token=token))  # "não tem cobrança idêntica, foi 1 mês depois"
+    assert (r.state, r.ask_for, r.candidates_note) == (State.CLASSIFY, ["reason_code"], "no_duplicate")
+
+
+def test_duplicate_reference_not_offered_is_ignored(flow, token):
+    flow.handle(Turn(token=token, transaction_id="TXN003", reason_code=ReasonCode.DUPLICATE))
+    r = flow.handle(Turn(token=token, evidence={"duplicate_transaction_id": "TXN101"}))  # another customer's charge
+    assert r.action != "confirm" and "duplicate_transaction_id" not in flow.evidence
+
+
+# ---- every reason: the answers must make sense for the reason (policy review, 04/10) ------------------------
+
+def test_unrecognised_charge_with_the_card_not_with_the_customer_becomes_lost_or_stolen(flow, token, store):
+    # FRAUD_CNP means "card still with me" (reader prompt); a "no" to the card question is a lost or stolen card.
+    flow.handle(Turn(token=token, transaction_id="TXN001", reason_code=ReasonCode.FRAUD_CNP))
+    r = flow.handle(Turn(token=token, evidence={"card_in_possession": "no", "recognizes_merchant": "no"}))
+    assert r.action == "confirm" and flow.reason_code == ReasonCode.FRAUD_CP
+    assert "reason_corrected" in kinds(store)
+
+
+def test_reason_corrected_while_evidence_is_asked_is_followed(flow, token, store):
+    # "Na verdade eu não reconheço essa compra" while the correct amount is asked: the new reason is followed even if
+    # the reading is less sure than the first one; before, the same question repeated until a hand-off.
+    flow.handle(Turn(token=token, transaction_id="TXN001", reason_code=ReasonCode.INCORRECT_AMOUNT,
+                     classifier_confidence=0.9))
+    r = flow.handle(Turn(token=token, reason_code=ReasonCode.FRAUD_CNP, classifier_confidence=0.8))
+    assert flow.reason_code == ReasonCode.FRAUD_CNP
+    assert r.ask_for == ["card_in_possession", "recognizes_merchant"]
+
+
+def test_a_short_answer_with_a_reason_reading_does_not_change_the_reason(flow, token):
+    # The answer to the question asked is kept, and its incidental reason reading does not replace the first one.
+    flow.handle(Turn(token=token, transaction_id="TXN001", reason_code=ReasonCode.INCORRECT_AMOUNT,
+                     classifier_confidence=0.9))
+    r = flow.handle(Turn(token=token, reason_code=ReasonCode.FRAUD_CNP, classifier_confidence=0.8,
+                         evidence={"expected_amount": "1000.00"}))
+    assert flow.reason_code == ReasonCode.INCORRECT_AMOUNT and r.action == "confirm"
+
+
+@pytest.mark.parametrize("expected", ["1250.00", "3000.00", "0.00"])
+def test_wrong_amount_needs_a_correct_amount_below_the_charge(flow, token, expected):
+    flow.handle(Turn(token=token, transaction_id="TXN001", reason_code=ReasonCode.INCORRECT_AMOUNT))
+    r = flow.handle(Turn(token=token, evidence={"expected_amount": expected}))
+    assert (r.action, r.ask_for, r.candidates_note) == ("ask", ["expected_amount"], "invalid_expected_amount")
+    assert "expected_amount" not in flow.evidence
+    assert flow.handle(Turn(token=token, evidence={"expected_amount": "1000.00"})).action == "confirm"
+
+
+def test_not_received_before_the_delivery_date_is_not_disputable_yet(flow, token):
+    flow.handle(Turn(token=token, transaction_id="TXN001", reason_code=ReasonCode.NOT_RECEIVED))
+    r = flow.handle(Turn(token=token, evidence={"expected_delivery_date": "2026-07-01", "contacted_merchant": "yes"}))
+    assert r.action == "ineligible" and r.policy.rule_ids == ["R-NOT-DUE"]
+
+
+def test_subscription_cancelled_after_the_charge_is_not_disputable(flow, token):
+    flow.handle(Turn(token=token, transaction_id="TXN002", reason_code=ReasonCode.CANCELLED_RECURRING))
+    r = flow.handle(Turn(token=token, evidence={"cancellation_date": "2026-06-16"}))  # charge on 2026-06-14
+    assert r.action == "ineligible" and r.policy.rule_ids == ["R-CANCEL-AFTER"]
+
+
+def test_subscription_cancelled_before_the_charge_is_disputable(flow, token):
+    flow.handle(Turn(token=token, transaction_id="TXN002", reason_code=ReasonCode.CANCELLED_RECURRING))
+    assert flow.handle(Turn(token=token, evidence={"cancellation_date": "2026-06-01"})).action == "confirm"

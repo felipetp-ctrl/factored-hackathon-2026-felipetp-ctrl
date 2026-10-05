@@ -11,7 +11,7 @@ The README has the one-table summary; this page keeps every set, its method and 
 | test-v3 | Fallback reader end to end | 42 | 42/42 both fallback variants | below |
 | hard-v1 | App conversation, vague memory, blind | 36 | free reader 16 → 30, Claude path 24 → 31 | [ADR-022](decisions/ADR-022-hard-set-and-fuzzy-references.md), [country gap](analysis/hard-v1-disparity.md) |
 | hard-v1 on the API | Same 36 blind scenarios, real Claude Haiku 4.5, 2 runs each, vs a plain AI chatbot | 36 × 2 | 65/72 correct, 4/72 unsafe vs chatbot 49/72, 11/72 unsafe | [below](#hard-v1-on-the-real-api-2026-09-30) |
-| channels-v1 | Written complaints and fraud-alert answers | 24 + 18 | letters 23/24, alerts 17/18, 0 unsafe | [ADR-025](decisions/ADR-025-channels-evaluation.md) |
+| channels-v1 | Written complaints and fraud-alert answers | 24 + 18 | letters 23/24, alerts 17/18, 0 unsafe (lost-card label corrected to FRAUD_CP on 2026-10-04) | [ADR-025](decisions/ADR-025-channels-evaluation.md), [ADR-035](decisions/ADR-035-evidence-fits-the-reason.md) |
 | independent-v1 | Reason reading, another author, blind labels | 525 | intent-v2 94.1% (at the time) / intent-v3 93.5% vs keyword rules 45.7% | [report](../ml/results/independent-v1.md) |
 | **MInDS-14 (real speech)** | Should a real call start a dispute? es-ES/pt-PT, ASR | 1,090 | non-disputes to the intake on unseen topics: intent-v3 7.9% vs intent-v2 31.1%, rules 67.3% | [ADR-030](decisions/ADR-030-real-speech-and-intent-v3.md), [report](../ml/results/external-minds14.md) |
 | human-review | The intent labels themselves, one blind human | 90 | 78/85 agree, κ = 0.91; DISPUTE_NO_REASON weakest (4/8) | [report](../ml/results/human-review.md) |
