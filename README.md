@@ -6,6 +6,8 @@ An AI-first customer-service **system** (not a chatbot) for one banking workflow
 Customers reach it in **Spanish or Portuguese** through the app, written complaints (PQR) or a proactive fraud alert.
 A deterministic core decides; the language model only interprets.
 
+**Pitch video (2:31)**: [docs/submission/pitch_video.mp4](docs/submission/pitch_video.mp4) · **Slides**: [docs/submission/slides.pdf](docs/submission/slides.pdf)
+
 **Judging in two minutes**
 1. Open the [live demo](https://latam-bank-disputes.vercel.app) → *Process written complaints* → *See the cases* →
    click a case. Or read the [walkthrough with screenshots](docs/demo.md).
@@ -13,7 +15,7 @@ A deterministic core decides; the language model only interprets.
    [traceability](docs/requirements_traceability.md).
 3. Machine learning in one paragraph — why no model is trained on the bank's data and what is trained instead:
    [Machine learning](#machine-learning).
-4. Why it is built this way: [decisions at a glance](#decisions-at-a-glance), 35 ADRs in [docs/decisions](docs/decisions/).
+4. Why it is built this way: [decisions at a glance](#decisions-at-a-glance), 36 ADRs in [docs/decisions](docs/decisions/).
 
 ```
 chat / PQR / fraud alert
